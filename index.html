@@ -1,0 +1,1211 @@
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+// Importações obrigatórias do Firebase para um aplicativo completo e persistente
+import { initializeApp } from 'firebase/app';
+import { 
+    getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged 
+} from 'firebase/auth';
+import { 
+    getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, 
+    onSnapshot, collection, query, where, Timestamp, setLogLevel
+} from 'firebase/firestore';
+
+// --- CONFIGURAÇÕES E CONSTANTES GLOBAIS ---
+
+// Detalhes dos planos de IPTV
+const PLAN_DETAILS = [
+    { value: 30.00, label: "R$ 30,00" },
+    { value: 25.00, label: "R$ 25,00" },
+    { value: 21.50, label: "R$ 21,50" },
+    { value: 20.00, label: "R$ 20,00" },
+    { value: 10.00, label: "R$ 10,00" },
+];
+
+// Custo fixo de ativação por cliente
+const ACTIVATION_COST = 10.50;
+
+// Estado inicial para um novo cliente
+const initialClientState = {
+    name: '',
+    planValue: PLAN_DETAILS[0].value,
+    dueDate: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
+    status: 'Ativo', // O status será dinamicamente atualizado, mas começa como Ativo
+    notes: '',
+    phoneNumber: '', // Adicionando campo para WhatsApp
+};
+
+// --- FUNÇÕES DE UTILIDADE E CÁLCULO FINANCEIRO ---
+
+// Formata a data para exibição no Brasil
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    // Se for timestamp do Firebase, converte primeiro
+    const date = dateString instanceof Date ? dateString : 
+                 (dateString.toDate ? dateString.toDate() : new Date(dateString));
+    return date.toLocaleDateString('pt-BR');
+};
+
+// Retorna a diferença em dias entre duas datas (Data2 - Data1)
+const getDaysDiff = (date1, date2) => {
+    const d1 = new Date(date1.setHours(0, 0, 0, 0));
+    const d2 = new Date(date2.setHours(0, 0, 0, 0));
+    const diffTime = d2.getTime() - d1.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
+// Calcula o status do cliente com base na data de vencimento
+const calculateClientStatus = (dueDate) => {
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diff = getDaysDiff(today, due);
+
+    if (diff < 0) return 'Vencido';
+    if (diff === 0) return 'Vence Hoje';
+    if (diff === 1) return 'Vence Amanhã';
+    return 'Ativo';
+};
+
+// Função para formatar valores monetários
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value);
+};
+
+// --- COMPONENTE DE MODAL (PARA SUBSTITUIR ALERT/CONFIRM) ---
+const Modal = ({ title, children, isOpen, onClose }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" onClick={onClose}>
+            <div 
+                className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm transform transition-all duration-300 scale-100"
+                onClick={(e) => e.stopPropagation()} // Impede que o clique no modal feche-o
+            >
+                <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">{title}</h3>
+                <div className="text-gray-600 mb-6">{children}</div>
+                <button 
+                    onClick={onClose}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition"
+                >
+                    Fechar
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// --- COMPONENTE PRINCIPAL (APP) ---
+
+const App = () => {
+    // --- ESTADO DA APLICAÇÃO ---
+    const [activeView, setActiveView] = useState('Dashboard');
+    const [clients, setClients] = useState([]);
+    const [quickEntries, setQuickEntries] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [userId, setUserId] = useState(null);
+    const [db, setDb] = useState(null);
+    const [auth, setAuth] = useState(null);
+    const [modal, setModal] = useState({ isOpen: false, title: '', content: null });
+
+    // Determina o ID do aplicativo e configurações do Firebase
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    // Função para abrir o modal
+    const openModal = (title, content) => setModal({ isOpen: true, title, content });
+    // Função para fechar o modal
+    const closeModal = () => setModal({ isOpen: false, title: '', content: null });
+
+    // 1. Inicialização e Autenticação do Firebase (Executado apenas na montagem)
+    useEffect(() => {
+        if (!firebaseConfig) {
+            console.error("Firebase config not found.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            // Configura o nível de log para debug
+            setLogLevel('debug');
+            
+            const app = initializeApp(firebaseConfig);
+            const firestore = getFirestore(app);
+            const firebaseAuth = getAuth(app);
+            
+            setDb(firestore);
+            setAuth(firebaseAuth);
+
+            // Listener para o estado de autenticação
+            const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
+                if (user) {
+                    // Usuário autenticado
+                    setUserId(user.uid);
+                    setLoading(false);
+                } else {
+                    // Tenta o login silencioso ou anônimo
+                    try {
+                        if (initialAuthToken) {
+                            // Tenta autenticação com token personalizado
+                            const userCredential = await signInWithCustomToken(firebaseAuth, initialAuthToken);
+                            setUserId(userCredential.user.uid);
+                        } else {
+                            // Assina anonimamente como fallback
+                            const userCredential = await signInAnonymously(firebaseAuth);
+                            setUserId(userCredential.user.uid);
+                        }
+                    } catch (error) {
+                        console.error("Erro ao autenticar no Firebase:", error);
+                        setLoading(false);
+                    }
+                }
+            });
+
+            return () => unsubscribe(); // Limpeza do listener
+
+        } catch (error) {
+            console.error("Erro ao inicializar o Firebase:", error);
+            setLoading(false);
+        }
+    }, [initialAuthToken, appId]);
+
+
+    // 2. Listeners de Dados (Executado quando o DB e o UserId estiverem prontos)
+    useEffect(() => {
+        if (!db || !userId) return; // Garante que o DB e o usuário estão prontos
+
+        // --- Listener para Clientes ---
+        const clientsPath = `/artifacts/${appId}/users/${userId}/clients`;
+        const clientsRef = collection(db, clientsPath);
+        
+        const unsubscribeClients = onSnapshot(clientsRef, (snapshot) => {
+            const clientList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                dueDate: doc.data().dueDate.toDate ? doc.data().dueDate.toDate().toISOString().split('T')[0] : doc.data().dueDate, // Normaliza a data
+                planValue: Number(doc.data().planValue), // Garante que seja número
+            }));
+            setClients(clientList);
+        }, (error) => {
+            console.error("Erro ao ouvir clientes:", error);
+        });
+
+        // --- Listener para Lançamentos Rápidos ---
+        const quickEntriesPath = `/artifacts/${appId}/users/${userId}/quickEntries`;
+        const entriesRef = collection(db, quickEntriesPath);
+        
+        const unsubscribeEntries = onSnapshot(entriesRef, (snapshot) => {
+            const entryList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                date: doc.data().date.toDate ? doc.data().date.toDate().toISOString().split('T')[0] : doc.data().date,
+            }));
+            setQuickEntries(entryList);
+        }, (error) => {
+            console.error("Erro ao ouvir lançamentos rápidos:", error);
+        });
+
+        return () => {
+            unsubscribeClients();
+            unsubscribeEntries();
+        }; // Limpeza de listeners
+    }, [db, userId, appId]);
+    
+    // Mostra tela de carregamento
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="text-indigo-600 text-lg font-semibold animate-pulse">
+                    Carregando LiveTV Manager...
+                </div>
+            </div>
+        );
+    }
+    
+    // Garante que o userId seja exibido para facilitar a colaboração/suporte
+    const displayUserId = userId || 'ID Não Disponível';
+
+    // --- LÓGICA DE GERENCIAMENTO DE CLIENTES ---
+
+    const ClientManager = ({ clients, db, userId, appId }) => {
+        const [filterStatus, setFilterStatus] = useState('Todos');
+        const [filterPlan, setFilterPlan] = useState('Todos');
+        const [searchText, setSearchText] = useState('');
+        const [isAdding, setIsAdding] = useState(false);
+        const [editingClient, setEditingClient] = useState(null);
+        const [clientForm, setClientForm] = useState(initialClientState);
+
+        // Prepara o formulário para adicionar ou editar
+        useEffect(() => {
+            if (editingClient) {
+                // Ao editar, carrega os dados do cliente
+                setClientForm({ 
+                    ...editingClient,
+                    // Garante que o plano está no formato Number
+                    planValue: Number(editingClient.planValue) 
+                });
+            } else {
+                // Ao adicionar, reseta o formulário
+                setClientForm(initialClientState);
+            }
+        }, [editingClient, isAdding]);
+
+        // Função para manipular a mudança de campos do formulário
+        const handleFormChange = (e) => {
+            const { name, value } = e.target;
+            setClientForm(prev => ({ ...prev, [name]: value }));
+        };
+
+        // Salva ou atualiza um cliente no Firestore
+        const saveClient = async (e) => {
+            e.preventDefault();
+            
+            if (!db || !userId) return;
+
+            const collectionRef = collection(db, `/artifacts/${appId}/users/${userId}/clients`);
+
+            try {
+                // Converte dueDate string para Timestamp
+                const dateAsTimestamp = Timestamp.fromDate(new Date(clientForm.dueDate));
+                
+                const clientData = {
+                    ...clientForm,
+                    planValue: Number(clientForm.planValue), // Garante que o valor é salvo como número
+                    dueDate: dateAsTimestamp,
+                    // Re-calcula o status na hora de salvar, mas o principal é a data
+                    status: calculateClientStatus(dateAsTimestamp.toDate()), 
+                    createdAt: editingClient ? editingClient.createdAt : Timestamp.now(),
+                    updatedAt: Timestamp.now(),
+                };
+
+                if (editingClient) {
+                    // Atualiza
+                    const docRef = doc(db, collectionRef.path, editingClient.id);
+                    await updateDoc(docRef, clientData);
+                    setEditingClient(null);
+                    openModal('Sucesso', `Cliente ${clientForm.name} atualizado!`);
+                } else {
+                    // Novo Cliente
+                    await addDoc(collectionRef, clientData);
+                    setIsAdding(false);
+                    openModal('Sucesso', `Cliente ${clientForm.name} cadastrado!`);
+                }
+                setClientForm(initialClientState);
+
+            } catch (error) {
+                console.error("Erro ao salvar cliente:", error);
+                openModal('Erro', `Não foi possível salvar o cliente: ${error.message}`);
+            }
+        };
+
+        // Alterna o status do cliente (Ativo/Inativo) manualmente
+        const toggleClientStatus = async (client) => {
+            if (!db || !userId) return;
+            const collectionPath = `/artifacts/${appId}/users/${userId}/clients`;
+            const docRef = doc(db, collectionPath, client.id);
+
+            // Se o cliente está vencido/vence hoje/amanhã, e está sendo reativado, a próxima data de vencimento deve ser atual
+            const newDueDate = calculateClientStatus(client.dueDate) !== 'Ativo' 
+                ? new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0]
+                : client.dueDate;
+            
+            const newStatus = client.status === 'Inativo' ? calculateClientStatus(newDueDate) : 'Inativo';
+
+            try {
+                await updateDoc(docRef, { 
+                    status: newStatus,
+                    dueDate: newStatus !== 'Inativo' ? Timestamp.fromDate(new Date(newDueDate)) : client.dueDate,
+                    updatedAt: Timestamp.now(),
+                });
+                openModal('Status Atualizado', `${client.name} marcado como ${newStatus}.`);
+            } catch (error) {
+                console.error("Erro ao mudar status:", error);
+            }
+        };
+
+        // Exclui um cliente (com confirmação)
+        const deleteClient = async (client) => {
+             openModal(
+                'Confirmação de Exclusão',
+                (
+                    <div className="flex flex-col gap-4">
+                        <p>Tem certeza que deseja excluir permanentemente o cliente <strong>{client.name}</strong>?</p>
+                        <button 
+                            onClick={async () => {
+                                if (!db || !userId) return;
+                                const collectionPath = `/artifacts/${appId}/users/${userId}/clients`;
+                                try {
+                                    await deleteDoc(doc(db, collectionPath, client.id));
+                                    closeModal();
+                                    openModal('Excluído', `O cliente ${client.name} foi removido.`);
+                                } catch (error) {
+                                    console.error("Erro ao excluir:", error);
+                                    openModal('Erro', `Não foi possível excluir o cliente: ${error.message}`);
+                                }
+                            }}
+                            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-lg transition"
+                        >
+                            Sim, Excluir Cliente
+                        </button>
+                    </div>
+                )
+            );
+        };
+        
+        // Filtra e Busca a lista de clientes
+        const filteredClients = useMemo(() => {
+            return clients
+                .filter(client => {
+                    // 1. Filtro por Status
+                    const statusCheck = filterStatus === 'Todos' || calculateClientStatus(client.dueDate) === filterStatus;
+                    
+                    // 2. Filtro por Plano
+                    const planCheck = filterPlan === 'Todos' || client.planValue === Number(filterPlan);
+                    
+                    // 3. Busca por Nome
+                    const searchCheck = client.name.toLowerCase().includes(searchText.toLowerCase());
+
+                    return statusCheck && planCheck && searchCheck;
+                })
+                .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)); // Ordena por data de vencimento
+        }, [clients, filterStatus, filterPlan, searchText]);
+
+        // Função para gerar o link do WhatsApp
+        const generateWhatsAppLink = (client, type) => {
+            if (!client.phoneNumber) return 'Telefone não cadastrado.';
+            
+            const phone = client.phoneNumber.replace(/\D/g, ''); // Remove caracteres não numéricos
+            let message = '';
+
+            if (type === 'vencimento') {
+                message = encodeURIComponent(`Olá ${client.name}, este é um lembrete amigável de que sua assinatura Live TV no valor de ${formatCurrency(client.planValue)} está com vencimento em ${formatDate(client.dueDate)}. Por favor, regularize para evitar interrupção. Obrigado!`);
+            } else if (type === 'vencido') {
+                message = encodeURIComponent(`Olá ${client.name}, sua assinatura Live TV no valor de ${formatCurrency(client.planValue)} está vencida desde ${formatDate(client.dueDate)}. Clique aqui para reativar seu serviço imediatamente: [Link de Pagamento Aqui]`);
+            }
+
+            return `https://wa.me/55${phone}?text=${message}`;
+        };
+
+        // Formulário de Cadastro/Edição
+        const ClientForm = () => (
+            <form onSubmit={saveClient} className="space-y-4 p-4 bg-white rounded-xl shadow-lg">
+                <h3 className="text-2xl font-bold text-indigo-600 mb-4">{editingClient ? 'Editar Cliente' : 'Novo Cliente'}</h3>
+                
+                {/* Nome Completo */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Nome Completo</label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={clientForm.name}
+                        onChange={handleFormChange}
+                        required
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                </div>
+                
+                {/* Telefone (WhatsApp) */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">WhatsApp (apenas números)</label>
+                    <input
+                        type="text"
+                        name="phoneNumber"
+                        value={clientForm.phoneNumber}
+                        onChange={handleFormChange}
+                        placeholder="Ex: 5511999999999"
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                </div>
+
+                {/* Plano */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Plano (Valor Mensal)</label>
+                    <select
+                        name="planValue"
+                        value={clientForm.planValue}
+                        onChange={handleFormChange}
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border focus:border-indigo-500 focus:ring-indigo-500 bg-white"
+                    >
+                        {PLAN_DETAILS.map(plan => (
+                            <option key={plan.value} value={plan.value}>
+                                {plan.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Data de Vencimento */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Data de Vencimento</label>
+                    <input
+                        type="date"
+                        name="dueDate"
+                        value={clientForm.dueDate}
+                        onChange={handleFormChange}
+                        required
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                </div>
+
+                {/* Observações */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Observações</label>
+                    <textarea
+                        name="notes"
+                        value={clientForm.notes}
+                        onChange={handleFormChange}
+                        rows="2"
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border focus:border-indigo-500 focus:ring-indigo-500"
+                    ></textarea>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                    <button
+                        type="submit"
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition duration-200"
+                    >
+                        {editingClient ? 'Salvar Edição' : 'Cadastrar Cliente'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsAdding(false);
+                            setEditingClient(null);
+                        }}
+                        className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-xl transition duration-200"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        );
+
+        // Renderização principal do Gerenciador de Clientes
+        return (
+            <div className="p-4 space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-3xl font-bold text-gray-800">Clientes</h2>
+                    <button
+                        onClick={() => { setIsAdding(true); setEditingClient(null); }}
+                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-xl shadow-md transition"
+                    >
+                        + Novo
+                    </button>
+                </div>
+
+                {(isAdding || editingClient) && <ClientForm />}
+
+                {!isAdding && !editingClient && (
+                    <div className="space-y-4">
+                        {/* Seção de Alertas de Vencimento */}
+                        <VencimentoAlerts clients={clients} generateWhatsAppLink={generateWhatsAppLink} />
+
+                        {/* Barra de Filtros e Busca */}
+                        <div className="bg-white p-4 rounded-xl shadow-md space-y-3">
+                            <input
+                                type="text"
+                                placeholder="Buscar cliente por nome..."
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                className="w-full rounded-lg border-gray-300 shadow-sm p-3 border focus:border-indigo-500 focus:ring-indigo-500"
+                            />
+                            <div className="flex gap-2">
+                                {/* Filtro por Status */}
+                                <select
+                                    value={filterStatus}
+                                    onChange={(e) => setFilterStatus(e.target.value)}
+                                    className="flex-1 rounded-lg border-gray-300 shadow-sm p-3 border bg-white"
+                                >
+                                    <option value="Todos">Todos Status</option>
+                                    <option value="Ativo">Ativo</option>
+                                    <option value="Vence Hoje">Vence Hoje</option>
+                                    <option value="Vence Amanhã">Vence Amanhã</option>
+                                    <option value="Vencido">Vencido</option>
+                                </select>
+                                {/* Filtro por Plano */}
+                                <select
+                                    value={filterPlan}
+                                    onChange={(e) => setFilterPlan(e.target.value)}
+                                    className="flex-1 rounded-lg border-gray-300 shadow-sm p-3 border bg-white"
+                                >
+                                    <option value="Todos">Todos Planos</option>
+                                    {PLAN_DETAILS.map(plan => (
+                                        <option key={plan.value} value={plan.value}>{plan.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Lista de Clientes */}
+                        <div className="space-y-3">
+                            {filteredClients.length > 0 ? (
+                                filteredClients.map(client => {
+                                    const status = calculateClientStatus(client.dueDate);
+                                    let statusColor = 'bg-green-100 text-green-800';
+                                    if (status === 'Vence Hoje' || status === 'Vence Amanhã') statusColor = 'bg-yellow-100 text-yellow-800';
+                                    if (status === 'Vencido' || client.status === 'Inativo') statusColor = 'bg-red-100 text-red-800';
+
+                                    return (
+                                        <div key={client.id} className="bg-white p-4 rounded-xl shadow-md border-l-4 border-indigo-500">
+                                            <div className="flex justify-between items-start">
+                                                <h4 className="text-lg font-semibold text-gray-900">{client.name}</h4>
+                                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusColor}`}>
+                                                    {status}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-600 mt-1">
+                                                Plano: {formatCurrency(client.planValue)} | Venc.: {formatDate(client.dueDate)}
+                                            </p>
+                                            <p className="text-xs text-gray-500 italic mt-1 truncate">Obs: {client.notes || 'Sem observações'}</p>
+                                            
+                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                <button
+                                                    onClick={() => setEditingClient(client)}
+                                                    className="text-indigo-600 hover:text-indigo-800 font-medium text-sm p-1 transition"
+                                                >
+                                                    Editar
+                                                </button>
+                                                <button
+                                                    onClick={() => toggleClientStatus(client)}
+                                                    className="text-red-600 hover:text-red-800 font-medium text-sm p-1 transition"
+                                                >
+                                                    {client.status === 'Inativo' ? 'Reativar' : 'Marcar Inativo'}
+                                                </button>
+                                                <button
+                                                    onClick={() => deleteClient(client)}
+                                                    className="text-gray-600 hover:text-gray-800 font-medium text-sm p-1 transition"
+                                                >
+                                                    Excluir
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-center text-gray-500 p-4 bg-white rounded-xl shadow-md">Nenhum cliente encontrado com os filtros aplicados.</p>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // --- COMPONENTE DE ALERTAS DE VENCIMENTO ---
+    const VencimentoAlerts = ({ clients, generateWhatsAppLink }) => {
+        const today = new Date();
+        
+        const expiringClients = useMemo(() => {
+            return clients.filter(c => {
+                const status = calculateClientStatus(c.dueDate);
+                return status === 'Vence Hoje' || status === 'Vence Amanhã';
+            });
+        }, [clients]);
+
+        const overdueClients = useMemo(() => {
+            return clients.filter(c => calculateClientStatus(c.dueDate) === 'Vencido' && c.status !== 'Inativo');
+        }, [clients]);
+
+        return (
+            <div className="space-y-4">
+                {/* Clientes Vencidos */}
+                {overdueClients.length > 0 && (
+                    <div className="bg-red-100 border-l-4 border-red-500 p-4 rounded-xl shadow-md">
+                        <h4 className="font-bold text-red-800 mb-2">Clientes Vencidos ({overdueClients.length})</h4>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {overdueClients.map(client => (
+                                <div key={client.id} className="text-sm text-red-700 p-2 bg-red-50 rounded-lg flex justify-between items-center">
+                                    <span>{client.name} ({formatDate(client.dueDate)})</span>
+                                    {client.phoneNumber && (
+                                        <a 
+                                            href={generateWhatsAppLink(client, 'vencido')} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-1 px-2 rounded-lg transition whitespace-nowrap"
+                                        >
+                                            <i className="fas fa-whatsapp"></i> Msg Vencida
+                                        </a>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Clientes a Vencer */}
+                {expiringClients.length > 0 && (
+                    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-xl shadow-md">
+                        <h4 className="font-bold text-yellow-800 mb-2">Vencendo Hoje/Amanhã ({expiringClients.length})</h4>
+                         <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {expiringClients.map(client => (
+                                <div key={client.id} className="text-sm text-yellow-700 p-2 bg-yellow-50 rounded-lg flex justify-between items-center">
+                                    <span>{client.name} ({calculateClientStatus(client.dueDate)})</span>
+                                    {client.phoneNumber && (
+                                        <a 
+                                            href={generateWhatsAppLink(client, 'vencimento')} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-1 px-2 rounded-lg transition whitespace-nowrap"
+                                        >
+                                            <i className="fas fa-whatsapp"></i> Msg Lembrete
+                                        </a>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // --- LÓGICA DE LANÇAMENTO RÁPIDO ---
+    const QuickEntry = ({ quickEntries, db, userId, appId, clients }) => {
+        const todayString = new Date().toISOString().split('T')[0];
+        const todayEntry = quickEntries.find(e => e.date === todayString);
+        
+        // Inicializa o estado do formulário com base nos planos fixos
+        const initialFormState = PLAN_DETAILS.reduce((acc, plan) => ({
+            ...acc,
+            [plan.value]: 0 // Quantidade de clientes
+        }), {});
+        
+        const [form, setForm] = useState(todayEntry ? todayEntry.data : initialFormState);
+        const [isEditing, setIsEditing] = useState(!todayEntry);
+
+        useEffect(() => {
+            if (todayEntry) {
+                // Se já existe, preenche com os dados do dia
+                setForm(todayEntry.data);
+                setIsEditing(false);
+            } else {
+                // Se não existe, reseta o formulário
+                setForm(initialFormState);
+                setIsEditing(true);
+            }
+        }, [quickEntries, todayString]);
+
+        // Manipula a mudança de quantidade de clientes no plano
+        const handlePlanChange = (value, count) => {
+            setForm(prev => ({ ...prev, [value]: Math.max(0, parseInt(count, 10) || 0) }));
+        };
+
+        // Calcula os resultados (Total, Custo, Lucro)
+        const { totalRevenue, totalCost, totalProfit } = useMemo(() => {
+            let revenue = 0;
+            let cost = 0;
+            let totalClients = 0;
+
+            Object.entries(form).forEach(([value, count]) => {
+                const planValue = Number(value);
+                const clientCount = Number(count);
+
+                revenue += planValue * clientCount;
+                cost += ACTIVATION_COST * clientCount;
+                totalClients += clientCount;
+            });
+
+            return {
+                totalRevenue: revenue,
+                totalCost: cost,
+                totalProfit: revenue - cost,
+                totalClients: totalClients,
+            };
+        }, [form]);
+
+        // Salva o lançamento diário no Firestore
+        const saveEntry = async (e) => {
+            e.preventDefault();
+            if (!db || !userId) return;
+
+            const collectionRef = collection(db, `/artifacts/${appId}/users/${userId}/quickEntries`);
+            const dateAsTimestamp = Timestamp.fromDate(new Date(todayString));
+
+            try {
+                const entryData = {
+                    date: dateAsTimestamp,
+                    data: form, // Guarda a contagem por plano
+                    revenue: totalRevenue,
+                    cost: totalCost,
+                    profit: totalProfit,
+                    updatedAt: Timestamp.now(),
+                };
+
+                if (todayEntry) {
+                    // Atualiza a entrada existente
+                    const docRef = doc(db, collectionRef.path, todayEntry.id);
+                    await updateDoc(docRef, entryData);
+                } else {
+                    // Adiciona nova entrada
+                    await addDoc(collectionRef, entryData);
+                }
+                
+                setIsEditing(false);
+                openModal('Sucesso', `Lançamento diário de ${formatDate(todayString)} salvo com sucesso!`);
+            } catch (error) {
+                console.error("Erro ao salvar lançamento rápido:", error);
+                openModal('Erro', `Não foi possível salvar o lançamento: ${error.message}`);
+            }
+        };
+
+        return (
+            <div className="p-4 space-y-4">
+                <h2 className="text-3xl font-bold text-gray-800 mb-4">Lançamento Rápido</h2>
+                
+                <div className="bg-white p-4 rounded-xl shadow-lg space-y-4">
+                    <p className="text-lg font-semibold text-indigo-600 border-b pb-2">Lançamento para: {formatDate(todayString)}</p>
+                    
+                    <form onSubmit={saveEntry} className="space-y-3">
+                        {PLAN_DETAILS.map(plan => (
+                            <div key={plan.value} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                                <label className="text-gray-700 font-medium">{plan.label}</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={form[plan.value] || 0}
+                                        onChange={(e) => handlePlanChange(plan.value, e.target.value)}
+                                        disabled={!isEditing}
+                                        className="w-20 text-center rounded-lg border-gray-300 shadow-sm p-2 disabled:bg-gray-200"
+                                    />
+                                    <span className="text-sm text-gray-500">Clientes</span>
+                                </div>
+                            </div>
+                        ))}
+                        
+                        {/* Resultado do Cálculo */}
+                        <div className="pt-4 space-y-1 border-t mt-4">
+                            <p className="flex justify-between font-medium text-gray-800">
+                                <span>Total Recebido:</span>
+                                <span className="text-green-600">{formatCurrency(totalRevenue)}</span>
+                            </p>
+                            <p className="flex justify-between text-sm text-gray-600">
+                                <span>Total de Custo (R${ACTIVATION_COST} x {Object.values(form).reduce((a, b) => a + b, 0)}):</span>
+                                <span className="text-red-600">{formatCurrency(totalCost)}</span>
+                            </p>
+                            <p className="flex justify-between text-xl font-bold text-gray-900 border-t pt-2 mt-2">
+                                <span>Lucro Total:</span>
+                                <span className="text-indigo-600">{formatCurrency(totalProfit)}</span>
+                            </p>
+                        </div>
+
+                        {isEditing ? (
+                            <button
+                                type="submit"
+                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition duration-200 mt-4"
+                            >
+                                Salvar Lançamento
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setIsEditing(true)}
+                                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl shadow-md transition duration-200 mt-4"
+                            >
+                                Editar Lançamento
+                            </button>
+                        )}
+                    </form>
+                </div>
+            </div>
+        );
+    };
+
+    // --- LÓGICA DO DASHBOARD ---
+    const Dashboard = ({ clients, quickEntries }) => {
+        
+        // 1. Métricas de Clientes
+        const activeClients = useMemo(() => 
+            clients.filter(c => calculateClientStatus(c.dueDate) === 'Ativo').length, [clients]);
+        const inactiveClients = useMemo(() => 
+            clients.filter(c => calculateClientStatus(c.dueDate) === 'Vencido' || c.status === 'Inativo').length, [clients]);
+        const totalClients = clients.length;
+
+        // Clientes por Plano (ativos e inativos)
+        const clientsByPlan = useMemo(() => {
+            const counts = PLAN_DETAILS.reduce((acc, plan) => ({
+                ...acc,
+                [plan.value]: { count: 0, label: plan.label }
+            }), {});
+
+            clients.forEach(client => {
+                if (counts[client.planValue]) {
+                    counts[client.planValue].count++;
+                }
+            });
+            return Object.values(counts);
+        }, [clients]);
+
+        // 2. Métricas Financeiras
+        const todayString = new Date().toISOString().split('T')[0];
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+
+        const financialMetrics = useMemo(() => {
+            const metrics = {
+                dailyRevenue: 0, monthlyRevenue: 0, annualRevenue: 0,
+                dailyProfit: 0, monthlyProfit: 0, annualProfit: 0,
+            };
+
+            quickEntries.forEach(entry => {
+                const entryDate = new Date(entry.date);
+                const isToday = entry.date === todayString;
+                const isThisMonth = entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
+                const isThisYear = entryDate.getFullYear() === currentYear;
+
+                if (isToday) {
+                    metrics.dailyRevenue += entry.revenue || 0;
+                    metrics.dailyProfit += entry.profit || 0;
+                }
+                if (isThisMonth) {
+                    metrics.monthlyRevenue += entry.revenue || 0;
+                    metrics.monthlyProfit += entry.profit || 0;
+                }
+                if (isThisYear) {
+                    metrics.annualRevenue += entry.revenue || 0;
+                    metrics.annualProfit += entry.profit || 0;
+                }
+            });
+
+            return metrics;
+        }, [quickEntries, todayString, currentMonth, currentYear]);
+
+
+        // Componente de Cartão de Métrica
+        const MetricCard = ({ title, value, colorClass }) => (
+            <div className="bg-white p-4 rounded-xl shadow-md flex flex-col justify-center items-center">
+                <p className="text-sm font-medium text-gray-500">{title}</p>
+                <p className={`text-2xl font-bold ${colorClass} mt-1`}>{value}</p>
+            </div>
+        );
+
+        return (
+            <div className="p-4 space-y-6">
+                <h2 className="text-3xl font-bold text-gray-800">Dashboard</h2>
+                
+                {/* Métricas de Clientes */}
+                <div className="grid grid-cols-3 gap-3">
+                    <MetricCard 
+                        title="Total Clientes" 
+                        value={totalClients} 
+                        colorClass="text-indigo-600" 
+                    />
+                    <MetricCard 
+                        title="Ativos" 
+                        value={activeClients} 
+                        colorClass="text-green-600" 
+                    />
+                    <MetricCard 
+                        title="Inativos/Vencidos" 
+                        value={inactiveClients} 
+                        colorClass="text-red-600" 
+                    />
+                </div>
+
+                {/* Métricas Financeiras - Faturamento */}
+                <div className="space-y-3 bg-white p-4 rounded-xl shadow-lg">
+                    <h3 className="text-xl font-bold text-indigo-600 border-b pb-2">Faturamento (Rendimento)</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                        <MetricCard 
+                            title="Diário" 
+                            value={formatCurrency(financialMetrics.dailyRevenue)} 
+                            colorClass="text-gray-800" 
+                        />
+                        <MetricCard 
+                            title="Mensal" 
+                            value={formatCurrency(financialMetrics.monthlyRevenue)} 
+                            colorClass="text-gray-800" 
+                        />
+                        <MetricCard 
+                            title="Anual" 
+                            value={formatCurrency(financialMetrics.annualRevenue)} 
+                            colorClass="text-gray-800" 
+                        />
+                    </div>
+                </div>
+
+                {/* Métricas Financeiras - Lucro */}
+                <div className="space-y-3 bg-white p-4 rounded-xl shadow-lg">
+                    <h3 className="text-xl font-bold text-green-600 border-b pb-2">Lucro (Faturamento - Custo)</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                        <MetricCard 
+                            title="Diário" 
+                            value={formatCurrency(financialMetrics.dailyProfit)} 
+                            colorClass="text-green-700" 
+                        />
+                        <MetricCard 
+                            title="Mensal" 
+                            value={formatCurrency(financialMetrics.monthlyProfit)} 
+                            colorClass="text-green-700" 
+                        />
+                        <MetricCard 
+                            title="Anual" 
+                            value={formatCurrency(financialMetrics.annualProfit)} 
+                            colorClass="text-green-700" 
+                        />
+                    </div>
+                </div>
+
+                {/* Clientes por Plano */}
+                <div className="space-y-3 bg-white p-4 rounded-xl shadow-lg">
+                    <h3 className="text-xl font-bold text-gray-700 border-b pb-2">Clientes por Plano</h3>
+                    <div className="space-y-2">
+                        {clientsByPlan
+                            .sort((a, b) => b.count - a.count)
+                            .map((plan, index) => (
+                                <div key={index} className="flex justify-between items-center text-sm">
+                                    <span className="font-medium text-gray-700">{plan.label}</span>
+                                    <span className="text-indigo-600 font-semibold">{plan.count} clientes</span>
+                                </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- LÓGICA DE RELATÓRIOS ---
+    const Reports = ({ clients, quickEntries }) => {
+        const [reportType, setReportType] = useState('Mensal');
+        const [selectedDate, setSelectedDate] = useState(new Date().toISOString().substring(0, 7)); // YYYY-MM
+        
+        // Função que calcula o relatório (Mensal ou Anual)
+        const generateReport = useCallback((type, date) => {
+            const isMonthly = type === 'Mensal';
+            let targetYear = Number(date.substring(0, 4));
+            let targetMonth = isMonthly ? Number(date.substring(5, 7)) - 1 : null; // Mês é 0-index
+
+            // 1. Agrega dados financeiros dos Lançamentos Rápidos
+            const financialData = quickEntries.reduce((acc, entry) => {
+                const entryDate = new Date(entry.date);
+                const year = entryDate.getFullYear();
+                const month = entryDate.getMonth();
+
+                const isTarget = isMonthly
+                    ? year === targetYear && month === targetMonth
+                    : year === targetYear;
+
+                if (isTarget) {
+                    acc.totalRevenue += entry.revenue;
+                    acc.totalCost += entry.cost;
+                    acc.totalProfit += entry.profit;
+                }
+                return acc;
+            }, { totalRevenue: 0, totalCost: 0, totalProfit: 0 });
+
+            // 2. Agrega dados de Clientes e Ativações (Clientes cadastrados ou com vencimento no período)
+            const activeClients = clients.filter(c => {
+                const dueDate = new Date(c.dueDate);
+                const clientYear = dueDate.getFullYear();
+                const clientMonth = dueDate.getMonth();
+
+                // Considera ativo se o vencimento for no mês/ano alvo
+                return isMonthly 
+                    ? clientYear === targetYear && clientMonth === targetMonth
+                    : clientYear === targetYear;
+            }).length;
+
+            const activations = clients
+                .filter(c => {
+                    const createdAt = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(); // Assume hoje se não houver data
+                    const activationYear = createdAt.getFullYear();
+                    const activationMonth = createdAt.getMonth();
+
+                    // Considera ativação se o cadastro ocorreu no período
+                    return isMonthly
+                        ? activationYear === targetYear && activationMonth === targetMonth
+                        : activationYear === targetYear;
+                })
+                .sort((a, b) => (a.createdAt?.toDate ? a.createdAt.toDate() : 0) - (b.createdAt?.toDate ? b.createdAt.toDate() : 0));
+
+
+            return { activeClients, ...financialData, activations };
+        }, [clients, quickEntries]);
+
+        const reportData = useMemo(() => generateReport(reportType, selectedDate), [reportType, selectedDate, generateReport]);
+
+        // Define o título do relatório (Mês/Ano)
+        const reportTitle = reportType === 'Mensal' 
+            ? `Relatório Mensal - ${new Date(selectedDate + '-01').toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' })}`
+            : `Relatório Anual - ${selectedDate}`;
+
+        return (
+            <div className="p-4 space-y-6">
+                <h2 className="text-3xl font-bold text-gray-800">Relatórios</h2>
+                
+                {/* Controles de Filtro */}
+                <div className="bg-white p-4 rounded-xl shadow-lg space-y-3">
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setReportType('Mensal')}
+                            className={`flex-1 py-2 rounded-xl font-semibold transition ${reportType === 'Mensal' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                        >
+                            Mensal
+                        </button>
+                        <button
+                            onClick={() => setReportType('Anual')}
+                            className={`flex-1 py-2 rounded-xl font-semibold transition ${reportType === 'Anual' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                        >
+                            Anual
+                        </button>
+                    </div>
+                    {reportType === 'Mensal' ? (
+                        <input
+                            type="month"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="w-full rounded-lg border-gray-300 shadow-sm p-3 border focus:border-indigo-500 focus:ring-indigo-500"
+                        />
+                    ) : (
+                        <input
+                            type="number"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            min="2020"
+                            max="2050"
+                            className="w-full rounded-lg border-gray-300 shadow-sm p-3 border focus:border-indigo-500 focus:ring-indigo-500"
+                        />
+                    )}
+                </div>
+
+                {/* Exibição do Relatório */}
+                <div className="bg-white p-4 rounded-xl shadow-lg space-y-4">
+                    <h3 className="text-xl font-bold text-indigo-600 border-b pb-2">{reportTitle}</h3>
+                    
+                    {/* Resumo Financeiro */}
+                    <div className="space-y-2">
+                        <p className="flex justify-between font-medium text-gray-800">
+                            <span className="text-gray-500">Clientes Ativos (Venc. no Período):</span>
+                            <span className="font-bold text-indigo-700">{reportData.activeClients}</span>
+                        </p>
+                        <p className="flex justify-between font-medium text-gray-800">
+                            <span className="text-gray-500">Total Recebido:</span>
+                            <span className="font-bold text-green-600">{formatCurrency(reportData.totalRevenue)}</span>
+                        </p>
+                        <p className="flex justify-between text-sm text-gray-600">
+                            <span className="text-gray-500">Total de Custo ({formatCurrency(ACTIVATION_COST)} por ativação):</span>
+                            <span className="font-bold text-red-600">{formatCurrency(reportData.totalCost)}</span>
+                        </p>
+                        <p className="flex justify-between text-lg font-bold text-gray-900 border-t pt-2 mt-2">
+                            <span>Lucro Final:</span>
+                            <span className="text-indigo-600">{formatCurrency(reportData.totalProfit)}</span>
+                        </p>
+                    </div>
+
+                    {/* Lista de Ativações */}
+                    <div className="pt-4 border-t">
+                        <h4 className="font-bold text-gray-700 mb-2">Lista de Cadastros/Ativações no Período ({reportData.activations.length})</h4>
+                        <div className="space-y-1 max-h-60 overflow-y-auto">
+                            {reportData.activations.length > 0 ? (
+                                reportData.activations.map(client => (
+                                    <div key={client.id} className="text-sm p-2 bg-gray-50 rounded-lg flex justify-between">
+                                        <span>{client.name}</span>
+                                        <span className="text-indigo-600 font-medium">{formatCurrency(client.planValue)}</span>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-gray-500 italic">Nenhum cliente cadastrado no período.</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- COMPONENTE DE CONFIGURAÇÕES ---
+    const Settings = ({ userId }) => (
+        <div className="p-4 space-y-6">
+            <h2 className="text-3xl font-bold text-gray-800">Configurações</h2>
+            
+            <div className="bg-white p-4 rounded-xl shadow-lg space-y-3">
+                <h3 className="text-xl font-bold text-indigo-600 mb-4">Informações da Conta</h3>
+                
+                <p className="text-sm text-gray-600">Seu ID de Usuário (Necessário para suporte e colaboração):</p>
+                <div className="bg-gray-100 p-3 rounded-lg break-all font-mono text-xs">
+                    {userId}
+                </div>
+                <p className="text-sm text-gray-600 mt-4">
+                    <span className="font-bold">Custo Fixo por Ativação:</span> {formatCurrency(ACTIVATION_COST)}
+                </p>
+                <p className="text-sm text-gray-600">
+                    <span className="font-bold">Plataforma de Armazenamento:</span> Google Firestore (Real-Time)
+                </p>
+            </div>
+        </div>
+    );
+    
+    // --- MAPA DE TELAS ---
+    const renderView = () => {
+        switch (activeView) {
+            case 'Dashboard':
+                return <Dashboard clients={clients} quickEntries={quickEntries} />;
+            case 'Clientes':
+                return <ClientManager clients={clients} db={db} userId={userId} appId={appId} />;
+            case 'Lançamento':
+                return <QuickEntry quickEntries={quickEntries} db={db} userId={userId} appId={appId} clients={clients} />;
+            case 'Relatórios':
+                return <Reports clients={clients} quickEntries={quickEntries} />;
+            case 'Configurações':
+                return <Settings userId={displayUserId} />;
+            default:
+                return <Dashboard clients={clients} quickEntries={quickEntries} />;
+        }
+    };
+
+    // --- RENDERIZAÇÃO PRINCIPAL DO APP ---
+    return (
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans antialiased">
+            
+            {/* Cabeçalho */}
+            <header className="bg-indigo-600 text-white p-4 shadow-lg sticky top-0 z-10">
+                <h1 className="text-2xl font-extrabold text-center">LiveTV Manager</h1>
+            </header>
+            
+            {/* Conteúdo da Tela Atual */}
+            <main className="flex-grow pb-20 overflow-y-auto">
+                {renderView()}
+            </main>
+            
+            {/* Modal de Alerta */}
+            <Modal
+                title={modal.title}
+                isOpen={modal.isOpen}
+                onClose={closeModal}
+            >
+                {modal.content}
+            </Modal>
+
+            {/* Menu de Navegação Inferior (Mobile-Friendly) */}
+            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-20">
+                <div className="flex justify-around h-16">
+                    {['Dashboard', 'Clientes', 'Lançamento', 'Relatórios', 'Configurações'].map((view) => (
+                        <button
+                            key={view}
+                            onClick={() => setActiveView(view)}
+                            className={`flex flex-col items-center justify-center p-1 flex-1 text-xs font-medium transition duration-150 ${
+                                activeView === view 
+                                    ? 'text-indigo-600 border-t-2 border-indigo-600' 
+                                    : 'text-gray-500 hover:text-indigo-500'
+                            }`}
+                        >
+                            <i className={`text-xl ${
+                                view === 'Dashboard' ? 'fas fa-chart-line' :
+                                view === 'Clientes' ? 'fas fa-users' :
+                                view === 'Lançamento' ? 'fas fa-hand-holding-usd' :
+                                view === 'Relatórios' ? 'fas fa-file-invoice-dollar' :
+                                'fas fa-cogs'
+                            }`}></i>
+                            <span className="mt-1">{view}</span>
+                        </button>
+                    ))}
+                </div>
+            </nav>
+            {/* Incluindo Font Awesome para ícones */}
+            <script src="https://kit.fontawesome.com/a076d05399.js" crossOrigin="anonymous"></script>
+        </div>
+    );
+};
+
+export default App;
