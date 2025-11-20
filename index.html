@@ -1,64 +1,105 @@
-/* ===========================
-   BASE / RESET
-=========================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live TV – Gestão</title>
 
-body {
-    background: var(--bg);
-    color: var(--text);
-    transition: background 0.3s ease, color 0.3s ease;
-}
+    <!-- Variáveis de Tema -->
+    <style>
+        :root {
+            --bg: #0d0d0d;
+            --bg-header: #141414;
+            --bg-card: #1a1a1a;
+            --text: #ffffff;
+            --text-soft: #c7c7c7;
+            --border-color: #2a2a2a;
 
-/* ===========================
-   TEMA CLARO
-=========================== */
-:root {
-    --bg: #f5f7fa;
-    --bg-card: #ffffff;
-    --bg-header: #ffffff;
+            --green: #00c853;
+            --yellow: #ffeb3b;
+            --blue: #2196f3;
+            --purple: #9c27b0;
+            --red: #ff5252;
+        }
 
-    --text: #111827;
-    --text-soft: #4b5563;
+        body.light {
+            --bg: #f4f4f4;
+            --bg-header: #ffffff;
+            --bg-card: #ffffff;
+            --text: #1a1a1a;
+            --text-soft: #555;
+            --border-color: #ddd;
+        }
+    </style>
 
-    --border-color: #e5e7eb;
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
-    --purple: #7c3aed;
-    --purple-soft: #a78bfa;
+    <!-- ===========================
+         HEADER
+    ============================ -->
+    <header>
+        <h1>Live TV – Gestão</h1>
+    </header>
 
-    --green: #22c55e;
-    --red: #ef4444;
-    --yellow: #facc15;
-    --blue: #3b82f6;
-}
+    <main style="padding: 20px;">
 
-/* ===========================
-   TEMA ESCURO → ATIVADO COM: body.dark
-=========================== */
-body.dark {
-    --bg: #0d1117;
-    --bg-card: #111827;
-    --bg-header: #0f1623;
+        <!-- ===========================
+             TABS (Diário / Mensal / Anual)
+        ============================ -->
+        <div class="tabs">
+            <div class="tab active">Diário</div>
+            <div class="tab">Mensal</div>
+            <div class="tab">Anual</div>
+        </div>
 
-    --text: #e5e7eb;
-    --text-soft: #9ca3af;
+        <!-- ===========================
+             CARDS
+        ============================ -->
+        <div class="card green">
+            <div class="card-title">Ativações Hoje</div>
+            <div class="card-value">12</div>
+            <div class="card-icon">📈</div>
+        </div>
 
-    --border-color: #1f2937;
+        <div class="card blue">
+            <div class="card-title">Clientes Ativos</div>
+            <div class="card-value">842</div>
+            <div class="card-icon">👥</div>
+        </div>
 
-    --purple: #c084fc;
-    --purple-soft: #a855f7;
+        <div class="card yellow">
+            <div class="card-title">Faturamento do Mês</div>
+            <div class="card-value">R$ 12.380</div>
+            <div class="card-icon">💰</div>
+        </div>
 
-    --green: #22c55e;
-    --red: #ef4444;
-    --yellow: #facc15;
-    --blue: #60a5fa;
-}
+        <div class="card purple">
+            <div class="card-title">Lucro Líquido</div>
+            <div class="card-value">R$ 6.740</div>
+            <div class="card-icon">📊</div>
+        </div>
 
-/* Transições suaves */
-.card, header, .btn {
-    transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
-}
+        <!-- BOTÕES -->
+        <br><br>
+
+        <button id="toggleTheme" class="btn btn-purple">
+            🌓
+        </button>
+
+    </main>
+
+    <!-- ===========================
+         JS – alternar tema
+    ============================ -->
+    <script>
+        const toggleBtn = document.getElementById("toggleTheme");
+
+        toggleBtn.addEventListener("click", () => {
+            document.body.classList.toggle("light");
+        });
+    </script>
+
+</body>
+</html>
