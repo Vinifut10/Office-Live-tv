@@ -1,1 +1,111 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live TV – Gestão</title>
+
+<style>
+    body { margin:0; font-family: Arial, sans-serif; background:#0d0d0d; color:white; }
+    header { background:#ffcc00; padding:20px; text-align:center; font-size:22px; font-weight:bold; color:#000; }
+    nav { display:flex; justify-content:space-around; background:#1a1a1a; padding:10px; position:sticky; top:0; }
+    nav button { flex:1; margin:5px; padding:12px; background:#ffcc00; color:black; border:none; border-radius:6px; font-size:15px; font-weight:bold; cursor:pointer; }
+    .page { display:none; padding:20px; }
+    .active { display:block; }
+    ul { list-style:none; padding:0; }
+    li { background:#1f1f1f; padding:12px; margin:6px 0; border-radius:6px; }
+    form input, form select, form textarea { width:100%; padding:12px; margin:8px 0; border-radius:6px; border:none; background:#2a2a2a; color:white; }
+    form button { width:100%; padding:14px; background:#ffcc00; color:black; border:none; border-radius:6px; font-weight:bold; }
+    .card { background:#1f1f1f; padding:15px; border-radius:8px; margin-bottom:15px; text-align:center; }
+    .card h3 { margin:0; color:#ffcc00; }
+</style>
+</head>
+
+<body>
+
+<header>📺 Live TV – Gestão</header>
+
+<nav>
+    <button onclick="showPage('dashboard')">Dashboard</button>
+    <button onclick="showPage('clientes')">Clientes</button>
+    <button onclick="showPage('addCliente')">Adicionar</button>
+</nav>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="page active">
+    <h2>Dashboard</h2>
+    <div class="card"><h3 id="totalClientes">0</h3><p>Total de Clientes</p></div>
+    <div class="card"><h3 id="fatTotal">R$ 0,00</h3><p>Faturamento Total</p></div>
+    <div class="card"><h3 id="lucroTotal">R$ 0,00</h3><p>Lucro Total</p></div>
+</section>
+
+<!-- CLIENTES -->
+<section id="clientes" class="page">
+    <h2>Clientes</h2>
+    <ul id="listaClientes"></ul>
+</section>
+
+<!-- ADICIONAR CLIENTE -->
+<section id="addCliente" class="page">
+    <h2>Novo Cliente</h2>
+    <form onsubmit="addCliente(event)">
+        <input type="text" id="nome" placeholder="Nome" required>
+        <input type="text" id="telefone" placeholder="Telefone" required>
+        <select id="plano">
+            <option value="30">R$ 30</option>
+            <option value="25">R$ 25</option>
+            <option value="21.50">R$ 21,50</option>
+            <option value="20">R$ 20</option>
+            <option value="10">R$ 10</option>
+            <option value="0">Grátis</option>
+        </select>
+        <textarea id="obs" placeholder="Observações"></textarea>
+        <button type="submit">Salvar</button>
+    </form>
+</section>
+
+<script>
+// Banco local temporário
+let clientes = [];
+
+// Mostrar páginas
+function showPage(id) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+}
+
+// Atualizar lista e dashboard
+function atualizar() {
+    const ul = document.getElementById("listaClientes");
+    ul.innerHTML = "";
+    clientes.forEach((c, i) => {
+        let li = document.createElement("li");
+        li.innerHTML = `<strong>${c.nome}</strong> — Plano R$${c.plano}<br><small>${c.telefone}</small>`;
+        ul.appendChild(li);
+    });
+
+    document.getElementById("totalClientes").innerText = clientes.length;
+    let faturamento = clientes.reduce((t,c)=> t + Number(c.plano), 0);
+    let lucro = clientes.reduce((t,c)=> t + (Number(c.plano) - 10.5), 0);
+
+    document.getElementById("fatTotal").innerText = "R$ " + faturamento.toFixed(2);
+    document.getElementById("lucroTotal").innerText = "R$ " + lucro.toFixed(2);
+}
+
+// Adicionar novo cliente
+function addCliente(e) {
+    e.preventDefault();
+    let novo = {
+        nome: document.getElementById("nome").value,
+        telefone: document.getElementById("telefone").value,
+        plano: document.getElementById("plano").value,
+        obs: document.getElementById("obs").value
+    };
+    clientes.push(novo);
+    atualizar();
+    alert("Cliente adicionado! (Lembrando: para salvar permanentemente, edite o JSON no GitHub)");
+}
+</script>
+
+</body>
+</html>
