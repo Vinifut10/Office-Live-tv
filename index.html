@@ -1,119 +1,56 @@
-Crie um aplicativo completo e simples em React JSX, ideal para iniciantes, totalmente gratuito, sem back-end avançado.
-O app deve controlar clientes e gerar relatórios financeiros da minha empresa de IPTV chamada Live TV.
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live TV – Gestão</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-OBJETIVO DO APP
+<header>📺 Live TV – Gestão</header>
 
-Quero ter duas formas de uso:
-	1.	Modo rápido → apenas lançar diariamente a quantidade de clientes por plano para gerar faturamento e lucro.
-	2.	Modo completo → cadastrar cada cliente individualmente, com nome, plano, data de vencimento, status e observação.
+<nav>
+    <button data-page="dashboard">Dashboard</button>
+    <button data-page="clientes">Clientes</button>
+    <button data-page="addCliente">Adicionar</button>
+</nav>
 
-⸻
+<!-- DASHBOARD -->
+<section id="dashboard" class="page active">
+    <h2>Dashboard</h2>
+    <div class="card"><h3 id="totalClientes">0</h3><p>Total de Clientes</p></div>
+    <div class="card"><h3 id="fatTotal">R$ 0,00</h3><p>Faturamento Total</p></div>
+    <div class="card"><h3 id="lucroTotal">R$ 0,00</h3><p>Lucro Total</p></div>
+</section>
 
-PLANOS QUE DEVO CADASTRAR (FIXOS)
-	•	R$30
-	•	R$25
-	•	R$21,50
-	•	R$20
-	•	R$10
-Todos possuem custo fixo de ativação R$10,50, inclusive gratuitos.
+<!-- CLIENTES -->
+<section id="clientes" class="page">
+    <h2>Clientes</h2>
+    <ul id="listaClientes"></ul>
+</section>
 
-⸻
+<!-- ADICIONAR CLIENTE -->
+<section id="addCliente" class="page">
+    <h2>Novo Cliente</h2>
+    <form id="formAdd">
+        <input type="text" id="nome" placeholder="Nome" required>
+        <input type="text" id="telefone" placeholder="Telefone" required>
 
-FUNCIONALIDADES QUE O APP DEVE TER
+        <select id="plano">
+            <option value="30">R$ 30</option>
+            <option value="25">R$ 25</option>
+            <option value="21.5">R$ 21,50</option>
+            <option value="20">R$ 20</option>
+            <option value="10">R$ 10</option>
+            <option value="0">Grátis</option>
+        </select>
 
-1. Tela Inicial (Dashboard)
-	•	Total de clientes ativos
-	•	Total de clientes inativos
-	•	Faturamento diário, mensal e anual
-	•	Lucro diário, mensal e anual (já subtraindo custo de R$10,50 por ativação)
-	•	Quantidade de clientes por plano
+        <textarea id="obs" placeholder="Observações"></textarea>
+        <button type="submit">Salvar</button>
+    </form>
+</section>
 
-2. Lançamento Rápido
-
-Apenas digitar a quantidade de clientes em cada plano naquele dia:
-	•	Exemplo:
-	•	Plano R$30 → 20 clientes
-	•	Plano R$25 → 10 clientes
-	•	O app automaticamente calcula:
-	•	Total recebido
-	•	Total de custo
-	•	Lucro
-	•	Armazena histórico diário
-
-3. Cadastro de Clientes
-
-Informações que cada cliente precisa ter:
-	•	Nome completo
-	•	Plano
-	•	Data de vencimento
-	•	Status (ativo / inativo) automático pelo vencimento
-	•	Observações
-	•	Botão de buscar cliente pelo nome
-	•	Botão de editar
-	•	Botão de marcar como ativo ou inativo
-
-4. Filtros e Busca
-	•	Buscar cliente por nome
-	•	Filtrar por ativo / inativo
-	•	Filtrar por plano
-
-5. Alerta de Vencimento
-	•	Listar automaticamente clientes que vencem hoje ou amanhã
-	•	Listar clientes vencidos
-
-6. Botão “Enviar mensagem pelo WhatsApp”
-
-Para cada cliente vencido, gerar botão:
-	•	“Enviar mensagem de vencimento”
-	•	“Enviar mensagem de plano vencido”
-
-O link deve ser algo assim:
-
-https://wa.me/55NUMERO?text=MENSAGEM_AQUI
-
-7. Relatório Mensal e Anual
-
-Gerar automaticamente:
-	•	Quantidade de clientes ativos
-	•	Total recebido
-	•	Total de custo
-	•	Lucro
-	•	Lista de ativações do mês
-
-8. Armazenamento
-
-Usar algo simples:
-	•	LocalStorage ou IndexedDB
-(iniciantes conseguem usar e não precisa de servidor)
-
-⸻
-
-INTERFACE
-
-Quero uma interface simples, moderna e clara, com:
-	•	Cores leves
-	•	Botões grandes
-	•	Campos fáceis de preencher
-	•	Menu inferior com abas: Dashboard | Clientes | Lançamento | Relatórios | Configurações
-
-⸻
-
-EXTRA
-
-Inclua:
-	•	Código 100% comentado
-	•	Arquitetura organizada
-	•	Explicação de como rodar o projeto passo a passo
-	•	Versão final em React JSX
-	•	Estrutura com componentes separados
-	•	Banco simulado usando LocalStorage
-
-⸻
-
-ENTREGA FINAL
-
-Quero:
-	1.	Código completo do app
-	2.	Estrutura de pastas
-	3.	Instruções para rodar no celular (via PWA)
-	4.	Passo a passo para instalar Node, criar projeto e rodar tudo
+<script src="app.js"></script>
+</body>
+</html>
