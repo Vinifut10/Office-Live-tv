@@ -1,64 +1,111 @@
 /* ===========================
-   BASE / RESET
+   HEADER
 =========================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
+header {
+    background: var(--bg-header);
+    padding: 25px 20px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-body {
-    background: var(--bg);
+header h1 {
+    color: var(--purple);
+    font-size: 26px;
+    font-weight: 700;
+}
+
+/* ===========================
+   TABS (Diário / Mensal / Anual)
+=========================== */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.tab {
+    padding: 10px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
     color: var(--text);
-    transition: background 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+}
+
+.tab.active {
+    background: var(--purple);
+    color: white;
 }
 
 /* ===========================
-   TEMA CLARO
+   BOTÕES GRANDES
 =========================== */
-:root {
-    --bg: #f5f7fa;
-    --bg-card: #ffffff;
-    --bg-header: #ffffff;
+.btn {
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
-    --text: #111827;
-    --text-soft: #4b5563;
+.btn-green { background: var(--green); }
+.btn-yellow { background: var(--yellow); color: #000; }
+.btn-blue { background: var(--blue); }
+.btn-purple { background: var(--purple); }
 
-    --border-color: #e5e7eb;
+/* ===========================
+   CARDS
+=========================== */
+.card {
+    background: var(--bg-card);
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
 
-    --purple: #7c3aed;
-    --purple-soft: #a78bfa;
+.card-title {
+    color: var(--text-soft);
+    font-size: 15px;
+    margin-bottom: 8px;
+}
 
-    --green: #22c55e;
-    --red: #ef4444;
-    --yellow: #facc15;
-    --blue: #3b82f6;
+.card-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* Borda colorida igual à imagem */
+.card.green { border-bottom: 4px solid var(--green); }
+.card.red { border-bottom: 4px solid var(--red); }
+.card.blue { border-bottom: 4px solid var(--blue); }
+.card.yellow { border-bottom: 4px solid var(--yellow); }
+.card.purple { border-bottom: 4px solid var(--purple); }
+
+/* Ícone no canto direito */
+.card-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    opacity: 0.8;
+    font-size: 20px;
 }
 
 /* ===========================
-   TEMA ESCURO → ATIVADO COM: body.dark
+   TEMA TOGGLE BUTTON
 =========================== */
-body.dark {
-    --bg: #0d1117;
-    --bg-card: #111827;
-    --bg-header: #0f1623;
-
-    --text: #e5e7eb;
-    --text-soft: #9ca3af;
-
-    --border-color: #1f2937;
-
-    --purple: #c084fc;
-    --purple-soft: #a855f7;
-
-    --green: #22c55e;
-    --red: #ef4444;
-    --yellow: #facc15;
-    --blue: #60a5fa;
-}
-
-/* Transições suaves */
-.card, header, .btn {
-    transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
+#toggleTheme {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 }
