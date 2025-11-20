@@ -1,56 +1,870 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live TV – Gestão</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, onSnapshot, query, where, doc, setDoc, addDoc, updateDoc, getDocs } from 'firebase/firestore';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { Users, DollarSign, BarChart3, TrendingUp, Bell, AlertTriangle, CheckCircle, Package, MinusCircle, PlusCircle, Calendar, Zap, Sun, Moon } from 'lucide-react';
 
-<header>📺 Live TV – Gestão</header>
+// Variáveis globais obrigatórias do ambiente Canvas
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-<nav>
-    <button data-page="dashboard">Dashboard</button>
-    <button data-page="clientes">Clientes</button>
-    <button data-page="addCliente">Adicionar</button>
-</nav>
+// --- Configuração e Inicialização Firebase ---
+let app, db, auth;
+if (Object.keys(firebaseConfig).length) {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+} else {
+    console.error("Firebase config is missing. Data persistence will not work.");
+}
 
-<!-- DASHBOARD -->
-<section id="dashboard" class="page active">
-    <h2>Dashboard</h2>
-    <div class="card"><h3 id="totalClientes">0</h3><p>Total de Clientes</p></div>
-    <div class="card"><h3 id="fatTotal">R$ 0,00</h3><p>Faturamento Total</p></div>
-    <div class="card"><h3 id="lucroTotal">R$ 0,00</h3><p>Lucro Total</p></div>
-</section>
+// Constantes
+const PLANS = [
+    { name: 'Plano A', value: 30.00 },
+    { name: 'Plano B', value: 25.00 },
+    { name: 'Plano C', value: 21.50 },
+    { name: 'Plano D', value: 20.00 },
+    { name: 'Plano E', value: 10.00 },
+    { name: 'Grátis', value: 0.00 },
+];
+const ACTIVATION_COST = 10.50;
+const MARY_RATE = 1.00; // R$1,00 por cliente ativo no mês
 
-<!-- CLIENTES -->
-<section id="clientes" class="page">
-    <h2>Clientes</h2>
-    <ul id="listaClientes"></ul>
-</section>
+const getClientStatus = (dueDate) => {
+    const today = new Date();
+    const due = new Date(dueDate);
 
-<!-- ADICIONAR CLIENTE -->
-<section id="addCliente" class="page">
-    <h2>Novo Cliente</h2>
-    <form id="formAdd">
-        <input type="text" id="nome" placeholder="Nome" required>
-        <input type="text" id="telefone" placeholder="Telefone" required>
+    // Clients are considered 'active' if their due date is in the future or today
+    if (due.getTime() >= today.setHours(0, 0, 0, 0)) {
+        return 'Ativo';
+    }
 
-        <select id="plano">
-            <option value="30">R$ 30</option>
-            <option value="25">R$ 25</option>
-            <option value="21.5">R$ 21,50</option>
-            <option value="20">R$ 20</option>
-            <option value="10">R$ 10</option>
-            <option value="0">Grátis</option>
-        </select>
+    // Check for 'Expired'
+    const expiredLimit = new Date();
+    expiredLimit.setDate(expiredLimit.getDate() - 30); // Consider expired for 30 days past due
 
-        <textarea id="obs" placeholder="Observações"></textarea>
-        <button type="submit">Salvar</button>
-    </form>
-</section>
+    if (due.getTime() >= expiredLimit.getTime()) {
+        return 'Vencido (Recente)';
+    }
 
-<script src="app.js"></script>
-</body>
-</html>
+    return 'Inativo';
+};
+
+const getPlanValue = (planName) => {
+    return PLANS.find(p => p.name === planName)?.value || 0;
+};
+
+// --- Componentes Reutilizáveis UI ---
+
+const Card = ({ title, value, icon, color = 'text-purple-400', className = '' }) => (
+    <div className={`p-4 bg-gray-800 rounded-xl shadow-lg flex flex-col justify-between ${className}`}>
+        <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-400">{title}</span>
+            <span className={`${color}`}>{icon}</span>
+        </div>
+        <div className="mt-2 text-3xl font-bold text-white">
+            {value}
+        </div>
+    </div>
+);
+
+const IconButton = ({ children, onClick, className = '' }) => (
+    <button
+        onClick={onClick}
+        className={`p-2 rounded-full transition-colors duration-200 ${className}`}
+    >
+        {children}
+    </button>
+);
+
+const Modal = ({ isOpen, onClose, title, children }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4" onClick={onClose}>
+            <div className="bg-gray-900 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <div className="p-4 border-b border-purple-500 flex justify-between items-center">
+                    <h3 className="text-xl font-semibold text-white">{title}</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white">
+                        &times;
+                    </button>
+                </div>
+                <div className="p-6">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Lógica Principal do Aplicativo ---
+
+const App = () => {
+    const [clients, setClients] = useState([]);
+    const [maryPayments, setMaryPayments] = useState({}); // { 'YYYY-MM': { amountDue, isPaid, ... } }
+    const [userId, setUserId] = useState(null);
+    const [isAuthReady, setIsAuthReady] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [filterPeriod, setFilterPeriod] = useState('day'); // day, month, year
+    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+    const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+    const [isMaryModalOpen, setIsMaryModalOpen] = useState(false);
+    const [isDarkTheme, setIsDarkTheme] = useState(true);
+
+    // --- 1. Autenticação e Configuração Firebase ---
+    useEffect(() => {
+        if (!auth) {
+            setLoading(false);
+            return;
+        }
+
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                setUserId(user.uid);
+                setIsAuthReady(true);
+            } else {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Firebase Auth Error:", error);
+                }
+            }
+        });
+
+        if (initialAuthToken) {
+            // Wait for onAuthStateChanged to resolve
+        } else {
+            // For environments where initialAuthToken is not set, we can set isAuthReady after a small delay
+            // to allow for anonymous sign-in
+            setTimeout(() => {
+                setIsAuthReady(true);
+            }, 1000);
+        }
+
+        return () => unsubscribe();
+    }, []);
+
+    // --- 2. Listeners do Firestore (Clientes e Pagamentos Mary) ---
+    useEffect(() => {
+        if (!isAuthReady || !db) return;
+
+        // Path para dados públicos (necessário para sincronização entre 2 usuários)
+        const clientsRef = collection(db, `artifacts/${appId}/public/data/clients`);
+        const maryPaymentsRef = collection(db, `artifacts/${appId}/public/data/maryPayments`);
+
+        // Listener de Clientes
+        const unsubscribeClients = onSnapshot(clientsRef, (snapshot) => {
+            const clientList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Adiciona status dinâmico
+            const clientsWithStatus = clientList.map(client => ({
+                ...client,
+                status: getClientStatus(client.dueDate),
+            }));
+
+            clientsWithStatus.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+            setClients(clientsWithStatus);
+            setLoading(false);
+        }, (error) => {
+            console.error("Erro ao obter clientes:", error);
+            setLoading(false);
+        });
+
+        // Listener de Pagamentos Mary
+        const unsubscribeMary = onSnapshot(maryPaymentsRef, (snapshot) => {
+            const paymentsMap = {};
+            snapshot.docs.forEach(doc => {
+                paymentsMap[doc.id] = doc.data();
+            });
+            setMaryPayments(paymentsMap);
+        }, (error) => {
+            console.error("Erro ao obter pagamentos Mary:", error);
+        });
+
+        return () => {
+            unsubscribeClients();
+            unsubscribeMary();
+        };
+    }, [isAuthReady]);
+
+    // --- 3. Função de Cálculo do Relatório ---
+    const calculateReportData = useCallback((data, period) => {
+        const today = new Date();
+        let startDate, endDate;
+        let dateFormat;
+
+        switch (period) {
+            case 'day':
+                startDate = new Date(today.setHours(0, 0, 0, 0));
+                endDate = new Date(today.setHours(23, 59, 59, 999));
+                dateFormat = 'DD/MM';
+                break;
+            case 'month':
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
+                endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+                dateFormat = 'DD/MM';
+                break;
+            case 'year':
+                startDate = new Date(today.getFullYear(), 0, 1, 0, 0, 0, 0);
+                endDate = new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999);
+                dateFormat = 'MMM/YY';
+                break;
+            default:
+                startDate = new Date(0);
+                endDate = new Date();
+                dateFormat = 'DD/MM/YYYY';
+        }
+
+        const filteredData = data.filter(client => {
+            const date = client.dateAdded?.toDate ? client.dateAdded.toDate() : new Date(0);
+            return date >= startDate && date <= endDate;
+        });
+
+        // Agrupamento por dia/mês/ano para o gráfico
+        const aggregated = {};
+        const groupingKey = (date) => {
+            const d = date.toDate ? date.toDate() : new Date(date);
+            if (period === 'day') return `${d.getDate()}/${d.getMonth() + 1}`;
+            if (period === 'month') return `${d.getDate()}/${d.getMonth() + 1}`;
+            if (period === 'year') return `${d.getMonth() + 1}/${d.getFullYear()}`;
+            return d.toLocaleDateString();
+        };
+
+        let totalRevenue = 0;
+        let totalCost = 0;
+        let totalProfit = 0;
+        let newClientsCount = 0;
+        let totalActiveClients = 0;
+
+        filteredData.forEach(client => {
+            const key = groupingKey(client.dateAdded);
+            if (!aggregated[key]) {
+                aggregated[key] = { name: key, receita: 0, custo: 0, lucro: 0, novos: 0 };
+            }
+
+            const revenue = client.planValue;
+            const cost = ACTIVATION_COST; // Custo fixo de ativação
+
+            totalRevenue += revenue;
+            totalCost += cost;
+            newClientsCount++;
+
+            aggregated[key].receita += revenue;
+            aggregated[key].custo += cost;
+            aggregated[key].novos += 1;
+        });
+
+        // Adiciona Pagamento Mary
+        const currentMonthYear = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        const totalActiveClientsToday = clients.filter(c => c.status === 'Ativo').length;
+        const maryDue = totalActiveClientsToday * MARY_RATE;
+        const maryPaidForCurrentMonth = maryPayments[currentMonthYear]?.isPaid || false;
+        const maryCost = maryPaidForCurrentMonth ? 0 : maryDue;
+
+        // Finaliza os cálculos
+        totalProfit = totalRevenue - totalCost - maryCost;
+
+        // Atualiza os lucros agregados para o gráfico (distribui o custo de Mary proporcionalmente ou simplifica)
+        const totalAggregatedCost = Object.values(aggregated).reduce((sum, item) => sum + item.custo, 0);
+        Object.keys(aggregated).forEach(key => {
+            const costShare = (aggregated[key].custo / totalAggregatedCost) * maryCost;
+            aggregated[key].lucro = aggregated[key].receita - aggregated[key].custo - (isNaN(costShare) ? 0 : costShare);
+        });
+
+
+        const chartData = Object.values(aggregated).sort((a, b) => {
+            // Simple sorting by name (key)
+            return a.name > b.name ? 1 : -1;
+        });
+
+        return {
+            totalActiveClients: clients.filter(c => c.status === 'Ativo').length, // Clientes Ativos é sempre o total atual
+            newClientsCount: newClientsCount,
+            totalRevenue: totalRevenue,
+            totalCost: totalCost,
+            totalProfit: totalProfit,
+            maryDue: maryDue,
+            maryPaid: maryPaidForCurrentMonth,
+            chartData: chartData,
+        };
+    }, [clients, maryPayments]);
+
+    // --- 4. Dados do Dashboard (Baseado no Filtro) ---
+    const reportData = useMemo(() => calculateReportData(clients, filterPeriod), [clients, filterPeriod, calculateReportData]);
+
+    // --- Componente de Cadastro de Clientes (Modal) ---
+    const ClientRegistrationModal = ({ isOpen, onClose }) => {
+        const [formData, setFormData] = useState({
+            name: '',
+            plan: PLANS[0].name,
+            dueDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+        });
+        const [error, setError] = useState('');
+
+        const handleChange = (e) => {
+            setFormData({ ...formData, [e.target.name]: e.target.value });
+        };
+
+        const handleSubmit = async (e) => {
+            e.preventDefault();
+            if (!formData.name || !formData.plan || !formData.dueDate) {
+                setError('Todos os campos são obrigatórios.');
+                return;
+            }
+
+            if (!db) {
+                 setError('Firebase não inicializado. Verifique a conexão.');
+                 return;
+            }
+
+            try {
+                const planValue = getPlanValue(formData.plan);
+                const newClient = {
+                    dateAdded: new Date(),
+                    name: formData.name,
+                    plan: formData.plan,
+                    planValue: planValue,
+                    activationCost: ACTIVATION_COST,
+                    dueDate: formData.dueDate,
+                    status: getClientStatus(formData.dueDate),
+                    paidToMaryHistory: [], // Histórico de pagamentos
+                };
+
+                await addDoc(collection(db, `artifacts/${appId}/public/data/clients`), newClient);
+
+                setError('');
+                onClose();
+            } catch (err) {
+                console.error("Erro ao adicionar cliente:", err);
+                setError('Erro ao salvar no banco de dados. Tente novamente.');
+            }
+        };
+
+        return (
+            <Modal isOpen={isOpen} onClose={onClose} title="Novo Cliente e Ativação">
+                {error && <p className="text-red-400 mb-4">{error}</p>}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <label className="block">
+                        <span className="text-gray-300">Nome do Cliente</span>
+                        <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            className="mt-1 block w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-purple-500 focus:border-purple-500"
+                            required
+                        />
+                    </label>
+
+                    <label className="block">
+                        <span className="text-gray-300">Plano</span>
+                        <select
+                            name="plan"
+                            value={formData.plan}
+                            onChange={handleChange}
+                            className="mt-1 block w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-purple-500 focus:border-purple-500"
+                            required
+                        >
+                            {PLANS.map(p => (
+                                <option key={p.name} value={p.name}>
+                                    {p.name} (R$ {p.value.toFixed(2).replace('.', ',')})
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+
+                    <div className="flex space-x-4">
+                        <label className="block flex-1">
+                            <span className="text-gray-300">Valor do Plano (R$)</span>
+                            <input
+                                type="text"
+                                value={getPlanValue(formData.plan).toFixed(2).replace('.', ',')}
+                                className="mt-1 block w-full p-2 bg-gray-600 border border-gray-500 rounded-md text-white cursor-not-allowed"
+                                readOnly
+                            />
+                        </label>
+                        <label className="block flex-1">
+                            <span className="text-gray-300">Custo Fixo Ativação (R$)</span>
+                            <input
+                                type="text"
+                                value={ACTIVATION_COST.toFixed(2).replace('.', ',')}
+                                className="mt-1 block w-full p-2 bg-gray-600 border border-gray-500 rounded-md text-white cursor-not-allowed"
+                                readOnly
+                            />
+                        </label>
+                    </div>
+
+                    <label className="block">
+                        <span className="text-gray-300">Data de Vencimento</span>
+                        <input
+                            type="date"
+                            name="dueDate"
+                            value={formData.dueDate}
+                            onChange={handleChange}
+                            className="mt-1 block w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-purple-500 focus:border-purple-500"
+                            required
+                        />
+                    </label>
+
+                    <button
+                        type="submit"
+                        className="w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-md text-white font-semibold transition-colors duration-200"
+                    >
+                        Cadastrar Cliente
+                    </button>
+                </form>
+            </Modal>
+        );
+    };
+
+    // --- Componente de Pagamento Mary (Modal) ---
+    const MaryPaymentModal = ({ isOpen, onClose }) => {
+        const currentMonthYear = useMemo(() => `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`, []);
+
+        const activeClientsForMary = clients.filter(c => c.status === 'Ativo').length;
+        const amountDue = activeClientsForMary * MARY_RATE;
+        const currentPayment = maryPayments[currentMonthYear] || { isPaid: false, clientsActive: 0, amountDue: 0 };
+
+        const markAsPaid = async (paid) => {
+            if (!db) return;
+            try {
+                const docRef = doc(db, `artifacts/${appId}/public/data/maryPayments`, currentMonthYear);
+                await setDoc(docRef, {
+                    clientsActive: activeClientsForMary,
+                    amountDue: amountDue,
+                    isPaid: paid,
+                    paidDate: paid ? new Date() : null,
+                    paidByUserId: userId,
+                }, { merge: true });
+
+            } catch (error) {
+                console.error("Erro ao atualizar pagamento Mary:", error);
+            }
+        };
+
+        const history = Object.entries(maryPayments)
+            .sort(([a], [b]) => b.localeCompare(a))
+            .map(([monthYear, data]) => {
+                const [year, month] = monthYear.split('-');
+                return {
+                    monthYear: `${month}/${year}`,
+                    ...data
+                };
+            });
+
+        return (
+            <Modal isOpen={isOpen} onClose={onClose} title="Controle de Pagamento Mary">
+                <div className="bg-gray-800 p-4 rounded-xl mb-6">
+                    <h4 className="text-xl font-semibold text-purple-400 mb-3">Pagamento Atual ({currentMonthYear.split('-').reverse().join('/')})</h4>
+                    <p className="text-gray-300">Clientes Ativos no Mês: <span className="font-bold text-white">{activeClientsForMary}</span></p>
+                    <p className="text-gray-300">Valor a Pagar (R$1,00/cliente): <span className="font-bold text-lg text-yellow-400">R$ {amountDue.toFixed(2).replace('.', ',')}</span></p>
+                    <div className="mt-4 flex space-x-4">
+                        <p className="text-gray-300 font-medium">Status:</p>
+                        {currentPayment.isPaid ? (
+                            <span className="text-green-400 font-semibold flex items-center">
+                                <CheckCircle size={20} className="mr-1" /> Pago
+                            </span>
+                        ) : (
+                            <span className="text-red-400 font-semibold flex items-center">
+                                <AlertTriangle size={20} className="mr-1" /> Pendente
+                            </span>
+                        )}
+                    </div>
+                    <button
+                        onClick={() => markAsPaid(!currentPayment.isPaid)}
+                        className={`mt-4 w-full py-2 rounded-md font-semibold transition-colors duration-200 ${currentPayment.isPaid ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                    >
+                        {currentPayment.isPaid ? 'Marcar como Pendente' : 'Marcar como Pago'}
+                    </button>
+                </div>
+
+                <h4 className="text-xl font-semibold text-gray-300 mb-3">Histórico Mensal</h4>
+                <div className="max-h-60 overflow-y-auto pr-2">
+                    {history.map((item, index) => (
+                        <div key={index} className="flex justify-between items-center p-3 mb-2 bg-gray-700 rounded-lg">
+                            <span className="font-medium text-white">{item.monthYear}</span>
+                            <div className="text-right">
+                                <p className="text-sm text-gray-400">Clientes: {item.clientsActive}</p>
+                                <p className="font-bold text-yellow-300">R$ {item.amountDue.toFixed(2).replace('.', ',')}</p>
+                            </div>
+                            {item.isPaid ? (
+                                <CheckCircle size={20} className="text-green-400" title="Pago" />
+                            ) : (
+                                <MinusCircle size={20} className="text-red-400" title="Pendente" />
+                            )}
+                        </div>
+                    ))}
+                    {history.length === 0 && <p className="text-gray-400 text-center">Nenhum histórico encontrado.</p>}
+                </div>
+            </Modal>
+        );
+    };
+
+    // --- Componente de Cadastro Manual (Modal - Requisito 6) ---
+    const ManualClientInputModal = ({ isOpen, onClose }) => {
+        const [numClients, setNumClients] = useState(0);
+
+        const handleManualReport = () => {
+            // Em um aplicativo real, isso talvez adicionasse um registro "Manual" ao Firestore.
+            // Aqui, apenas fechamos, pois o relatório já está sendo calculado sobre a base de dados real.
+            // Para cumprir o requisito 6, essa funcionalidade seria usada para gerar um *relatório temporário*
+            // sem a necessidade de cadastrar os detalhes.
+
+            // Devido à limitação de usar dados em tempo real do Firestore para o relatório principal,
+            // informamos ao usuário que o relatório sempre reflete a base de clientes cadastrada.
+            // O campo serve como um lembrete ou anotação.
+            alert(`Apenas um lembrete: O relatório principal utiliza os dados de ${clients.length} clientes cadastrados no sistema. Este campo de "quantidade de clientes" serve apenas para anotação. Para relatórios precisos, use o "Novo Cliente e Ativação"`);
+
+            onClose();
+        };
+
+        return (
+            <Modal isOpen={isOpen} onClose={onClose} title="Input Manual de Quantidade (Somente para Relatório)">
+                <p className="text-gray-400 mb-4">
+                    **ATENÇÃO:** Para relatórios precisos de *Receita, Custo e Lucro*, é **necessário** o cadastro completo do cliente.
+                    Este campo serve apenas para uma anotação rápida de "Clientes Ativos" se preferir não cadastrar todos os detalhes. O relatório principal (dashboard) sempre usa o total cadastrado ({clients.length}).
+                </p>
+                <label className="block">
+                    <span className="text-gray-300">Clientes Ativos Hoje (Anote Aqui)</span>
+                    <input
+                        type="number"
+                        min="0"
+                        value={numClients}
+                        onChange={(e) => setNumClients(parseInt(e.target.value) || 0)}
+                        className="mt-1 block w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-purple-500 focus:border-purple-500"
+                    />
+                </label>
+                <button
+                    onClick={handleManualReport}
+                    className="w-full py-3 mt-4 bg-purple-600 hover:bg-purple-700 rounded-md text-white font-semibold transition-colors duration-200"
+                >
+                    Ver Relatório (Usando dados reais)
+                </button>
+            </Modal>
+        );
+    };
+
+    // --- Componente de Notificações e Lembretes (Requisito 7) ---
+    const NotificationList = ({ clients }) => {
+        const today = new Date();
+        const next7Days = new Date();
+        next7Days.setDate(today.getDate() + 7);
+
+        const clientsToPay = clients.filter(c => {
+            const dueDate = new Date(c.dueDate);
+            return c.status === 'Ativo' && dueDate >= today && dueDate <= next7Days;
+        });
+
+        const expiredClients = clients.filter(c => c.status === 'Vencido (Recente)');
+
+        const handleWhatsAppSend = (clientName, dueDate) => {
+            // Simula o envio de mensagem
+            const message = `Olá, ${clientName}! Seu plano Live TV vence em ${new Date(dueDate).toLocaleDateString()}. Para evitar a interrupção do serviço, por favor, realize o pagamento.`;
+            // Em um app real, seria uma chamada de API do WhatsApp Business
+            const whatsappLink = `https://wa.me/?text=${encodeURIComponent(message)}`;
+
+            // Exibe a mensagem simulada e o link (que não funcionará no iframe, mas demonstra a intenção)
+            alert(`Simulando envio de WhatsApp para ${clientName}: \n\nMensagem: "${message}"\n\nLink (Ação Requerida): ${whatsappLink}`);
+        };
+
+        return (
+            <div className="mt-8">
+                <h3 className="text-xl font-semibold text-white flex items-center mb-4 border-b border-gray-700 pb-2">
+                    <Bell size={20} className="mr-2 text-yellow-400" />
+                    Clientes a Vencer e Vencidos
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Clientes a Vencer */}
+                    <div className="bg-gray-800 p-4 rounded-xl shadow-lg border-l-4 border-yellow-500">
+                        <h4 className="font-semibold text-yellow-400 mb-3">A Vencer (Próximos 7 dias - {clientsToPay.length})</h4>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {clientsToPay.length === 0 && <p className="text-gray-400 text-sm">Nenhum cliente a vencer nos próximos 7 dias.</p>}
+                            {clientsToPay.map(c => (
+                                <div key={c.id} className="flex justify-between items-center text-sm text-white bg-gray-700 p-2 rounded-lg">
+                                    <span className="truncate">{c.name} ({new Date(c.dueDate).toLocaleDateString()})</span>
+                                    <button
+                                        onClick={() => handleWhatsAppSend(c.name, c.dueDate)}
+                                        className="text-green-400 hover:text-green-300 ml-2 p-1 rounded-md transition-colors duration-200 flex items-center text-xs bg-gray-600"
+                                        title="Enviar Lembrete WhatsApp"
+                                    >
+                                        <Zap size={14} className="mr-1" />
+                                        Zap
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Clientes Vencidos */}
+                    <div className="bg-gray-800 p-4 rounded-xl shadow-lg border-l-4 border-red-500">
+                        <h4 className="font-semibold text-red-400 mb-3">Vencidos (Recentes - {expiredClients.length})</h4>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {expiredClients.length === 0 && <p className="text-gray-400 text-sm">Nenhum cliente vencido recentemente.</p>}
+                            {expiredClients.map(c => (
+                                <div key={c.id} className="flex justify-between items-center text-sm text-white bg-gray-700 p-2 rounded-lg">
+                                    <span className="truncate">{c.name} (Vencido em: {new Date(c.dueDate).toLocaleDateString()})</span>
+                                    <button
+                                        onClick={() => handleWhatsAppSend(c.name, c.dueDate)}
+                                        className="text-green-400 hover:text-green-300 ml-2 p-1 rounded-md transition-colors duration-200 flex items-center text-xs bg-gray-600"
+                                        title="Enviar Lembrete WhatsApp"
+                                    >
+                                        <Zap size={14} className="mr-1" />
+                                        Zap
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- Toggle de Tema ---
+    const toggleTheme = () => setIsDarkTheme(prev => !prev);
+
+    if (loading) {
+        return (
+            <div className={`flex items-center justify-center min-h-screen ${isDarkTheme ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+                    <p className="mt-4">Carregando dados e autenticando...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // --- Renderização Principal ---
+    return (
+        <div className={`${isDarkTheme ? 'dark' : ''}`}>
+            <div className="min-h-screen bg-gray-900 text-white font-sans transition-colors duration-300 p-4 sm:p-6 lg:p-8">
+                {/* Cabeçalho */}
+                <header className="flex justify-between items-center pb-6 border-b border-purple-700 mb-6">
+                    <h1 className="text-3xl font-extrabold text-purple-400 flex items-center">
+                        Live TV | Financeiro
+                    </h1>
+                    <div className="flex items-center space-x-4">
+                        <IconButton
+                            onClick={toggleTheme}
+                            className="bg-gray-800 hover:bg-gray-700 text-purple-400"
+                            title={isDarkTheme ? "Mudar para Tema Claro" : "Mudar para Tema Escuro"}
+                        >
+                            {isDarkTheme ? <Sun size={20} /> : <Moon size={20} />}
+                        </IconButton>
+                        <span className="text-sm text-gray-500 hidden sm:inline">Usuário: {userId ? `${userId.substring(0, 4)}...` : 'Anônimo'}</span>
+                    </div>
+                </header>
+
+                {/* Dashboard - Filtros e Ações */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+                    <div className="flex space-x-2 bg-gray-800 p-1 rounded-lg shadow-inner">
+                        {['day', 'month', 'year'].map(period => (
+                            <button
+                                key={period}
+                                onClick={() => setFilterPeriod(period)}
+                                className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors duration-200 capitalize ${filterPeriod === period ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700'}`}
+                            >
+                                {period === 'day' ? 'Diário' : period === 'month' ? 'Mensal' : 'Anual'}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex flex-wrap space-x-2 md:space-x-4">
+                        <button
+                            onClick={() => setIsClientModalOpen(true)}
+                            className="flex items-center py-2 px-3 bg-green-600 hover:bg-green-700 rounded-lg text-white font-medium transition-colors duration-200 text-sm"
+                        >
+                            <PlusCircle size={18} className="mr-1" /> Cadastro Cliente
+                        </button>
+                        <button
+                            onClick={() => setIsMaryModalOpen(true)}
+                            className="flex items-center py-2 px-3 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white font-medium transition-colors duration-200 text-sm"
+                        >
+                            <DollarSign size={18} className="mr-1" /> Pagar Mary
+                        </button>
+                        <button
+                            onClick={() => setIsManualModalOpen(true)}
+                            className="flex items-center py-2 px-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium transition-colors duration-200 text-sm"
+                        >
+                            <Zap size={18} className="mr-1" /> Input Qtd
+                        </button>
+                    </div>
+                </div>
+
+                {/* Cards de Resumo */}
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                    <Card
+                        title="Clientes Ativos (Total)"
+                        value={reportData.totalActiveClients.toLocaleString()}
+                        icon={<Users size={24} />}
+                        color="text-purple-400"
+                        className="col-span-2 lg:col-span-1 border-b-4 border-purple-500"
+                    />
+                    <Card
+                        title={`Receita Total (${filterPeriod === 'day' ? 'Dia' : filterPeriod === 'month' ? 'Mês' : 'Ano'})`}
+                        value={`R$ ${reportData.totalRevenue.toFixed(2).replace('.', ',')}`}
+                        icon={<TrendingUp size={24} />}
+                        color="text-green-400"
+                        className="border-b-4 border-green-500"
+                    />
+                    <Card
+                        title={`Custo Total (${filterPeriod === 'day' ? 'Dia' : filterPeriod === 'month' ? 'Mês' : 'Ano'})`}
+                        value={`R$ ${reportData.totalCost.toFixed(2).replace('.', ',')}`}
+                        icon={<MinusCircle size={24} />}
+                        color="text-red-400"
+                        className="border-b-4 border-red-500"
+                    />
+                    <Card
+                        title={`Lucro Líquido (${filterPeriod === 'day' ? 'Dia' : filterPeriod === 'month' ? 'Mês' : 'Ano'})`}
+                        value={`R$ ${reportData.totalProfit.toFixed(2).replace('.', ',')}`}
+                        icon={<DollarSign size={24} />}
+                        color="text-sky-400"
+                        className="border-b-4 border-sky-500"
+                    />
+                    <Card
+                        title="Pagamento Mary (Pendente)"
+                        value={`R$ ${reportData.maryDue.toFixed(2).replace('.', ',')}`}
+                        icon={<Package size={24} />}
+                        color={reportData.maryPaid ? "text-green-400" : "text-yellow-400"}
+                        className="col-span-2 lg:col-span-1 border-b-4 border-yellow-500"
+                    />
+                </div>
+
+                {/* Gráfico de Relatório */}
+                <div className="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg mb-8">
+                    <h3 className="text-xl font-semibold text-gray-300 mb-4">
+                        Relatório de Lucro e Receita ({filterPeriod === 'day' ? 'Diário' : filterPeriod === 'month' ? 'Mensal' : 'Anual'})
+                    </h3>
+                    <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={reportData.chartData}
+                                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#4c1d95" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#4c1d95" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <XAxis dataKey="name" stroke="#6b7280" />
+                                <YAxis stroke="#6b7280" domain={['auto', 'auto']} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }}
+                                    formatter={(value, name) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name.charAt(0).toUpperCase() + name.slice(1)]}
+                                />
+                                <Area type="monotone" dataKey="receita" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorRevenue)" name="Receita" />
+                                <Area type="monotone" dataKey="lucro" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorProfit)" name="Lucro Líquido" />
+                                <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Tabela de Clientes Ativos/Vencidos */}
+                <div className="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg mb-8">
+                    <h3 className="text-xl font-semibold text-gray-300 flex items-center mb-4">
+                        <BarChart3 size={20} className="mr-2 text-purple-400" />
+                        Detalhes dos Clientes
+                    </h3>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-700">
+                            <thead className="bg-gray-700">
+                                <tr>
+                                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Cliente</th>
+                                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Plano</th>
+                                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Vencimento</th>
+                                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800">
+                                {clients.slice(0, 10).map((client) => (
+                                    <tr key={client.id} className="hover:bg-gray-700 transition-colors duration-150">
+                                        <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-white">{client.name}</td>
+                                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-300">{client.plan}</td>
+                                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-300">{new Date(client.dueDate).toLocaleDateString('pt-BR')}</td>
+                                        <td className="px-3 py-4 whitespace-nowrap text-sm">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                client.status === 'Ativo' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200' :
+                                                client.status.includes('Vencido') ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200' :
+                                                'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                            }`}>
+                                                {client.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {clients.length === 0 && (
+                            <p className="text-center py-4 text-gray-400">Nenhum cliente cadastrado. Comece a adicionar clientes!</p>
+                        )}
+                        {clients.length > 10 && (
+                             <p className="text-center py-2 text-gray-400 text-sm">Mostrando os 10 primeiros clientes. Total: {clients.length}</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Notificações de Vencimento */}
+                <NotificationList clients={clients} />
+
+                {/* Opções de Exportação (Simuladas) */}
+                <div className="mt-8 pt-6 border-t border-gray-700">
+                    <h3 className="text-xl font-semibold text-white mb-4">Configurações e Exportação</h3>
+                    <p className="text-sm text-gray-400 mb-4">
+                        *Nota: A sincronização com Google Sheets e a exportação para PDF/Excel requerem APIs externas que não estão disponíveis neste ambiente de arquivo único. As ações abaixo são simuladas, mas a arquitetura de dados no Firestore é ideal para tal integração.
+                    </p>
+                    <div className="flex space-x-4">
+                        <button
+                            onClick={() => alert("Simulação: O Relatório foi exportado em formato Excel.")}
+                            className="py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-medium transition-colors"
+                        >
+                            Exportar para Excel (Simulado)
+                        </button>
+                        <button
+                            onClick={() => alert("Simulação: Sincronização de dados com Google Sheets iniciada.")}
+                            className="py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-medium transition-colors"
+                        >
+                            Sincronizar com Google Sheets (Simulado)
+                        </button>
+                    </div>
+                </div>
+
+                {/* Modals */}
+                <ClientRegistrationModal
+                    isOpen={isClientModalOpen}
+                    onClose={() => setIsClientModalOpen(false)}
+                />
+                <ManualClientInputModal
+                    isOpen={isManualModalOpen}
+                    onClose={() => setIsManualModalOpen(false)}
+                />
+                <MaryPaymentModal
+                    isOpen={isMaryModalOpen}
+                    onClose={() => setIsMaryModalOpen(false)}
+                />
+
+                {/* Rodapé com ID do Usuário para Colaboração */}
+                <footer className="mt-10 pt-4 text-center text-xs text-gray-600 border-t border-gray-800">
+                    <p>ID do Aplicativo: {appId}</p>
+                    <p>Seu ID de Usuário (para sincronização entre dois dispositivos): <span className="text-purple-400 font-mono break-all">{userId}</span></p>
+                </footer>
+            </div>
+        </div>
+    );
+};
+
+export default App;
+
