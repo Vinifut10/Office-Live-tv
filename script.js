@@ -1,9 +1,4 @@
-/* ===== Live TV — Gestão (localStorage) =====
-   Schema (localStorage key 'ltv_activations'):
-   [
-     { id: 'uuid', date: 'YYYY-MM-DD', plan: '30'|'25'|'21.5'|'20'|'10'|'free', qty: 2 }
-   ]
-*/
+/* script.js — gestão de ativações (localStorage) */
 
 (() => {
   const LS_KEY = 'ltv_activations_v1';
@@ -30,58 +25,27 @@
 
   const clearBtn = document.getElementById('clearBtn');
 
-  // Charts
   let pieChart = null;
   let lineChart = null;
 
-  // Utils
   const uid = () => 'id-' + Math.random().toString(36).slice(2,9);
   const readStore = () => {
-    try {
-      return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-    } catch (e) {
-      console.error(e);
-      return [];
-    }
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
+    catch(e){ console.error(e); return []; }
   };
   const writeStore = (arr) => localStorage.setItem(LS_KEY, JSON.stringify(arr));
 
-  const today = () => {
-    const d = new Date();
-    const iso = d.toISOString().slice(0,10);
-    return iso;
-  };
-
-  // init date inputs
+  const today = () => new Date().toISOString().slice(0,10);
   dateInput.value = today();
   todayText.textContent = new Date().toLocaleDateString('pt-BR');
 
-  // sample initial data if empty (optional)
-  const ensureSample = () => {
-    const current = readStore();
-    if (current.length === 0) {
-      const sample = [
-        { id: uid(), date: today(), plan: '30', qty: 12 },
-        { id: uid(), date: today(), plan: '25', qty: 4 },
-        { id: uid(), date: today(), plan: 'free', qty: 1 },
-      ];
-      writeStore(sample);
-    }
-  };
+  const planLabel = p => p === 'free' ? 'GRÁTIS' : `R$ ${Number(p).toLocaleString('pt-BR', {minimumFractionDigits: p.includes('.') ? 2 : 0})}`;
+  const unitValue = p => p === 'free' ? 0 : Number(p);
 
-  // Calculate totals (numbers refer to qty and value sums)
-  const planLabel = p => {
-    if (p === 'free') return 'GRÁTIS';
-    return `R$ ${Number(p).toLocaleString('pt-BR', {minimumFractionDigits: p.includes('.') ? 2 : 0})}`;
-  };
-  const unitValue = p => (p === 'free' ? 0 : Number(p));
-
-  // Filtering logic
   const applyFilters = (items) => {
     const fd = filterDate.value;
     const fm = filterMonth.value;
     const fy = filterYear.value;
-
     return items.filter(it => {
       if (fd && it.date !== fd) return false;
       if (fm) {
@@ -95,7 +59,6 @@
     });
   };
 
-  // Render functions
   const renderTable = (items) => {
     tableBody.innerHTML = '';
     if (!items.length) {
@@ -112,14 +75,13 @@
         <td>${it.qty}</td>
         <td>${unitValue(it.plan) === 0 ? '-' : unitValue(it.plan).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
         <td>${unitValue(it.plan) === 0 ? '-' : total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
-        <td class="actions">
+        <td>
           <button data-id="${it.id}" class="btn small del">Excluir</button>
         </td>
       `;
       tableBody.appendChild(tr);
     }
 
-    // attach delete
     tableBody.querySelectorAll('.del').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.dataset.id;
@@ -132,12 +94,7 @@
   };
 
   const computeTotals = (items) => {
-    const sums = {
-      dayCount: 0,
-      monthCount: 0,
-      yearCount: 0,
-      byPlanThisMonth: {}
-    };
+    const sums = { dayCount: 0, monthCount: 0, yearCount: 0, byPlanThisMonth: {} };
     const now = new Date();
     const nowDay = now.toISOString().slice(0,10);
     const nowMonth = now.toISOString().slice(0,7);
@@ -146,15 +103,9 @@
     for (const it of items) {
       const monthKey = it.date.slice(0,7);
       const yearKey = it.date.slice(0,4);
-
-      // day
       if (it.date === nowDay) sums.dayCount += it.qty;
-      // month
       if (monthKey === nowMonth) sums.monthCount += it.qty;
-      // year
       if (Number(yearKey) === nowYear) sums.yearCount += it.qty;
-
-      // by plan this month (for pie)
       if (!sums.byPlanThisMonth[it.plan]) sums.byPlanThisMonth[it.plan] = 0;
       if (monthKey === nowMonth) sums.byPlanThisMonth[it.plan] += it.qty;
     }
@@ -171,13 +122,11 @@
     const labels = [];
     const data = [];
     const bg = [];
-
-    const order = ['30','25','21.5','20','10','free']; // consistent ordering
+    const order = ['30','25','21.5','20','10','free'];
     for (const key of order) {
       const v = byPlanObj[key] || 0;
       labels.push(planLabel(key));
       data.push(v);
-      // colors matched to gradient
       switch(key){
         case '30': bg.push('rgba(0,123,255,0.9)'); break;
         case '25': bg.push('rgba(139,60,255,0.9)'); break;
@@ -193,19 +142,12 @@
     if (pieChart) pieChart.destroy();
     pieChart = new Chart(ctx, {
       type: 'pie',
-      data: {
-        labels, datasets: [{ data, backgroundColor: bg }]
-      },
-      options: {
-        plugins: { legend: { position: 'bottom' } },
-        responsive: true,
-        maintainAspectRatio: false
-      }
+      data: { labels, datasets: [{ data, backgroundColor: bg }] },
+      options: { plugins: { legend: { position: 'bottom' } }, responsive:true, maintainAspectRatio:false }
     });
   };
 
   const renderLine = (allItems) => {
-    // build last 30 days labels and aggregated counts
     const days = 30;
     const labels = [];
     const counts = [];
@@ -223,41 +165,31 @@
     if (lineChart) lineChart.destroy();
     lineChart = new Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ label: 'Ativações', data: counts, fill: true, tension: 0.25 }] },
+      data: { labels, datasets: [{ label: 'Ativações', data: counts, fill:true, tension:0.25 }] },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } },
-          y: { beginAtZero: true }
-        }
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false } },
+        scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:10 } }, y:{ beginAtZero:true } }
       }
     });
   };
 
-  // Refresh UI from store with current filters
   const refreshUI = () => {
     const all = readStore();
     const filtered = applyFilters(all);
-
-    const sums = computeTotals(all); // compute totals from all items (not filtered)
+    const sums = computeTotals(all);
     renderTopCards(sums);
     renderPie(sums.byPlanThisMonth);
     renderLine(all);
     renderTable(filtered);
   };
 
-  // Form submission
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const plan = planSelect.value;
     const qty = Number(qtyInput.value) || 0;
     const date = dateInput.value;
-    if (!date || qty <= 0) {
-      alert('Preencha a data e quantidade corretamente.');
-      return;
-    }
+    if (!date || qty <= 0) { alert('Preencha a data e quantidade corretamente.'); return; }
     const cur = readStore();
     cur.push({ id: uid(), date, plan, qty });
     writeStore(cur);
@@ -281,7 +213,6 @@
     refreshUI();
   });
 
-  // Export / Import
   exportBtn.addEventListener('click', () => {
     const data = readStore();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -302,10 +233,8 @@
       try {
         const parsed = JSON.parse(e.target.result);
         if (!Array.isArray(parsed)) throw new Error('Formato inválido');
-        // basic validation
         const ok = parsed.every(x => x.id && x.date && x.plan && Number(x.qty) >= 0);
         if (!ok) throw new Error('Estrutura incorreta');
-        // merge with existing (keeps unique ids)
         const existing = readStore();
         const merged = [...existing];
         for (const item of parsed) {
@@ -314,22 +243,31 @@
         writeStore(merged);
         refreshUI();
         alert('Importação concluída.');
-      } catch (err) {
-        alert('Erro ao importar JSON: ' + err.message);
-      }
+      } catch (err) { alert('Erro ao importar JSON: ' + err.message); }
     };
     reader.readAsText(f);
     ev.target.value = '';
   });
 
-  // keyboard shortcut: "n" to focus qty
   document.addEventListener('keydown', (ev) => {
     if (ev.key === 'n' && document.activeElement.tagName.toLowerCase() !== 'input') {
       qtyInput.focus();
     }
   });
 
-  // initial
+  // sample data on first load to help visualization (only if store empty)
+  const ensureSample = () => {
+    const current = readStore();
+    if (current.length === 0) {
+      const s = [
+        { id: uid(), date: today(), plan: '30', qty: 12 },
+        { id: uid(), date: today(), plan: '25', qty: 4 },
+        { id: uid(), date: today(), plan: 'free', qty: 1 },
+      ];
+      writeStore(s);
+    }
+  };
+
   ensureSample();
   refreshUI();
 })();
