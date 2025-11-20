@@ -1,143 +1,64 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Live TV — Gestão de Ativações</title>
+/* ===========================
+   BASE / RESET
+=========================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
 
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+body {
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.3s ease, color 0.3s ease;
+}
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <img id="logo" src="logo.png" alt="Live TV Logo" />
-      <h1>Live TV — Gestão</h1>
-    </div>
-    <div class="top-right">
-      <div class="today">Data: <span id="todayText"></span></div>
-    </div>
-  </header>
+/* ===========================
+   TEMA CLARO
+=========================== */
+:root {
+    --bg: #f5f7fa;
+    --bg-card: #ffffff;
+    --bg-header: #ffffff;
 
-  <main class="container">
-    <!-- Left: Controls / Form -->
-    <section class="panel form-panel">
-      <h2>Lançar Ativações</h2>
-      <form id="activationForm" autocomplete="off">
-        <label>Plano
-          <select id="planSelect" required>
-            <option value="30">R$30</option>
-            <option value="25">R$25</option>
-            <option value="21.5">R$21,50</option>
-            <option value="20">R$20</option>
-            <option value="10">R$10</option>
-            <option value="free">GRÁTIS</option>
-          </select>
-        </label>
+    --text: #111827;
+    --text-soft: #4b5563;
 
-        <label>Quantidade
-          <input id="quantityInput" type="number" min="1" value="1" required />
-        </label>
+    --border-color: #e5e7eb;
 
-        <label>Data (permite lançar dias anteriores)
-          <input id="dateInput" type="date" required />
-        </label>
+    --purple: #7c3aed;
+    --purple-soft: #a78bfa;
 
-        <div class="form-actions">
-          <button type="submit" class="btn primary">Salvar Ativação</button>
-          <button type="button" id="clearBtn" class="btn ghost">Limpar formulário</button>
-        </div>
-      </form>
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #facc15;
+    --blue: #3b82f6;
+}
 
-      <hr />
+/* ===========================
+   TEMA ESCURO → ATIVADO COM: body.dark
+=========================== */
+body.dark {
+    --bg: #0d1117;
+    --bg-card: #111827;
+    --bg-header: #0f1623;
 
-      <h3>Filtros / Pesquisa</h3>
-      <div class="filters">
-        <label>Pesquisar por data
-          <input id="filterDate" type="date" />
-        </label>
+    --text: #e5e7eb;
+    --text-soft: #9ca3af;
 
-        <label>Pesquisar por mês
-          <input id="filterMonth" type="month" />
-        </label>
+    --border-color: #1f2937;
 
-        <label>Pesquisar por ano
-          <input id="filterYear" type="number" min="2000" max="2100" placeholder="Ex: 2025" />
-        </label>
+    --purple: #c084fc;
+    --purple-soft: #a855f7;
 
-        <div class="filter-actions">
-          <button id="applyFilters" class="btn">Aplicar</button>
-          <button id="resetFilters" class="btn ghost">Resetar</button>
-        </div>
-      </div>
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #facc15;
+    --blue: #60a5fa;
+}
 
-      <hr />
-
-      <h3>Exportar / Backup</h3>
-      <div class="export-actions">
-        <button id="exportJson" class="btn">Exportar JSON</button>
-        <button id="importJsonBtn" class="btn ghost">Importar JSON</button>
-        <input id="importJson" type="file" accept=".json" style="display:none" />
-      </div>
-    </section>
-
-    <!-- Right: Dashboard / Charts -->
-    <section class="panel dashboard-panel">
-      <div class="top-cards">
-        <div class="card">
-          <h4>Total do Dia</h4>
-          <div class="value" id="totalDay">0</div>
-        </div>
-        <div class="card">
-          <h4>Total do Mês</h4>
-          <div class="value" id="totalMonth">0</div>
-        </div>
-        <div class="card">
-          <h4>Total do Ano</h4>
-          <div class="value" id="totalYear">0</div>
-        </div>
-      </div>
-
-      <div class="charts-row">
-        <div class="chart-card">
-          <h4>Distribuição por Plano (mês selecionado)</h4>
-          <canvas id="planPie"></canvas>
-        </div>
-
-        <div class="chart-card">
-          <h4>Ativações — últimos 30 dias</h4>
-          <canvas id="timeLine"></canvas>
-        </div>
-      </div>
-
-      <hr />
-
-      <h3>Lista de Lançamentos</h3>
-      <div class="table-wrap">
-        <table id="activationsTable">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Plano</th>
-              <th>Qtd</th>
-              <th>Valor Unit.</th>
-              <th>Valor Total</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <small>Live TV — Sistema Offline (localStorage). Desenvolvido para GitHub Pages.</small>
-  </footer>
-
-  <script src="script.js"></script>
-</body>
-</html>
+/* Transições suaves */
+.card, header, .btn {
+    transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
+}
