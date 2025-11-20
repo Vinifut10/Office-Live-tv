@@ -1,17 +1,22 @@
-const btn = document.getElementById("toggleTheme");
+// toggleTheme.js
+(function(){
+  const btn = document.getElementById('toggleTheme');
+  const rootBody = document.body;
 
-// Se tiver tema salvo no localStorage, aplica
-if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark");
-}
+  // aplicar preferência salva
+  const saved = localStorage.getItem('ltv_theme');
+  if (saved === 'light') {
+    rootBody.classList.add('light');
+    btn.textContent = '☀️';
+  } else {
+    // default = dark
+    rootBody.classList.remove('light');
+    btn.textContent = '🌙';
+  }
 
-btn.addEventListener("click", () => {
-    document.body.classList.toggle("dark");
-
-    // Salva preferência
-    if (document.body.classList.contains("dark")) {
-        localStorage.setItem("theme", "dark");
-    } else {
-        localStorage.setItem("theme", "light");
-    }
-});
+  btn.addEventListener('click', () => {
+    const nowIsLight = rootBody.classList.toggle('light');
+    btn.textContent = nowIsLight ? '☀️' : '🌙';
+    localStorage.setItem('ltv_theme', nowIsLight ? 'light' : 'dark');
+  });
+})();
