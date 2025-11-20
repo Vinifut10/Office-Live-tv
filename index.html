@@ -1,105 +1,161 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Live TV – Gestão</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Live TV — Gestão de Ativações</title>
 
-    <!-- Variáveis de Tema -->
-    <style>
-        :root {
-            --bg: #0d0d0d;
-            --bg-header: #141414;
-            --bg-card: #1a1a1a;
-            --text: #ffffff;
-            --text-soft: #c7c7c7;
-            --border-color: #2a2a2a;
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-            --green: #00c853;
-            --yellow: #ffeb3b;
-            --blue: #2196f3;
-            --purple: #9c27b0;
-            --red: #ff5252;
-        }
-
-        body.light {
-            --bg: #f4f4f4;
-            --bg-header: #ffffff;
-            --bg-card: #ffffff;
-            --text: #1a1a1a;
-            --text-soft: #555;
-            --border-color: #ddd;
-        }
-    </style>
-
-    <link rel="stylesheet" href="style.css" />
+  <!-- Estilos -->
+  <link rel="stylesheet" href="index.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
+  <!-- ================= HEADER ================= -->
+  <header class="top-header">
+    <div class="header-left">
+      <img id="logo" src="logo.png" alt="Logo Live TV" class="logo-img" />
+      <div class="title-group">
+        <h1 class="app-title">Live TV</h1>
+        <div class="app-sub">Gestão de Ativações</div>
+      </div>
+    </div>
 
-    <!-- ===========================
-         HEADER
-    ============================ -->
-    <header>
-        <h1>Live TV – Gestão</h1>
-    </header>
+    <div class="header-right">
+      <div class="today">📅 <span id="todayText"></span></div>
+      <button id="toggleTheme" class="theme-btn" aria-label="Alternar tema">🌙</button>
+    </div>
+  </header>
 
-    <main style="padding: 20px;">
+  <!-- ================= MAIN ================= -->
+  <main class="container">
 
-        <!-- ===========================
-             TABS (Diário / Mensal / Anual)
-        ============================ -->
-        <div class="tabs">
-            <div class="tab active">Diário</div>
-            <div class="tab">Mensal</div>
-            <div class="tab">Anual</div>
+    <!-- PAINEL ESQUERDO -->
+    <section class="panel form-panel">
+      <h2 class="panel-title">Lançar Ativações</h2>
+
+      <form id="activationForm" autocomplete="off">
+        <label class="input-label">Plano
+          <select id="planSelect" class="input-field" required>
+            <option value="30">R$30</option>
+            <option value="25">R$25</option>
+            <option value="21.5">R$21,50</option>
+            <option value="20">R$20</option>
+            <option value="10">R$10</option>
+            <option value="free">GRÁTIS</option>
+          </select>
+        </label>
+
+        <label class="input-label">Quantidade
+          <input id="quantityInput" type="number" min="1" value="1" class="input-field" required />
+        </label>
+
+        <label class="input-label">Data (permite lançar dias anteriores)
+          <input id="dateInput" type="date" class="input-field" required />
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-purple">Salvar Ativação</button>
+          <button type="button" id="clearBtn" class="btn ghost">Limpar formulário</button>
+        </div>
+      </form>
+
+      <hr />
+
+      <h3 class="section-title">Filtros / Pesquisa</h3>
+
+      <div class="filters">
+
+        <label class="input-label">Pesquisar por data
+          <input id="filterDate" type="date" class="input-field" />
+        </label>
+
+        <label class="input-label">Pesquisar por mês
+          <input id="filterMonth" type="month" class="input-field" />
+        </label>
+
+        <label class="input-label">Pesquisar por ano
+          <input id="filterYear" type="number" min="2000" max="2100" placeholder="Ex: 2025" class="input-field" />
+        </label>
+
+        <div class="filter-actions">
+          <button id="applyFilters" class="btn btn-blue">Aplicar</button>
+          <button id="resetFilters" class="btn ghost">Resetar</button>
+        </div>
+      </div>
+
+      <hr />
+
+      <h3 class="section-title">Exportar / Backup</h3>
+
+      <div class="export-actions">
+        <button id="exportJson" class="btn btn-green">Exportar JSON</button>
+        <button id="importJsonBtn" class="btn ghost">Importar JSON</button>
+        <input id="importJson" type="file" accept=".json" style="display:none" />
+      </div>
+    </section>
+
+    <!-- PAINEL DIREITO / DASHBOARD -->
+    <section class="panel dashboard-panel">
+      <div class="top-cards">
+        <div class="card purple">
+          <span class="card-title">Clientes Ativos (Total)</span>
+          <span class="card-value" id="totalDay">0</span>
         </div>
 
-        <!-- ===========================
-             CARDS
-        ============================ -->
         <div class="card green">
-            <div class="card-title">Ativações Hoje</div>
-            <div class="card-value">12</div>
-            <div class="card-icon">📈</div>
+          <span class="card-title">Total Mensal (QTD)</span>
+          <span class="card-value" id="totalMonth">0</span>
         </div>
 
         <div class="card blue">
-            <div class="card-title">Clientes Ativos</div>
-            <div class="card-value">842</div>
-            <div class="card-icon">👥</div>
+          <span class="card-title">Total Anual (QTD)</span>
+          <span class="card-value" id="totalYear">0</span>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h4>Distribuição por Plano (mês selecionado)</h4>
+          <div class="chart-wrap"><canvas id="planPie"></canvas></div>
         </div>
 
-        <div class="card yellow">
-            <div class="card-title">Faturamento do Mês</div>
-            <div class="card-value">R$ 12.380</div>
-            <div class="card-icon">💰</div>
+        <div class="chart-card">
+          <h4>Ativações — últimos 30 dias</h4>
+          <div class="chart-wrap"><canvas id="timeLine"></canvas></div>
         </div>
+      </div>
 
-        <div class="card purple">
-            <div class="card-title">Lucro Líquido</div>
-            <div class="card-value">R$ 6.740</div>
-            <div class="card-icon">📊</div>
-        </div>
+      <hr />
 
-        <!-- BOTÕES -->
-        <br><br>
+      <h3 class="section-title">Lista de Lançamentos</h3>
 
-        <button id="toggleTheme" class="btn btn-purple">
-            🌓
-        </button>
+      <div class="table-wrap">
+        <table id="activationsTable">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Plano</th>
+              <th>Qtd</th>
+              <th>Valor Unit.</th>
+              <th>Valor Total</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
-    </main>
+  <footer class="footer">
+    <small>Live TV — Sistema Offline (localStorage). Desenvolvido para GitHub Pages.</small>
+  </footer>
 
-    <!-- ===========================
-         JS – alternar tema
-    ============================ -->
-    <script>
-        const toggleBtn = document.getElementById("toggleTheme");
-
-        toggleBtn.addEventListener("click", () => {
-            document.body.classList.toggle("light");
-        });
-    </script>
-
+  <script src="toggleTheme.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
