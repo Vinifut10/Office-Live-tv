@@ -1,74 +1,127 @@
-/* style.css — componentes, botões, cards, tabelas */
+/* ----------- VARIÁVEIS (modo escuro) ----------- */
+:root {
+    --bg: #0d0d0d;
+    --bg-card: #1a1a1a;
+    --text: #ffffff;
+    --text-soft: #b5b5b5;
+    --border-color: #333;
 
-/* FORM (left panel) */
-.panel-title { font-size:18px; color:var(--text); margin-bottom:14px; font-weight:700; }
-.input-label { display:block; font-size:13px; color:var(--text-soft); margin-bottom:8px; }
-.input-field {
-  width:100%;
-  padding:10px 12px;
-  border-radius:10px;
-  border:1px solid var(--border-color);
-  background: transparent;
-  color: var(--text);
-  outline: none;
-  margin-bottom:12px;
+    --green: #00ff9d;
+    --blue: #009dff;
+    --red: #ff4d4d;
+    --yellow: #ffd900;
+    --purple: #a770ff;
 }
 
-/* form actions */
-.form-actions { display:flex; gap:10px; margin-top:8px; }
-.btn {
-  padding:10px 14px;
-  border-radius:10px;
-  font-weight:700;
-  cursor:pointer;
-  border:none;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
+/* ----------- MODO CLARO ----------- */
+.light {
+    --bg: #f3f3f3;
+    --bg-card: #ffffff;
+    --text: #000;
+    --text-soft: #444;
+    --border-color: #ddd;
 }
-.btn.ghost {
-  background: transparent;
-  border:1px solid var(--border-color);
-  color:var(--text);
-}
-.btn-green { background: var(--green); color: #07120a; }
-.btn-blue { background: var(--blue); color: #071434; }
-.btn-purple { background: linear-gradient(90deg,var(--accent-start),var(--accent-end)); color:#071124; }
-.btn { color:var(--text); }
 
-/* CARDS (dashboard) */
-.top-cards { display:flex; gap:12px; margin-bottom:16px; }
+/* ----------- GLOBAL ----------- */
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* ----------- HEADER ----------- */
+header {
+    background: #111;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    color: var(--purple);
+    font-size: 22px;
+}
+
+#toggleTheme {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text);
+    cursor: pointer;
+}
+
+/* ----------- TABS ----------- */
+.tabs {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+}
+
+.tab {
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.tab.active {
+    background: var(--purple);
+    color: #fff;
+}
+
+/* ----------- MAIN ----------- */
+.section-title {
+    padding: 0 15px;
+    margin-top: 15px;
+    font-size: 18px;
+}
+
+/* ----------- CARDS ----------- */
 .card {
-  flex:1;
-  padding:16px;
-  border-radius:12px;
-  position:relative;
+    background: var(--bg-card);
+    margin: 15px;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
 }
-.card-title { font-size:13px; color:var(--text-soft); }
-.card-value { font-size:24px; font-weight:800; color:var(--text); margin-top:8px; }
 
-/* colored bottom border like requested */
 .card.green { border-bottom: 4px solid var(--green); }
-.card.red { border-bottom: 4px solid var(--red); }
 .card.blue { border-bottom: 4px solid var(--blue); }
+.card.red { border-bottom: 4px solid var(--red); }
 .card.yellow { border-bottom: 4px solid var(--yellow); }
-.card.purple { border-bottom: 4px solid var(--purple); }
 
-/* CHARTS */
-.charts-row { display:flex; gap:12px; margin-bottom:16px; }
-.chart-card { flex:1; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:12px; border-radius:10px; border:1px solid var(--border-color); }
-.chart-card h4 { margin:0 0 8px 0; color:var(--text-soft); font-size:14px; }
-.chart-wrap { height:220px; }
-
-/* TABLE */
-.table-wrap { max-height:360px; overflow:auto; }
-table { width:100%; border-collapse:collapse; color:var(--text); }
-thead th { text-align:left; position:sticky; top:0; background:var(--bg-card); padding:10px; border-bottom:1px solid var(--border-color); color:var(--text-soft); font-size:13px; }
-tbody td { padding:10px; border-top:1px solid rgba(255,255,255,0.03); font-size:14px; }
-
-/* small responsive tweaks */
-@media (max-width:600px){
-  .top-cards { flex-direction:column; }
-  .charts-row { flex-direction:column; }
-  .chart-wrap { height:180px; }
+.card-title {
+    color: var(--text-soft);
+    font-size: 14px;
 }
+
+.card-value {
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* ----------- BOTÕES ----------- */
+.btn {
+    margin: 20px auto;
+    display: block;
+    padding: 15px 20px;
+    border-radius: 12px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    color: #fff;
+    width: 90%;
+}
+
+.btn-green { background: var(--green); color: #000; }
+.btn-blue { background: var(--blue); }
+.btn-yellow { background: var(--yellow); color: #000; }
+.btn-purple { background: var(--purple); }
