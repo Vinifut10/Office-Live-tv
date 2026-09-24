@@ -117,6 +117,39 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;ba
 @keyframes splashPop{from{transform:scale(.62) rotate(-8deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}@keyframes spark{to{transform:translateY(-5px);filter:brightness(1.18)}}
 @media(max-width:440px){.app-brand{border-radius:20px}.app-brand strong{font-size:17px}.nav{width:calc(100% - 16px)}.store-grid{grid-template-columns:1fr 1fr}}
 
+
+/* ===== Missões Divertidas 1.12.3107 — layout fiel ao mockup ===== */
+:root{--violet:#7818e8;--violet2:#a930ff;--pink:#ff4fc8;--gold:#ffd83d;--green:#22d35d;--deep:#3d126b}
+body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe 100%) fixed}
+.shell{max-width:560px;padding:10px 10px 112px}
+.app-brand{border-radius:24px;padding:10px 12px;background:linear-gradient(135deg,#7619dd,#b52ef4 62%,#ff5cca);border:2px solid rgba(255,255,255,.45);box-shadow:0 10px 26px rgba(67,5,117,.28)}
+.app-brand img{width:46px;height:46px;border-radius:14px}
+.header{border:0;background:linear-gradient(180deg,#fff,#fff8ff);box-shadow:0 8px 24px rgba(88,28,136,.13)}
+.header .small{color:#7f5a97}.header h1{font-size:24px;color:#4a176f}
+.hero{background:linear-gradient(180deg,#fff7ff,#fff);color:#3f1560;border:0;box-shadow:0 10px 26px rgba(75,22,116,.12);padding:14px}
+.hero:after{display:none}
+.hero-top h2{font-size:22px;color:#4a176f}.hero-top p{color:#836698;opacity:1}
+.ring{width:82px;height:82px;background:conic-gradient(#7b20e8 calc(var(--p)*1%),#eadcff 0)}
+.ring:before{width:62px;height:62px;background:#fff}.ring b{color:#6b1fc5;font-size:18px}
+.quick-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}
+.quick-stat{background:#fff;border-radius:18px;padding:12px 7px;text-align:center;box-shadow:0 8px 20px rgba(89,28,134,.1);border:1px solid #efe2ff}
+.quick-stat .qs-icon{font-size:28px;line-height:1}.quick-stat b{display:block;font-size:21px;color:#431861;margin:4px 0 1px}.quick-stat span{display:block;font-size:11px;font-weight:800;color:#6c597a}
+.today-card{background:linear-gradient(135deg,#fff,#fff7ff);border-radius:22px;padding:15px;box-shadow:0 9px 22px rgba(78,26,120,.1);margin:12px 0}
+.today-head{display:flex;justify-content:space-between;align-items:center}.today-head h2{margin:0;color:#481765;font-size:21px}.date-badge{background:#f2e8ff;color:#7421cc;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:900}
+.progress-track{height:11px;background:#eadff5;border-radius:99px;overflow:hidden;margin:10px 0 6px}.progress-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#21d85e,#7cdc39);width:0}
+.filter-row{display:flex;gap:7px;overflow:auto;padding:3px 0 9px}.filter-chip{border:0;background:#f2edf6;color:#6d5e75;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:800;white-space:nowrap}.filter-chip.active{background:linear-gradient(135deg,#7a1ee8,#a52df5);color:#fff}
+.mission{border-radius:18px!important;padding:11px!important}.mission-info h3{font-size:16px}.mission-info p{font-size:11px}.mission button{min-width:46px;height:46px;border-radius:14px}
+.mission:nth-child(4n+1){background:#eaffea}.mission:nth-child(4n+2){background:#e8f7ff}.mission:nth-child(4n+3){background:#fff5d9}.mission:nth-child(4n){background:#f8eaff}
+.streak-mini{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff5d5,#fff);border-radius:20px;padding:13px 14px;margin:12px 0;box-shadow:0 8px 20px rgba(103,55,10,.08)}.streak-mini .fire{font-size:42px}.streak-mini b{font-size:18px;color:#5f287c}.streak-mini .small{margin-top:2px}
+.card{margin-top:12px}.card-title h2{font-size:19px}
+.calendar-strip{background:#fff;border-radius:18px;padding:8px;box-shadow:0 6px 18px rgba(78,24,118,.08);margin:8px 0 12px}
+.date-pill{min-width:58px;border:0;background:#f5f0f8}.date-pill.active{background:linear-gradient(180deg,#8f22ef,#6e18d6)}
+.week{background:#fff;border-radius:18px;padding:9px}.day{background:#fff}.day.selected{box-shadow:0 7px 16px rgba(111,25,205,.3)}
+.calendar-detail{background:linear-gradient(180deg,#fff,#fff9ff)}
+.nav{max-width:560px;border-radius:20px;padding:6px 5px}.nav button{font-size:9px}.nav button b{font-size:19px}
+.store-item{background:#fff;border:1px solid #eadbff;box-shadow:0 7px 18px rgba(88,28,130,.08)}
+.friend-row{background:#fff;border:1px solid #eee0ff;box-shadow:0 6px 16px rgba(92,29,137,.07)}
+@media(max-width:380px){.quick-stat b{font-size:18px}.quick-stat span{font-size:10px}.app-brand small{display:none}}
 </style>
 <script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
@@ -192,7 +225,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3106</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3107</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar" style="margin:0 auto 10px;width:72px;height:72px">${role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>'}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -209,34 +242,49 @@ function renderMenu(){
 }
 function renderHome(){
   const el=document.getElementById("sec-home"), f=data.family;
-  const giftPct=Math.min(100,data.monthPercent);
+  const completedToday=data.todayTasks.filter(t=>t.status==="completed").length;
+  const waitingToday=data.todayTasks.filter(t=>t.status==="pending_confirmation").length;
   const missions=data.todayTasks.length?data.todayTasks.map(t=>{
     const done=t.status==="completed",waiting=t.status==="pending_confirmation";
     const cls=done?"done":waiting?"waiting":"";
-    const icon=done?"✓":waiting?"⌛":"✓";
+    const icon=done?"✓":waiting?"⌛":"○";
     return `<div class="mission ${cls}" data-mission-title="${esc((t.title+" "+(t.description||"")).toLowerCase())}">
-      <div class="mission-emoji">${esc(t.emoji)}</div><div class="mission-info"><h3>${esc(t.title)}</h3><p>${esc(t.description||"Missão do dia")}</p><span class="points">+${t.points} ⭐</span></div>
+      <div class="mission-emoji">${esc(t.emoji)}</div>
+      <div class="mission-info"><h3>${esc(t.title)}</h3><p>${esc(t.description||"Missão do dia")}</p><span class="points">⭐ ${t.points}</span></div>
       <button data-task="${t.id}" data-status="${t.status}" title="Marcar missão">${icon}</button>
     </div>`;
   }).join(""):`<div class="empty"><div class="big">🌈</div>Nenhuma missão programada para hoje.</div>`;
-  const milestones=[3,7,14,30], nextMilestone=milestones.find(m=>data.streak<m), bonusMap=data.streakBonuses||{};
-  const streakGoal=`<div class="card"><div class="card-title"><h2>🔥 Sequência de missões</h2><span>${data.streak} dias</span></div><p style="margin:4px 0 10px">${data.streak===0?"Complete todas as missões de hoje para começar sua sequência!":`Você está com <b>${data.streak} dias seguidos</b>!`}</p>${nextMilestone?`<div class="bar"><i style="width:${Math.min(100,Math.round(data.streak/nextMilestone*100))}%"></i></div><p class="small" style="margin-top:8px">Faltam <b>${nextMilestone-data.streak} dias</b> para ganhar <b>+${bonusMap[nextMilestone]||0} ⭐</b></p>`:`<p class="small">👑 Sequência máxima conquistada! Continue mantendo o ritmo.</p>`}</div>`;
+  const prettyDate=new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short",timeZone:"UTC"}).format(new Date(data.today+"T12:00:00Z"));
+  const pendingReward=data.rewardUnlocked?1:0;
   el.innerHTML=`
-  <div class="hero">
-    <div class="hero-top"><div><h2>Missões de hoje</h2><p>${data.todayTasks.filter(t=>t.status==="completed").length} de ${data.todayTasks.length} concluídas</p></div>
-    <div class="ring" style="--p:${data.todayPercent}"><b>${data.todayPercent}%</b></div></div>
-    <div class="stats"><div class="stat"><b>⭐ ${data.totalPoints}</b><span>estrelas</span></div><div class="stat"><b>🔥 ${data.streak}</b><span>sequência</span></div><div class="stat"><b>🏅 ${data.level}</b><span>nível</span></div></div>
-  </div>
-  ${streakGoal}
-  <div class="card"><div class="reward"><div class="gift">${data.rewardUnlocked?"🎉":"🎁"}</div><div class="reward-main"><div class="small">Recompensa do mês</div><h3>${esc(f.current_reward_name||"Presente surpresa")}</h3><div class="small">${data.monthPercent}% de ${f.reward_goal_percent}% necessários</div><div class="bar"><i style="width:${giftPct}%"></i></div></div></div></div>
-  <div class="card"><div class="card-title"><h2>🎯 Suas missões</h2><span>${levelTitle(data.level)}</span></div><div class="field" style="margin-top:0"><input id="missionSearch" placeholder="🔎 Buscar missão"></div><div class="missions">${missions}</div></div>
-  <div class="card"><div class="card-title"><h2>🚀 Próximo nível</h2><span>${data.levelPoints}/250</span></div><div class="bar"><i style="width:${Math.round(data.levelPoints/250*100)}%;background:linear-gradient(90deg,#6d4aff,#a977ff)"></i></div></div>`;
+    <div class="quick-stats">
+      <div class="quick-stat"><div class="qs-icon">🔥</div><b>${data.streak}</b><span>Sequência<br>dias seguidos</span></div>
+      <div class="quick-stat"><div class="qs-icon">⭐</div><b>${data.totalPoints}</b><span>Estrelas<br>totais</span></div>
+      <div class="quick-stat"><div class="qs-icon">🎁</div><b>${pendingReward}</b><span>Recompensas<br>para resgatar</span></div>
+    </div>
+
+    <div class="today-card">
+      <div class="today-head"><h2>☀️ Hoje</h2><span class="date-badge">${prettyDate}</span></div>
+      <div class="progress-track"><i style="width:${data.todayPercent}%"></i></div>
+      <div class="small"><b>${completedToday} de ${data.todayTasks.length}</b> missões concluídas${waitingToday? ` • ${waitingToday} aguardando aprovação`:""}</div>
+    </div>
+
+    <div class="card">
+      <div class="field" style="margin-top:0"><input id="missionSearch" placeholder="🔎 Buscar missão..."></div>
+      <div class="filter-row"><button class="filter-chip active">Todas</button><button class="filter-chip">Casa</button><button class="filter-chip">Pessoal</button><button class="filter-chip">Estudos</button></div>
+      <div class="missions">${missions}</div>
+    </div>
+
+    <div class="streak-mini"><div class="fire">🔥</div><div><b>${data.streak} dias seguidos!</b><div class="small">${data.streak?"Continue assim para manter sua sequência.":"Complete todas as missões de hoje para começar."}</div></div></div>
+
+    <div class="card"><div class="reward"><div class="gift">${data.rewardUnlocked?"🎉":"🎁"}</div><div class="reward-main"><div class="small">Recompensa do mês</div><h3>${esc(f.current_reward_name||"Presente surpresa")}</h3><div class="small">${data.monthPercent}% de ${f.reward_goal_percent}% necessários</div><div class="bar"><i style="width:${Math.min(100,data.monthPercent)}%"></i></div></div></div></div>
+  `;
   const search=document.getElementById("missionSearch");if(search)search.oninput=()=>{const q=search.value.trim().toLowerCase();el.querySelectorAll("[data-mission-title]").forEach(m=>m.style.display=!q||m.dataset.missionTitle.includes(q)?"":"none")};
   el.querySelectorAll("[data-task]").forEach(b=>b.onclick=async()=>{
     const status=b.dataset.status, action=(status==="completed"||status==="pending_confirmation")?"undo_task":"complete_task";
     showLoader(true);try{
       const before=data.todayPercent;data=await callApi(action,{task_id:b.dataset.task,due_date:data.today});
-      if(action==="complete_task"){toast(data.todayPercent===100?"Todas as missões concluídas! 🎉":"Missão concluída! ⭐");if(before<100&&data.todayPercent===100)confetti()}
+      if(action==="complete_task"){toast(data.todayPercent===100?"Todas as missões concluídas! 🎉":"Missão marcada! ⭐");if(before<100&&data.todayPercent===100)confetti()}
       else toast("Missão desmarcada.");
       renderApp();
     }catch(e){toast(e.message)}finally{showLoader(false)}
