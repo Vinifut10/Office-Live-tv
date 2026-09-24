@@ -67,7 +67,7 @@ h1,h2,h3,p{margin-top:0}.login h1{text-align:center;margin-bottom:8px;font-size:
 @keyframes spin{to{transform:rotate(360deg)}}@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.8}}
 @media(max-width:440px){.shell{padding-left:12px;padding-right:12px}.hero{padding:17px}.stats{gap:6px}.stat{padding:9px 5px}.achievement-grid{grid-template-columns:1fr 1fr}.row2{grid-template-columns:1fr}}
 body{background:radial-gradient(circle at 15% 0,#f7d7ff 0,transparent 30%),radial-gradient(circle at 90% 10%,#fff0b7 0,transparent 28%),linear-gradient(180deg,#f4e9ff,#fff7fd 58%,#fff)}.login{border:3px solid #fff;box-shadow:0 18px 45px rgba(86,26,151,.2);position:relative;overflow:hidden}.login:before{content:"⭐";position:absolute;left:18px;top:18px;font-size:30px}.login:after{content:"💜";position:absolute;right:18px;top:20px;font-size:30px}.logo-bubble,.avatar{overflow:hidden;padding:0;background:#4a176f;border:3px solid #fff;transform:none}.logo-bubble img,.avatar img{width:100%;height:100%;object-fit:cover}.primary{background:linear-gradient(135deg,#6d22d8,#b93cff 55%,#ff4ca3)}.hero{background:linear-gradient(135deg,#4b1677,#7427c9 55%,#b437e9);border:3px solid rgba(255,255,255,.7)}.card{border:2px solid #f0e4ff}.mission:nth-child(3n+1) .mission-emoji{background:#f1e6ff}.mission:nth-child(3n+2) .mission-emoji{background:#fff1c9}.mission:nth-child(3n) .mission-emoji{background:#ffe3f2}</style>
-<script src="./register.js"></script></head>
+<script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
 <div id="root"></div><div id="toast" class="toast"></div><div id="loader" class="loader"><div class="spinner"></div></div>
 <script>
@@ -150,7 +150,9 @@ function renderHome(){
     <div class="hero-top"><div><h2>Missões de hoje</h2><p>${data.todayTasks.filter(t=>t.status==="completed").length} de ${data.todayTasks.length} concluídas</p></div>
     <div class="ring" style="--p:${data.todayPercent}"><b>${data.todayPercent}%</b></div></div>
     <div class="stats"><div class="stat"><b>⭐ ${data.totalPoints}</b><span>estrelas</span></div><div class="stat"><b>🔥 ${data.streak}</b><span>sequência</span></div><div class="stat"><b>🏅 ${data.level}</b><span>nível</span></div></div>
-  </div>\n  ${streakGoal}\n  <div class="card"><div class="reward"><div class="gift">${data.rewardUnlocked?"🎉":"🎁"}</div><div class="reward-main"><div class="small">Recompensa do mês</div><h3>${esc(f.current_reward_name||"Presente surpresa")}</h3><div class="small">${data.monthPercent}% de ${f.reward_goal_percent}% necessários</div><div class="bar"><i style="width:${giftPct}%"></i></div></div></div></div>
+  </div>
+  ${streakGoal}
+  <div class="card"><div class="reward"><div class="gift">${data.rewardUnlocked?"🎉":"🎁"}</div><div class="reward-main"><div class="small">Recompensa do mês</div><h3>${esc(f.current_reward_name||"Presente surpresa")}</h3><div class="small">${data.monthPercent}% de ${f.reward_goal_percent}% necessários</div><div class="bar"><i style="width:${giftPct}%"></i></div></div></div></div>
   <div class="card"><div class="card-title"><h2>🎯 Suas missões</h2><span>${levelTitle(data.level)}</span></div><div class="missions">${missions}</div></div>
   <div class="card"><div class="card-title"><h2>🚀 Próximo nível</h2><span>${data.levelPoints}/250</span></div><div class="bar"><i style="width:${Math.round(data.levelPoints/250*100)}%;background:linear-gradient(90deg,#6d4aff,#a977ff)"></i></div></div>`;
   el.querySelectorAll("[data-task]").forEach(b=>b.onclick=async()=>{
