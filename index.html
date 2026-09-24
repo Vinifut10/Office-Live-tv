@@ -161,6 +161,9 @@ body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe
 @media(max-width:400px){.icon-picker{grid-template-columns:repeat(6,1fr)}.app-brand-expanded img{width:56px!important;height:56px!important}.brand-copy strong{font-size:18px!important}}
 
 .pull-refresh{position:fixed;left:50%;top:0;z-index:9998;transform:translate(-50%,-72px);min-width:150px;height:54px;padding:8px 14px;border-radius:0 0 18px 18px;background:rgba(58,21,102,.96);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(45,12,76,.28);transition:transform .12s ease}.pull-refresh b{font-size:22px}.pull-refresh.ready{background:#6d20d7}.pull-refresh.refreshing b{animation:spinRefresh .8s linear infinite}@keyframes spinRefresh{to{transform:rotate(360deg)}}
+
+.profile-photo{overflow:hidden;background:#fff}.profile-photo img,.avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+#changeProfilePhoto{border-color:#cda8ff;background:#f7f0ff}
 </style>
 <script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
@@ -174,6 +177,21 @@ let loginRole=localStorage.getItem("md_role")||"child";
 let data=null, adminData=null, activeSection="home", adminTab="family", editingTask=null, selectedDate=null;
 let pullStartY=0,pullDistance=0,pullRefreshing=false,pullBound=false;
 const root=document.getElementById("root");
+const avatarStorageKey=role=>"md_avatar_"+role;
+function getLocalAvatar(role){try{return localStorage.getItem(avatarStorageKey(role))||""}catch{return""}}
+function saveLocalAvatar(role,dataUrl){try{if(dataUrl)localStorage.setItem(avatarStorageKey(role),dataUrl);else localStorage.removeItem(avatarStorageKey(role))}catch{}}
+function profileAvatarHtml(role,fallback){
+  const src=getLocalAvatar(role);
+  return src?'<img src="'+src+'" alt="Foto de perfil">':fallback;
+}
+async function fileToAvatarData(file){
+  if(!file||!file.type.startsWith("image/"))throw new Error("Escolha uma imagem.");
+  const img=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=r.result};r.onerror=reject;r.readAsDataURL(file)});
+  const size=256, canvas=document.createElement("canvas");canvas.width=size;canvas.height=size;
+  const ctx=canvas.getContext("2d");const s=Math.min(img.width,img.height),sx=(img.width-s)/2,sy=(img.height-s)/2;
+  ctx.drawImage(img,sx,sy,s,s,0,0,size,size);
+  return canvas.toDataURL("image/jpeg",.82);
+}
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const showLoader=v=>document.getElementById("loader").classList.toggle("show",!!v);
 function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2200)}
@@ -257,7 +275,7 @@ function renderApp(){
     <div class="brand-progress"><i style="width:${Math.min(100,data.monthPercent)}%"></i></div>
     <div class="brand-foot">${data.monthCompleted} de ${data.monthExpected} missões concluídas</div>
   </div>
-</div><header class="header"><div class="userline"><div class="avatar" id="profileMenuBtn" title="Abrir menu">${role==="parent"?"🧑":'<img src="data:image/jpeg;base64,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" alt="Duda">'}</div><div><div class="small">${role==="parent"?"Olá,":"Olá,"}</div><h1>${role==="parent"?esc(f.parent_name||f.display_name)+"!":child+"!"}</h1><span class="role-badge">${role==="parent"?"RESPONSÁVEL":"JOGADOR(A)"}</span></div></div></header>
+</div><header class="header"><div class="userline"><div class="avatar" id="profileMenuBtn" title="Abrir menu">${profileAvatarHtml(role,role==="parent"?"🧑":"⭐")}</div><div><div class="small">${role==="parent"?"Olá,":"Olá,"}</div><h1>${role==="parent"?esc(f.parent_name||f.display_name)+"!":child+"!"}</h1><span class="role-badge">${role==="parent"?"RESPONSÁVEL":"JOGADOR(A)"}</span></div></div></header>
     <main>
       <section id="sec-home" class="section ${activeSection==="home"?"active":""}"></section>
       <section id="sec-calendar" class="section ${activeSection==="calendar"?"active":""}"></section>
@@ -282,18 +300,27 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3111</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3112</span></div>
     <div style="text-align:center;padding:6px 0 14px">
-      <div class="avatar" style="margin:0 auto 10px;width:72px;height:72px">${role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>'}</div>
+      <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
       <div class="small">${role==="parent"?"Responsável":"Jogador(a)"} • Missões Divertidas</div>
     </div>
+    <input id="profilePhotoInput" type="file" accept="image/*" capture="user" style="display:none">
+    <button class="secondary" id="changeProfilePhoto" style="width:100%;margin-bottom:10px">📷 Alterar foto de perfil</button>
+    <button class="secondary" id="removeProfilePhoto" style="width:100%;margin-bottom:10px">🗑️ Remover foto</button>
     ${role==="parent"?'<button class="secondary" id="openParentSettings" style="width:100%;margin-bottom:10px">👨‍👩‍👧 Configurações da família</button>':""}
     <button class="secondary" id="menuHome" style="width:100%;margin-bottom:10px">🏠 Voltar para o início</button>
     <button class="secondary" id="menuStore" style="width:100%;margin-bottom:10px">🛍️ Loja de Estrelas</button>
     ${role==="child"?'<button class="secondary" id="menuAchievements" style="width:100%;margin-bottom:10px">🏆 Minhas conquistas</button>':""}
     <button class="danger" id="menuLogout" style="width:100%">🚪 Sair do aplicativo</button>
   </div>`;
+  const photoInput=document.getElementById("profilePhotoInput");
+  const changePhoto=document.getElementById("changeProfilePhoto");
+  const removePhoto=document.getElementById("removeProfilePhoto");
+  if(changePhoto)changePhoto.onclick=()=>photoInput.click();
+  if(photoInput)photoInput.onchange=async()=>{const file=photoInput.files&&photoInput.files[0];if(!file)return;showLoader(true);try{const img=await fileToAvatarData(file);saveLocalAvatar(role,img);toast("Foto de perfil atualizada 📸");renderApp()}catch(e){toast(e.message||"Não foi possível usar a foto.")}finally{showLoader(false)}};
+  if(removePhoto)removePhoto.onclick=()=>{if(!getLocalAvatar(role)){toast("Nenhuma foto personalizada.");return}if(!confirm("Remover a foto de perfil?"))return;saveLocalAvatar(role,"");toast("Foto removida.");renderApp()};
   document.getElementById("menuHome").onclick=()=>{activeSection="home";renderApp()};
   const ms=document.getElementById("menuStore");if(ms)ms.onclick=()=>{activeSection="store";renderApp()};
   const ma=document.getElementById("menuAchievements");if(ma)ma.onclick=()=>{activeSection="achievements";renderApp()};
