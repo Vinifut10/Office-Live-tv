@@ -1,1 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6d4aff"/><stop offset="1" stop-color="#b77cff"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#g)"/><circle cx="256" cy="256" r="142" fill="#fff" opacity=".14"/><circle cx="256" cy="256" r="100" fill="none" stroke="#fff" stroke-width="24"/><circle cx="256" cy="256" r="50" fill="none" stroke="#fff" stroke-width="20"/><circle cx="256" cy="256" r="14" fill="#fff"/><path d="M256 256L390 122" stroke="#ffd84d" stroke-width="22" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5b0fc9"/><stop offset=".5" stop-color="#a520ef"/><stop offset="1" stop-color="#ff52c8"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff36a"/><stop offset="1" stop-color="#ffad16"/></linearGradient>
+ <filter id="s"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#3e006f" flood-opacity=".35"/></filter>
+</defs>
+<rect width="512" height="512" rx="118" fill="url(#bg)"/>
+<path d="M49 118l17-36 17 36 39 5-29 27 8 39-35-19-35 19 8-39-29-27z" fill="url(#gold)" filter="url(#s)"/>
+<path d="M382 80l13-27 13 27 30 4-22 21 6 30-27-14-27 14 6-30-22-21z" fill="#fff" opacity=".9"/>
+<path d="M211 71l18 19 21-34 20 34 20-19 4 56h-87z" fill="none" stroke="#ffd83d" stroke-width="13" stroke-linejoin="round"/>
+<!-- Duda -->
+<ellipse cx="178" cy="225" rx="92" ry="103" fill="#2a0a36"/>
+<path d="M91 218c5-95 58-133 115-115 54 17 72 66 57 120-23-37-41-54-91-51-31 2-58 17-81 46z" fill="#18041f"/>
+<path d="M122 132c31-20 76-18 111 7" stroke="#8d37ff" stroke-width="18" stroke-linecap="round" opacity=".75"/>
+<ellipse cx="178" cy="224" rx="69" ry="75" fill="#f3a66f"/>
+<ellipse cx="153" cy="215" rx="12" ry="16" fill="#2d1835"/><ellipse cx="205" cy="215" rx="12" ry="16" fill="#2d1835"/>
+<circle cx="149" cy="210" r="4" fill="#fff"/><circle cx="201" cy="210" r="4" fill="#fff"/>
+<path d="M151 251q27 22 55-2" fill="none" stroke="#7d2746" stroke-width="8" stroke-linecap="round"/>
+<!-- Ryan -->
+<ellipse cx="342" cy="222" rx="88" ry="98" fill="#170b1d"/>
+<path d="M266 162c18-57 53-82 96-72 44 10 72 36 76 80-17-18-34-27-52-26-10-24-29-34-47-11-16-21-39-18-49 9-9-2-17 5-24 20z" fill="#16091d"/>
+<path d="M286 131q20-41 47-9 21-43 48-4 18-31 42 6" fill="none" stroke="#3e164d" stroke-width="20" stroke-linecap="round"/>
+<ellipse cx="342" cy="225" rx="66" ry="72" fill="#eda067"/>
+<ellipse cx="320" cy="214" rx="12" ry="16" fill="#2b1733"/><ellipse cx="370" cy="214" rx="12" ry="16" fill="#2b1733"/>
+<circle cx="316" cy="209" r="4" fill="#fff"/><circle cx="366" cy="209" r="4" fill="#fff"/>
+<path d="M318 249q25 20 50-2" fill="none" stroke="#792844" stroke-width="8" stroke-linecap="round"/>
+<!-- clipboard -->
+<g filter="url(#s)"><rect x="145" y="315" width="220" height="145" rx="32" fill="#fff"/><rect x="145" y="315" width="220" height="145" rx="32" fill="none" stroke="#6f19d8" stroke-width="14"/><rect x="221" y="296" width="70" height="35" rx="15" fill="url(#gold)"/>
+<rect x="178" y="350" width="32" height="32" rx="8" fill="#25ce59"/><path d="M185 365l8 8 15-18" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="178" y="398" width="32" height="32" rx="8" fill="#8f2fea"/><path d="M185 413l8 8 15-18" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M231 365h92M231 413h73" stroke="#cbb9dd" stroke-width="12" stroke-linecap="round"/></g>
+<path d="M399 344l15 31 34 5-25 23 6 34-30-16-31 16 6-34-24-23 34-5z" fill="url(#gold)" filter="url(#s)"/>
+</svg>
