@@ -154,6 +154,11 @@ body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe
 .brand-art-wrap{margin:2px 0 10px;border-radius:26px;overflow:hidden;box-shadow:0 14px 34px rgba(67,5,117,.30);border:2px solid rgba(255,255,255,.72);background:#7515df}
 .brand-art{display:block;width:100%;height:auto;aspect-ratio:560/214;object-fit:cover}
 @media(max-width:440px){.brand-art-wrap{border-radius:22px;margin-top:0}}
+
+.app-brand-expanded{align-items:flex-start;padding:14px!important}.app-brand-expanded img{width:62px!important;height:62px!important;border-radius:18px!important;flex:0 0 auto}.brand-copy{flex:1;min-width:0}.brand-copy strong{font-size:21px!important}.brand-month{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;font-weight:800}.brand-month b{font-size:18px}.brand-progress{height:9px;border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden;margin-top:5px}.brand-progress i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ffd83d,#53f176)}.brand-foot{font-size:10px;opacity:.86;margin-top:5px}
+.priority-card{background:linear-gradient(135deg,#fff9d9,#fff);border:2px solid #ffe16a;border-radius:24px;padding:15px;margin:12px 0;box-shadow:0 10px 25px rgba(110,75,5,.10)}.priority-progress{height:10px;background:#fff0a9;border-radius:99px;overflow:hidden;margin:10px 0 12px}.priority-progress i{display:block;height:100%;background:linear-gradient(90deg,#ffc928,#28d861);border-radius:99px}.priority-success{background:#eaffef;color:#168648;border-radius:14px;padding:9px 11px;font-size:12px;font-weight:900;margin-bottom:10px}.priority-mission{border:1px solid #ffe78c!important}.priority-badge{display:inline-flex;align-items:center;background:#fff0a9;color:#8a6200;border-radius:999px;padding:3px 7px;font-size:9px;font-weight:900;white-space:nowrap}.mission-title-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.mission-title-line h3{margin:0}.compact-empty{padding:12px!important;font-size:12px}
+.icon-picker{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.icon-choice{aspect-ratio:1;border:1px solid #eadcff;border-radius:13px;background:#fff;font-size:23px;display:grid;place-items:center;padding:0}.icon-choice.active{background:#efe2ff;border-color:#8b26e9;box-shadow:0 0 0 2px rgba(139,38,233,.15)}.recurrence-row{display:flex;gap:7px;flex-wrap:wrap}.recurrence-btn{padding:8px 10px;font-size:12px}.priority-toggle{height:48px;border:1px solid #eadcff;border-radius:15px;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px;font-weight:800;color:#5b267d}.task-tip{background:#f7f0ff;color:#6e5380;border-radius:14px;padding:10px 12px;font-size:12px;margin:5px 0 13px}.task-priority-row{background:#fffaf0;border-radius:14px;padding-left:8px;padding-right:8px}
+@media(max-width:400px){.icon-picker{grid-template-columns:repeat(6,1fr)}.app-brand-expanded img{width:56px!important;height:56px!important}.brand-copy strong{font-size:18px!important}}
 </style>
 <script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
@@ -203,7 +208,14 @@ function renderApp(){
   const f=data.family, child=esc(f.child_name||"Criança"), role=data.role;
   const childNav=role==="child";
   root.innerHTML=`<div class="shell">
-    <div class="app-brand"><img src="./app-icon.jpg" alt="Missões Divertidas"><div><strong>Missões Divertidas</strong><small>Tarefas, estrelas e recompensas!</small></div></div><header class="header"><div class="userline"><div class="avatar" id="profileMenuBtn" title="Abrir menu">${role==="parent"?"🧑":'<img src="data:image/jpeg;base64,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" alt="Duda">'}</div><div><div class="small">${role==="parent"?"Painel do responsável":"Olá,"}</div><h1>${role==="parent"?esc(f.display_name):child+"!"}</h1><span class="role-badge">${role==="parent"?"RESPONSÁVEL":"JOGADOR(A)"}</span></div></div></header>
+    <div class="app-brand app-brand-expanded">
+  <img src="./app-icon.jpg" alt="Missões Divertidas">
+  <div class="brand-copy"><strong>Missões Divertidas</strong><small>Tarefas, estrelas e recompensas!</small>
+    <div class="brand-month"><span>Progresso do mês</span><b>${data.monthPercent}%</b></div>
+    <div class="brand-progress"><i style="width:${Math.min(100,data.monthPercent)}%"></i></div>
+    <div class="brand-foot">${data.monthCompleted} de ${data.monthExpected} missões concluídas</div>
+  </div>
+</div><header class="header"><div class="userline"><div class="avatar" id="profileMenuBtn" title="Abrir menu">${role==="parent"?"🧑":'<img src="data:image/jpeg;base64,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" alt="Duda">'}</div><div><div class="small">${role==="parent"?"Olá,":"Olá,"}</div><h1>${role==="parent"?esc(f.parent_name||f.display_name)+"!":child+"!"}</h1><span class="role-badge">${role==="parent"?"RESPONSÁVEL":"JOGADOR(A)"}</span></div></div></header>
     <main>
       <section id="sec-home" class="section ${activeSection==="home"?"active":""}"></section>
       <section id="sec-calendar" class="section ${activeSection==="calendar"?"active":""}"></section>
@@ -228,7 +240,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3109</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3110</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar" style="margin:0 auto 10px;width:72px;height:72px">${role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>'}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -247,38 +259,52 @@ function renderHome(){
   const el=document.getElementById("sec-home"), f=data.family;
   const completedToday=data.todayTasks.filter(t=>t.status==="completed").length;
   const waitingToday=data.todayTasks.filter(t=>t.status==="pending_confirmation").length;
-  const missions=data.todayTasks.length?data.todayTasks.map(t=>{
+  const makeMission=(t,priority=false)=>{
     const done=t.status==="completed",waiting=t.status==="pending_confirmation";
     const cls=done?"done":waiting?"waiting":"";
     const icon=done?"✓":waiting?"⌛":"○";
-    return `<div class="mission ${cls}" data-mission-title="${esc((t.title+" "+(t.description||"")).toLowerCase())}">
+    return `<div class="mission ${cls} ${priority?"priority-mission":""}" data-mission-title="${esc((t.title+" "+(t.description||"")).toLowerCase())}">
       <div class="mission-emoji">${esc(t.emoji)}</div>
-      <div class="mission-info"><h3>${esc(t.title)}</h3><p>${esc(t.description||"Missão do dia")}</p><span class="points">⭐ ${t.points}</span></div>
+      <div class="mission-info"><div class="mission-title-line"><h3>${esc(t.title)}</h3>${priority?'<span class="priority-badge">⭐ Importante</span>':""}</div><p>${esc(t.description||"Missão do dia")}</p><span class="points">⭐ ${t.points}</span></div>
       <button data-task="${t.id}" data-status="${t.status}" title="Marcar missão">${icon}</button>
     </div>`;
-  }).join(""):`<div class="empty"><div class="big">🌈</div>Nenhuma missão programada para hoje.</div>`;
+  };
+  const priority=data.todayTasks.filter(t=>t.is_priority);
+  const normal=data.todayTasks.filter(t=>!t.is_priority);
+  const priorityHtml=priority.length?priority.map(t=>makeMission(t,true)).join(""):`<div class="empty compact-empty">Nenhuma missão prioritária hoje. 🌟</div>`;
+  const normalHtml=normal.length?normal.map(t=>makeMission(t,false)).join(""):`<div class="empty compact-empty">Nenhuma outra missão hoje.</div>`;
   const prettyDate=new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short",timeZone:"UTC"}).format(new Date(data.today+"T12:00:00Z"));
   const pendingReward=data.rewardUnlocked?1:0;
+  const priorityExpected=Number(data.todayPriorityExpected||priority.length||0);
+  const priorityCompleted=Number(data.todayPriorityCompleted||priority.filter(t=>t.status==="completed").length||0);
+  const priorityPct=priorityExpected?Math.round(priorityCompleted/priorityExpected*100):100;
   el.innerHTML=`
     <div class="quick-stats">
-      <div class="quick-stat"><div class="qs-icon">🔥</div><b>${data.streak}</b><span>Sequência<br>dias seguidos</span></div>
+      <div class="quick-stat"><div class="qs-icon">🔥</div><b>${data.streak}</b><span>Sequência<br>dias válidos</span></div>
       <div class="quick-stat"><div class="qs-icon">⭐</div><b>${data.totalPoints}</b><span>Estrelas<br>totais</span></div>
-      <div class="quick-stat"><div class="qs-icon">🎁</div><b>${pendingReward}</b><span>Recompensas<br>para resgatar</span></div>
+      <div class="quick-stat"><div class="qs-icon">🎁</div><b>${pendingReward}</b><span>Recompensas<br>disponíveis</span></div>
     </div>
 
     <div class="today-card">
-      <div class="today-head"><h2>☀️ Hoje</h2><span class="date-badge">${prettyDate}</span></div>
+      <div class="today-head"><h2>☀️ Missões de hoje</h2><span class="date-badge">${prettyDate}</span></div>
       <div class="progress-track"><i style="width:${data.todayPercent}%"></i></div>
-      <div class="small"><b>${completedToday} de ${data.todayTasks.length}</b> missões concluídas${waitingToday? ` • ${waitingToday} aguardando aprovação`:""}</div>
+      <div class="small"><b>${completedToday} de ${data.todayTasks.length}</b> concluídas${waitingToday? ` • ${waitingToday} aguardando aprovação`:""}</div>
+    </div>
+
+    <div class="priority-card">
+      <div class="card-title"><div><h2>⭐ Prioritárias do dia</h2><div class="small">Faça estas primeiro para manter o dia válido.</div></div><span>${priorityCompleted}/${priorityExpected}</span></div>
+      <div class="priority-progress"><i style="width:${priorityPct}%"></i></div>
+      ${data.todayPrioritiesDone?'<div class="priority-success">🎉 Prioridades concluídas! Seu dia já conta para a sequência.</div>':""}
+      <div class="missions">${priorityHtml}</div>
     </div>
 
     <div class="card">
+      <div class="card-title"><h2>✅ Outras missões</h2><span>${normal.length}</span></div>
       <div class="field" style="margin-top:0"><input id="missionSearch" placeholder="🔎 Buscar missão..."></div>
-      <div class="filter-row"><button class="filter-chip active">Todas</button><button class="filter-chip">Casa</button><button class="filter-chip">Pessoal</button><button class="filter-chip">Estudos</button></div>
-      <div class="missions">${missions}</div>
+      <div class="missions">${normalHtml}</div>
     </div>
 
-    <div class="streak-mini"><div class="fire">🔥</div><div><b>${data.streak} dias seguidos!</b><div class="small">${data.streak?"Continue assim para manter sua sequência.":"Complete todas as missões de hoje para começar."}</div></div></div>
+    <div class="streak-mini"><div class="fire">🔥</div><div><b>${data.streak} dias seguidos!</b><div class="small">${data.streak?"Complete as prioritárias de cada dia para manter sua sequência.":"Faça as prioritárias de hoje para começar sua sequência."}</div></div></div>
 
     <div class="card"><div class="reward"><div class="gift">${data.rewardUnlocked?"🎉":"🎁"}</div><div class="reward-main"><div class="small">Recompensa do mês</div><h3>${esc(f.current_reward_name||"Presente surpresa")}</h3><div class="small">${data.monthPercent}% de ${f.reward_goal_percent}% necessários</div><div class="bar"><i style="width:${Math.min(100,data.monthPercent)}%"></i></div></div></div></div>
   `;
@@ -287,7 +313,7 @@ function renderHome(){
     const status=b.dataset.status, action=(status==="completed"||status==="pending_confirmation")?"undo_task":"complete_task";
     showLoader(true);try{
       const before=data.todayPercent;data=await callApi(action,{task_id:b.dataset.task,due_date:data.today});
-      if(action==="complete_task"){toast(data.todayPercent===100?"Todas as missões concluídas! 🎉":"Missão marcada! ⭐");if(before<100&&data.todayPercent===100)confetti()}
+      if(action==="complete_task"){toast("Missão enviada para aprovação ⭐");if(before<100&&data.todayPercent===100)confetti()}
       else toast("Missão desmarcada.");
       renderApp();
     }catch(e){toast(e.message)}finally{showLoader(false)}
@@ -385,22 +411,42 @@ function renderTaskAdmin(){
   const el=document.getElementById("ap-tasks"),tasks=adminData?.tasks||[],t=editingTask;
   const selected=t?(t.task_schedules||[]).map(x=>Number(x.weekday)):[0,1,2,3,4,5,6];
   const names=["D","S","T","Q","Q","S","S"];
+  const icons=["⭐","🛏️","🧹","🧺","👕","🧸","🪥","🛁","🚿","📚","✏️","🎒","📝","🐶","🐱","🐾","💧","🥣","🍽️","🥗","🤝","❤️","🌟","🏆","🎯","🕒","🌞","🌙","🧽","🗑️","🪴","⚽","🎨","🎵"];
   el.innerHTML=`<div class="card"><div class="card-title"><h2>${t?"✏️ Editar missão":"➕ Nova missão"}</h2>${t?'<button class="secondary" id="cancelEdit">Cancelar</button>':""}</div>
-    <div class="row2"><div class="field"><label>Emoji</label><input id="taskEmoji" maxlength="4" value="${esc(t?.emoji||"⭐")}"></div><div class="field"><label>Pontos</label><input id="taskPoints" type="number" min="0" value="${t?.points||10}"></div></div>
     <div class="field"><label>Nome da missão</label><input id="taskTitle" value="${esc(t?.title||"")}" placeholder="Ex.: Guardar os brinquedos"></div>
     <div class="field"><label>Descrição opcional</label><input id="taskDesc" value="${esc(t?.description||"")}" placeholder="Uma dica curta"></div>
+
+    <div class="field"><label>Escolha um ícone</label>
+      <div class="icon-picker">${icons.map(ic=>`<button type="button" class="icon-choice ${(t?.emoji||"⭐")===ic?"active":""}" data-icon="${ic}">${ic}</button>`).join("")}</div>
+      <input id="taskEmoji" maxlength="8" value="${esc(t?.emoji||"⭐")}" placeholder="Ou digite outro emoji">
+    </div>
+
+    <div class="row2"><div class="field"><label>Pontos</label><input id="taskPoints" type="number" min="0" value="${t?.points||10}"></div>
+      <div class="field"><label>Importância</label><label class="priority-toggle"><input id="taskPriority" type="checkbox" ${t?.is_priority?"checked":""}><span>⭐ Tarefa prioritária</span></label></div>
+    </div>
+
+    <div class="field"><label>Recorrência</label><div class="recurrence-row">
+      <button type="button" class="secondary recurrence-btn" data-days="0,1,2,3,4,5,6">Todos os dias</button>
+      <button type="button" class="secondary recurrence-btn" data-days="1,2,3,4,5">Seg–Sex</button>
+      <button type="button" class="secondary recurrence-btn" data-days="0,6">Fim de semana</button>
+    </div></div>
+
     <div class="field"><label>Dias da semana</label><div class="weekdays">${names.map((n,i)=>`<label><input type="checkbox" data-wd="${i}" ${selected.includes(i)?"checked":""}>${n}</label>`).join("")}</div></div>
-    <label style="display:flex;gap:9px;align-items:center;margin:12px 0;font-size:13px;font-weight:800"><input id="taskConfirm" type="checkbox" ${t?.requires_parent_confirmation?"checked":""}> Precisa de confirmação dos pais</label>
+
+    <div class="task-tip">💡 Para uma rotina simples, use <b>Todos os dias</b>. A criança verá automaticamente a missão em cada dia escolhido.</div>
     <button class="primary" id="saveTask">${t?"Salvar missão":"Criar missão"}</button>
   </div>
   <div class="card"><div class="card-title"><h2>📋 Missões cadastradas</h2><span>${tasks.length}</span></div>
-    ${tasks.map(x=>`<div class="task-admin"><div class="mission-emoji">${esc(x.emoji)}</div><div class="grow"><h3>${esc(x.title)}</h3><p>${x.points} estrelas • ${(x.task_schedules||[]).length} dia(s) da semana</p></div><button class="secondary" data-edit="${x.id}">Editar</button><button class="danger" data-del="${x.id}">×</button></div>`).join("")||'<div class="empty">Nenhuma missão cadastrada.</div>'}
+    ${tasks.map(x=>`<div class="task-admin ${x.is_priority?"task-priority-row":""}"><div class="mission-emoji">${esc(x.emoji)}</div><div class="grow"><h3>${esc(x.title)} ${x.is_priority?'<span class="priority-badge">⭐ Prioritária</span>':""}</h3><p>${x.points} estrelas • ${(x.task_schedules||[]).length} dia(s) da semana</p></div><button class="secondary" data-edit="${x.id}">Editar</button><button class="danger" data-del="${x.id}">×</button></div>`).join("")||'<div class="empty">Nenhuma missão cadastrada.</div>'}
   </div>`;
   if(t)document.getElementById("cancelEdit").onclick=()=>{editingTask=null;renderTaskAdmin()};
+  el.querySelectorAll("[data-icon]").forEach(b=>b.onclick=()=>{document.getElementById("taskEmoji").value=b.dataset.icon;el.querySelectorAll("[data-icon]").forEach(x=>x.classList.toggle("active",x===b))});
+  el.querySelectorAll(".recurrence-btn").forEach(b=>b.onclick=()=>{const set=new Set(b.dataset.days.split(",").map(Number));document.querySelectorAll("[data-wd]").forEach(x=>x.checked=set.has(Number(x.dataset.wd)))});
   document.getElementById("saveTask").onclick=async()=>{
     const weekdays=[...document.querySelectorAll("[data-wd]:checked")].map(x=>Number(x.dataset.wd));
+    if(!weekdays.length){toast("Escolha pelo menos um dia da semana.");return}
     showLoader(true);try{
-      data=await callApi("save_task",{id:t?.id||null,emoji:document.getElementById("taskEmoji").value,title:document.getElementById("taskTitle").value,description:document.getElementById("taskDesc").value,points:Number(document.getElementById("taskPoints").value),weekdays,requires_parent_confirmation:document.getElementById("taskConfirm").checked});
+      data=await callApi("save_task",{id:t?.id||null,emoji:document.getElementById("taskEmoji").value,title:document.getElementById("taskTitle").value,description:document.getElementById("taskDesc").value,points:Number(document.getElementById("taskPoints").value),weekdays,is_priority:document.getElementById("taskPriority").checked,requires_parent_confirmation:true});
       adminData=await callAdmin();editingTask=null;toast(t?"Missão atualizada ✅":"Missão criada 🎯");renderApp();
     }catch(e){toast(e.message)}finally{showLoader(false)}
   };
