@@ -2,13 +2,14 @@
   "name": "Missões Divertidas",
   "short_name": "Missões",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f5ff",
-  "theme_color": "#6d4aff",
+  "background_color": "#f7f0ff",
+  "theme_color": "#6d22d8",
   "icons": [
     {
       "src": "./icon.svg",
-      "sizes": "any",
+      "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
