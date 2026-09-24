@@ -118,18 +118,18 @@ function renderApp(){
       <section id="sec-home" class="section ${activeSection==="home"?"active":""}"></section>
       <section id="sec-calendar" class="section ${activeSection==="calendar"?"active":""}"></section>
       <section id="sec-achievements" class="section ${activeSection==="achievements"?"active":""}"></section>
-      ${role==="parent"?`<section id="sec-parent" class="section ${activeSection==="parent"?"active":""}"></section>`:""}
+      ${role==="child"?`<section id="sec-friends" class="section ${activeSection==="friends"?"active":""}"></section><section id="sec-store" class="section ${activeSection==="store"?"active":""}"></section>`:""}${role==="parent"?`<section id="sec-parent" class="section ${activeSection==="parent"?"active":""}"></section>`:""}
     </main>
   </div>
   <nav class="nav ${role==="child"?"child":""}">
     <button data-sec="home" class="${activeSection==="home"?"active":""}"><b>🏠</b>Hoje</button>
     <button data-sec="calendar" class="${activeSection==="calendar"?"active":""}"><b>📅</b>Calendário</button>
     <button data-sec="achievements" class="${activeSection==="achievements"?"active":""}"><b>🏆</b>Conquistas</button>
-    ${role==="parent"?`<button data-sec="parent" class="${activeSection==="parent"?"active":""}"><b>⚙️</b>Pais</button>`:""}
+    ${role==="child"?`<button data-sec="friends" class="${activeSection==="friends"?"active":""}"><b>👫</b>Minha Turma</button><button data-sec="store" class="${activeSection==="store"?"active":""}"><b>🎁</b>Loja</button>`:""}${role==="parent"?`<button data-sec="parent" class="${activeSection==="parent"?"active":""}"><b>⚙️</b>Pais</button>`:""}
   </nav>`;
   document.getElementById("logoutBtn").onclick=async()=>{try{await callApi("logout")}catch{}logout()};
   document.querySelectorAll("[data-sec]").forEach(b=>b.onclick=async()=>{activeSection=b.dataset.sec;if(activeSection==="parent"&&!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()});
-  renderHome();renderCalendar();renderAchievements();if(role==="parent")renderParent();
+  renderHome();renderCalendar();renderAchievements();if(role==="child"){renderFriends();renderStore()}if(role==="parent")renderParent();
 }
 function renderHome(){
   const el=document.getElementById("sec-home"), f=data.family;
@@ -184,6 +184,15 @@ function renderCalendar(){
     <div class="stat" style="background:#fff5db"><b style="color:#a36b00">${Math.max(0,data.monthExpected-data.monthCompleted)}</b><span style="color:#6d6680">pendentes</span></div>
     <div class="stat" style="background:#eafaf2"><b style="color:#168657">${data.monthPercent}%</b><span style="color:#6d6680">aproveitamento</span></div>
   </div></div>`;
+}
+async function renderFriends(){
+  const el=document.getElementById("sec-friends");if(!el)return;
+  el.innerHTML=`<div class="card"><div class="card-title"><h2>👫 Minha Turma</h2><span>Jogue com amigos!</span></div><div class="field"><input id="friendSearch" placeholder="🔎 Pesquisar nome de usuário"><button class="primary" id="friendBtn">Pesquisar</button></div><div id="friendResults"></div></div><div class="card"><div class="card-title"><h2>⭐ Amigos</h2></div><div id="friendsList">Carregando...</div></div>`;
+  const load=async()=>{try{const x=await callApi("friends");document.getElementById("friendsList").innerHTML=(x.friends||[]).length?x.friends.map(a=>`<div class="mission"><div class="mission-emoji">👧</div><div class="mission-info"><h3>${esc(a.display_name)}</h3><p>@${esc(a.username)} · 🔥 ${a.streak} · 🏅 nível ${a.level}</p><span class="points">⭐ ${a.totalPoints} · ${a.monthPercent}% no mês</span></div></div>`).join(""):`<div class="empty">Adicione amigos para formar sua turma 🌈</div>`;if((x.requests||[]).length)document.getElementById("friendsList").innerHTML=`<h3>💌 Convites</h3>`+x.requests.map(a=>`<div class="mission"><div class="mission-info"><b>${esc(a.display_name)}</b><p>@${esc(a.username)}</p></div><button data-accept="${a.friendship_id}">✓</button></div>`).join("")+document.getElementById("friendsList").innerHTML;document.querySelectorAll("[data-accept]").forEach(b=>b.onclick=async()=>{await callApi("respond_friend",{friendship_id:b.dataset.accept,accept:true});load()})}catch(e){toast(e.message)}};load();
+  document.getElementById("friendBtn").onclick=async()=>{const q=document.getElementById("friendSearch").value.trim();if(q.length<2)return;const x=await callApi("search_friends",{query:q});document.getElementById("friendResults").innerHTML=(x.results||[]).map(a=>`<div class="mission"><div class="mission-info"><b>${esc(a.display_name)}</b><p>@${esc(a.username)}</p></div><button data-add="${a.id}">+</button></div>`).join("")||"<p>Ninguém encontrado.</p>";document.querySelectorAll("[data-add]").forEach(b=>b.onclick=async()=>{await callApi("add_friend",{account_id:b.dataset.add});toast("Convite enviado! 💌")})};
+}
+async function renderStore(){
+ const el=document.getElementById("sec-store");if(!el)return;el.innerHTML=`<div class="card"><div class="card-title"><h2>🎁 Loja de Recompensas</h2><span>Suas estrelas valem prêmios!</span></div><div id="storeList">Carregando...</div></div>`;try{const x=await callApi("reward_store");document.getElementById("storeList").innerHTML=`<div class="hero" style="margin-bottom:14px"><b>⭐ ${x.availablePoints}</b> estrelas disponíveis</div>`+((x.items||[]).map(a=>`<div class="mission"><div class="mission-emoji">${esc(a.emoji)}</div><div class="mission-info"><h3>${esc(a.title)}</h3><span class="points">${a.cost} ⭐</span></div><button data-redeem="${a.id}">🎁</button></div>`).join("")||'<div class="empty">Seus responsáveis ainda não cadastraram recompensas.</div>');document.querySelectorAll("[data-redeem]").forEach(b=>b.onclick=async()=>{try{await callApi("redeem_reward",{reward_id:b.dataset.redeem});toast("Pedido enviado aos responsáveis! 🎉");renderStore()}catch(e){toast(e.message)}})}catch(e){toast(e.message)}
 }
 function renderAchievements(){
   const list=[
