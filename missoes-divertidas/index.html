@@ -137,7 +137,7 @@ function renderApp(){
 }
 function renderMenu(){
  const el=document.getElementById("sec-menu");if(!el)return;
- el.innerHTML=`<div class="card"><div class="card-title"><h2>⚙️ Menu</h2><span>Minha conta</span></div><div class="missions"><div class="mission"><div class="mission-emoji">👤</div><div class="mission-info"><h3>Perfil</h3><p>${esc(session?.display_name||data.family.child_name||"Jogador")}</p></div></div><div class="mission"><div class="mission-emoji">ℹ️</div><div class="mission-info"><h3>Missões Divertidas</h3><p>Versão 1.12.3095</p></div></div><div class="mission"><div class="mission-emoji">🚪</div><div class="mission-info"><h3>Sair do aplicativo</h3><p>Encerrar esta sessão neste aparelho</p></div><button id="menuLogout">Sair</button></div></div></div>`;
+ el.innerHTML=`<div class="card"><div class="card-title"><h2>⚙️ Menu</h2><span>Minha conta</span></div><div class="missions"><div class="mission"><div class="mission-emoji">👤</div><div class="mission-info"><h3>Perfil</h3><p>${esc(session?.display_name||data.family.child_name||"Jogador")}</p></div></div><div class="mission"><div class="mission-emoji">ℹ️</div><div class="mission-info"><h3>Missões Divertidas</h3><p>Versão 1.12.3096</p></div></div><div class="mission"><div class="mission-emoji">🚪</div><div class="mission-info"><h3>Sair do aplicativo</h3><p>Encerrar esta sessão neste aparelho</p></div><button id="menuLogout">Sair</button></div></div></div>`;
  document.getElementById("menuLogout").onclick=async()=>{if(!confirm("Deseja realmente sair do Missões Divertidas?"))return;showLoader(true);try{await callApi("logout")}catch{}finally{showLoader(false);logout()}};
 }
 function renderHome(){
@@ -162,7 +162,8 @@ function renderHome(){
   </div>\n  ${streakGoal}\n  <div class="card"><div class="reward"><div class="gift">${data.rewardUnlocked?"🎉":"🎁"}</div><div class="reward-main"><div class="small">Recompensa do mês</div><h3>${esc(f.current_reward_name||"Presente surpresa")}</h3><div class="small">${data.monthPercent}% de ${f.reward_goal_percent}% necessários</div><div class="bar"><i style="width:${giftPct}%"></i></div></div></div></div>
   <div class="card"><div class="card-title"><h2>🎯 Suas missões</h2><span>${levelTitle(data.level)}</span></div><div class="field" style="margin:8px 0 14px"><input id="missionSearch" placeholder="🔎 Pesquisar missão..."></div><div class="missions">${missions}</div></div>
   <div class="card"><div class="card-title"><h2>🚀 Próximo nível</h2><span>${data.levelPoints}/250</span></div><div class="bar"><i style="width:${Math.round(data.levelPoints/250*100)}%;background:linear-gradient(90deg,#6d4aff,#a977ff)"></i></div></div>`;
-  const missionSearch=document.getElementById("missionSearch");if(missionSearch)missionSearch.oninput=()=>{const q=missionSearch.value.toLowerCase().trim();el.querySelectorAll(".mission").forEach(m=>m.style.display=m.textContent.toLowerCase().includes(q)?"":"none")};\n  el.querySelectorAll("[data-task]").forEach(b=>b.onclick=async()=>{
+  const missionSearch=document.getElementById("missionSearch");if(missionSearch)missionSearch.oninput=()=>{const q=missionSearch.value.toLowerCase().trim();el.querySelectorAll(".mission").forEach(m=>m.style.display=m.textContent.toLowerCase().includes(q)?"":"none")};
+  el.querySelectorAll("[data-task]").forEach(b=>b.onclick=async()=>{
     const status=b.dataset.status, action=(status==="completed"||status==="pending_confirmation")?"undo_task":"complete_task";
     showLoader(true);try{
       const before=data.todayPercent;data=await callApi(action,{task_id:b.dataset.task,due_date:data.today});
