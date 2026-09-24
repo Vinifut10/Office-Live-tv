@@ -159,6 +159,8 @@ body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe
 .priority-card{background:linear-gradient(135deg,#fff9d9,#fff);border:2px solid #ffe16a;border-radius:24px;padding:15px;margin:12px 0;box-shadow:0 10px 25px rgba(110,75,5,.10)}.priority-progress{height:10px;background:#fff0a9;border-radius:99px;overflow:hidden;margin:10px 0 12px}.priority-progress i{display:block;height:100%;background:linear-gradient(90deg,#ffc928,#28d861);border-radius:99px}.priority-success{background:#eaffef;color:#168648;border-radius:14px;padding:9px 11px;font-size:12px;font-weight:900;margin-bottom:10px}.priority-mission{border:1px solid #ffe78c!important}.priority-badge{display:inline-flex;align-items:center;background:#fff0a9;color:#8a6200;border-radius:999px;padding:3px 7px;font-size:9px;font-weight:900;white-space:nowrap}.mission-title-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.mission-title-line h3{margin:0}.compact-empty{padding:12px!important;font-size:12px}
 .icon-picker{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.icon-choice{aspect-ratio:1;border:1px solid #eadcff;border-radius:13px;background:#fff;font-size:23px;display:grid;place-items:center;padding:0}.icon-choice.active{background:#efe2ff;border-color:#8b26e9;box-shadow:0 0 0 2px rgba(139,38,233,.15)}.recurrence-row{display:flex;gap:7px;flex-wrap:wrap}.recurrence-btn{padding:8px 10px;font-size:12px}.priority-toggle{height:48px;border:1px solid #eadcff;border-radius:15px;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px;font-weight:800;color:#5b267d}.task-tip{background:#f7f0ff;color:#6e5380;border-radius:14px;padding:10px 12px;font-size:12px;margin:5px 0 13px}.task-priority-row{background:#fffaf0;border-radius:14px;padding-left:8px;padding-right:8px}
 @media(max-width:400px){.icon-picker{grid-template-columns:repeat(6,1fr)}.app-brand-expanded img{width:56px!important;height:56px!important}.brand-copy strong{font-size:18px!important}}
+
+.pull-refresh{position:fixed;left:50%;top:0;z-index:9998;transform:translate(-50%,-72px);min-width:150px;height:54px;padding:8px 14px;border-radius:0 0 18px 18px;background:rgba(58,21,102,.96);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(45,12,76,.28);transition:transform .12s ease}.pull-refresh b{font-size:22px}.pull-refresh.ready{background:#6d20d7}.pull-refresh.refreshing b{animation:spinRefresh .8s linear infinite}@keyframes spinRefresh{to{transform:rotate(360deg)}}
 </style>
 <script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
@@ -170,6 +172,7 @@ const ADMIN="/api/admin";
 let session=localStorage.getItem("md_session")||"";
 let loginRole=localStorage.getItem("md_role")||"child";
 let data=null, adminData=null, activeSection="home", adminTab="family", editingTask=null, selectedDate=null;
+let pullStartY=0,pullDistance=0,pullRefreshing=false,pullBound=false;
 const root=document.getElementById("root");
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const showLoader=v=>document.getElementById("loader").classList.toggle("show",!!v);
@@ -203,11 +206,50 @@ async function loadDashboard(){
   showLoader(true);
   try{data=await callApi("dashboard");renderApp()}catch(e){renderLogin(e.message)}finally{showLoader(false)}
 }
+async function refreshAppFromPull(){
+  if(pullRefreshing||!session)return;
+  pullRefreshing=true;
+  const ind=document.getElementById("pullRefresh");
+  if(ind){ind.classList.add("refreshing");const s=ind.querySelector("span");if(s)s.textContent="Atualizando..."}
+  try{
+    data=await callApi("dashboard");
+    if(data?.role==="parent" && activeSection==="parent") adminData=await callAdmin();
+    renderApp();
+    toast("Atualizado ✅");
+  }catch(e){toast(e.message||"Não foi possível atualizar.")}
+  finally{pullRefreshing=false;resetPullIndicator()}
+}
+function resetPullIndicator(){
+  pullDistance=0;
+  const ind=document.getElementById("pullRefresh");
+  if(ind){ind.style.transform="translate(-50%,-72px)";ind.classList.remove("ready","refreshing");const s=ind.querySelector("span");if(s)s.textContent="Puxe para atualizar";}
+}
+function bindPullToRefresh(){
+  if(pullBound)return;
+  pullBound=true;
+  document.addEventListener("touchstart",e=>{
+    if(window.scrollY<=0 && e.touches && e.touches.length===1) pullStartY=e.touches[0].clientY; else pullStartY=0;
+  },{passive:true});
+  document.addEventListener("touchmove",e=>{
+    if(!pullStartY||pullRefreshing||window.scrollY>0||!e.touches||!e.touches.length)return;
+    pullDistance=Math.max(0,Math.min(120,e.touches[0].clientY-pullStartY));
+    const ind=document.getElementById("pullRefresh"); if(!ind)return;
+    ind.style.transform="translate(-50%,"+(-72+Math.min(72,pullDistance*.72))+"px)";
+    ind.classList.toggle("ready",pullDistance>=78);
+    const s=ind.querySelector("span");if(s)s.textContent=pullDistance>=78?"Solte para atualizar":"Puxe para atualizar";
+  },{passive:true});
+  document.addEventListener("touchend",()=>{
+    if(!pullStartY)return;
+    const doRefresh=pullDistance>=78;
+    pullStartY=0;
+    if(doRefresh) refreshAppFromPull(); else resetPullIndicator();
+  },{passive:true});
+}
 function levelTitle(level){return ["Explorador","Ajudante","Super Ajudante","Herói da Casa","Mestre das Missões"][Math.min(level-1,4)]||"Lenda das Missões"}
 function renderApp(){
   const f=data.family, child=esc(f.child_name||"Criança"), role=data.role;
   const childNav=role==="child";
-  root.innerHTML=`<div class="shell">
+  root.innerHTML=`<div id="pullRefresh" class="pull-refresh"><b>↻</b><span>Puxe para atualizar</span></div><div class="shell">
     <div class="app-brand app-brand-expanded">
   <img src="./app-icon.jpg" alt="Missões Divertidas">
   <div class="brand-copy"><strong>Missões Divertidas</strong><small>Tarefas, estrelas e recompensas!</small>
@@ -229,28 +271,31 @@ function renderApp(){
   <nav class="nav ${role==="child"?"child":""}">
     <button data-sec="home" class="${activeSection==="home"?"active":""}"><b>🏠</b>Hoje</button>
     <button data-sec="calendar" class="${activeSection==="calendar"?"active":""}"><b>📅</b>Calendário</button>
-    ${childNav?`<button data-sec="friends" class="${activeSection==="friends"?"active":""}"><b>👫</b>Minha Turma</button><button data-sec="store" class="${activeSection==="store"?"active":""}"><b>🛍️</b>Loja</button>`:`<button data-sec="achievements" class="${activeSection==="achievements"?"active":""}"><b>🏆</b>Conquistas</button><button data-sec="parent" class="${activeSection==="parent"?"active":""}"><b>👨‍👩‍👧</b>Pais</button>`}
+    ${childNav?`<button data-sec="friends" class="${activeSection==="friends"?"active":""}"><b>👫</b>Minha Turma</button><button data-sec="store" class="${activeSection==="store"?"active":""}"><b>🛍️</b>Loja</button>`:`<button data-sec="achievements" class="${activeSection==="achievements"?"active":""}"><b>🏆</b>Conquistas</button><button data-sec="store" class="${activeSection==="store"?"active":""}"><b>🛍️</b>Loja</button>`}
     <button data-sec="menu" class="${activeSection==="menu"?"active":""}"><b>☰</b>Menu</button>
   </nav>`;
   document.getElementById("profileMenuBtn").onclick=()=>{activeSection="menu";renderApp()};
   document.querySelectorAll("[data-sec]").forEach(b=>b.onclick=async()=>{activeSection=b.dataset.sec;if(activeSection==="parent"&&!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()});
-  renderHome();renderCalendar();renderAchievements();renderMenu();if(role==="child"){renderFriends();renderStore()}if(role==="parent")renderParent();
+  renderHome();renderCalendar();renderAchievements();renderMenu();renderStore();if(role==="child")renderFriends();if(role==="parent")renderParent();bindPullToRefresh();
 }
 function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3110</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3111</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar" style="margin:0 auto 10px;width:72px;height:72px">${role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>'}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
       <div class="small">${role==="parent"?"Responsável":"Jogador(a)"} • Missões Divertidas</div>
     </div>
     ${role==="parent"?'<button class="secondary" id="openParentSettings" style="width:100%;margin-bottom:10px">👨‍👩‍👧 Configurações da família</button>':""}
-    <button class="secondary" id="menuHome" style="width:100%;margin-bottom:10px">🏠 Voltar para o início</button>${role==="child"?'<button class="secondary" id="menuAchievements" style="width:100%;margin-bottom:10px">🏆 Minhas conquistas</button>':""}
+    <button class="secondary" id="menuHome" style="width:100%;margin-bottom:10px">🏠 Voltar para o início</button>
+    <button class="secondary" id="menuStore" style="width:100%;margin-bottom:10px">🛍️ Loja de Estrelas</button>
+    ${role==="child"?'<button class="secondary" id="menuAchievements" style="width:100%;margin-bottom:10px">🏆 Minhas conquistas</button>':""}
     <button class="danger" id="menuLogout" style="width:100%">🚪 Sair do aplicativo</button>
   </div>`;
   document.getElementById("menuHome").onclick=()=>{activeSection="home";renderApp()};
+  const ms=document.getElementById("menuStore");if(ms)ms.onclick=()=>{activeSection="store";renderApp()};
   const ma=document.getElementById("menuAchievements");if(ma)ma.onclick=()=>{activeSection="achievements";renderApp()};
   const ps=document.getElementById("openParentSettings");if(ps)ps.onclick=async()=>{activeSection="parent";adminTab="family";if(!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()};
   document.getElementById("menuLogout").onclick=async()=>{if(!confirm("Deseja realmente sair do aplicativo?"))return;showLoader(true);try{await callApi("logout")}catch{}finally{showLoader(false)}logout()};
@@ -381,8 +426,38 @@ async function renderFriends(){
 }
 async function renderStore(){
   const el=document.getElementById("sec-store");if(!el)return;
+  const isParent=data?.role==="parent";
   el.innerHTML=`<div class="card"><div class="card-title"><h2>🛍️ Loja de Estrelas</h2><span>Carregando...</span></div></div>`;
-  try{const r=await callApi("reward_store");el.innerHTML=`<div class="hero" style="margin-bottom:14px"><div class="hero-top"><div><h2>🛍️ Loja de Estrelas</h2><p>Troque suas estrelas por recompensas!</p></div><div style="font-size:32px">⭐ ${r.availablePoints||0}</div></div></div><div class="store-grid">${(r.items||[]).map(x=>`<div class="store-item"><div class="reward-icon">${esc(x.emoji||"🎁")}</div><b>${esc(x.title)}</b><div class="small">⭐ ${x.cost}</div><button class="primary" style="margin-top:10px;padding:10px" data-redeem="${x.id}">Resgatar</button></div>`).join("")||`<div class="card" style="grid-column:1/-1"><div class="empty"><div class="big">🎁</div>Nenhuma recompensa cadastrada ainda.</div></div>`}</div>`;el.querySelectorAll("[data-redeem]").forEach(b=>b.onclick=async()=>{if(!confirm("Solicitar esta recompensa?"))return;try{await callApi("redeem_reward",{reward_id:b.dataset.redeem});toast("Pedido enviado! 🎁");renderStore()}catch(e){toast(e.message)}})}catch(e){el.innerHTML=`<div class="card"><div class="empty">${esc(e.message)}</div></div>`}
+  try{
+    const r=await callApi("reward_store");
+    const items=r.items||[];
+    el.innerHTML=`
+      <div class="hero" style="margin-bottom:14px"><div class="hero-top"><div><h2>🛍️ Loja de Estrelas</h2><p>${isParent?"Cadastre recompensas para a criança trocar pelas estrelas.":"Troque suas estrelas por recompensas!"}</p></div><div style="font-size:32px">⭐ ${r.availablePoints||0}</div></div></div>
+      ${isParent?`<div class="card"><div class="card-title"><h2>➕ Nova recompensa</h2></div>
+        <div class="row2"><div class="field"><label>Ícone</label><input id="rewardEmoji" value="🎁" maxlength="8"></div><div class="field"><label>Custo em estrelas</label><input id="rewardCost" type="number" min="1" value="50"></div></div>
+        <div class="field"><label>Nome da recompensa</label><input id="rewardTitle" placeholder="Ex.: Escolher o filme da noite"></div>
+        <button class="primary" id="addReward">Adicionar à loja</button></div>`:""}
+      <div class="store-grid">${items.map(x=>`<div class="store-item"><div class="reward-icon">${esc(x.emoji||"🎁")}</div><b>${esc(x.title)}</b><div class="small">⭐ ${x.cost}</div>${isParent?'<div class="small" style="margin-top:8px">Disponível na loja</div>':`<button class="primary" style="margin-top:10px;padding:10px" data-redeem="${x.id}">Resgatar</button>`}</div>`).join("")||`<div class="card" style="grid-column:1/-1"><div class="empty"><div class="big">🎁</div>${isParent?"Cadastre a primeira recompensa acima.":"Nenhuma recompensa cadastrada ainda."}</div></div>`}</div>`;
+    if(isParent){
+      const add=document.getElementById("addReward");
+      if(add)add.onclick=async()=>{
+        const title=document.getElementById("rewardTitle").value.trim();
+        const cost=Number(document.getElementById("rewardCost").value);
+        const emoji=document.getElementById("rewardEmoji").value||"🎁";
+        if(!title){toast("Informe o nome da recompensa.");return}
+        showLoader(true);
+        try{await callApi("save_reward",{title,cost,emoji});toast("Recompensa adicionada 🎁");renderStore()}
+        catch(e){toast(e.message)}
+        finally{showLoader(false)}
+      };
+    }else{
+      el.querySelectorAll("[data-redeem]").forEach(b=>b.onclick=async()=>{
+        if(!confirm("Solicitar esta recompensa?"))return;
+        try{await callApi("redeem_reward",{reward_id:b.dataset.redeem});toast("Pedido enviado! 🎁");renderStore()}
+        catch(e){toast(e.message)}
+      });
+    }
+  }catch(e){el.innerHTML=`<div class="card"><div class="empty">${esc(e.message)}</div></div>`}
 }
 function renderParent(){
   const el=document.getElementById("sec-parent"),f=data.family;
