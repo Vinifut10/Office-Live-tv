@@ -164,6 +164,8 @@ body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe
 
 .profile-photo{overflow:hidden;background:#fff}.profile-photo img,.avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 #changeProfilePhoto{border-color:#cda8ff;background:#f7f0ff}
+
+.crop-modal{position:fixed;inset:0;z-index:10050;background:rgba(24,8,39,.72);display:flex;align-items:flex-end;justify-content:center;padding:18px}.crop-sheet{width:min(100%,430px);background:#fff;border-radius:26px 26px 18px 18px;padding:16px;box-shadow:0 -18px 50px rgba(0,0,0,.28)}.crop-head{display:flex;align-items:center;justify-content:space-between}.crop-head h3{margin:0}.crop-head button{border:0;background:#f2eaff;width:36px;height:36px;border-radius:50%;font-size:24px}.crop-sheet p{font-size:12px;color:#78658b;margin:6px 0 12px}.crop-stage{position:relative;width:min(82vw,320px);aspect-ratio:1;margin:auto;overflow:hidden;border-radius:24px;background:#1a1022;touch-action:none}.crop-stage canvas{width:100%;height:100%;display:block}.crop-ring{position:absolute;inset:10%;border:3px solid rgba(255,255,255,.95);border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.28);pointer-events:none}.crop-zoom{display:flex;gap:10px;align-items:center;font-weight:800;font-size:12px;margin:14px 2px}.crop-zoom input{flex:1}.crop-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.crop-actions button{width:100%}
 </style>
 <script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
@@ -184,13 +186,46 @@ function profileAvatarHtml(role,fallback){
   const src=getLocalAvatar(role);
   return src?'<img src="'+src+'" alt="Foto de perfil">':fallback;
 }
-async function fileToAvatarData(file){
+async function openAvatarCropper(file,role){
   if(!file||!file.type.startsWith("image/"))throw new Error("Escolha uma imagem.");
   const img=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=r.result};r.onerror=reject;r.readAsDataURL(file)});
-  const size=256, canvas=document.createElement("canvas");canvas.width=size;canvas.height=size;
-  const ctx=canvas.getContext("2d");const s=Math.min(img.width,img.height),sx=(img.width-s)/2,sy=(img.height-s)/2;
-  ctx.drawImage(img,sx,sy,s,s,0,0,size,size);
-  return canvas.toDataURL("image/jpeg",.82);
+  const wrap=document.createElement("div");
+  wrap.className="crop-modal";
+  wrap.innerHTML=`<div class="crop-sheet">
+    <div class="crop-head"><h3>Enquadrar foto</h3><button id="cropClose">×</button></div>
+    <p>Arraste a foto e use o controle para aproximar.</p>
+    <div class="crop-stage"><canvas id="cropCanvas" width="320" height="320"></canvas><div class="crop-ring"></div></div>
+    <label class="crop-zoom">Zoom <input id="cropZoom" type="range" min="1" max="3" value="1" step="0.01"></label>
+    <div class="crop-actions"><button class="secondary" id="cropCancel">Cancelar</button><button class="primary" id="cropSave">Usar esta foto</button></div>
+  </div>`;
+  document.body.appendChild(wrap);
+  const canvas=wrap.querySelector("#cropCanvas"),ctx=canvas.getContext("2d"),zoom=wrap.querySelector("#cropZoom");
+  let scale=Math.max(canvas.width/img.width,canvas.height/img.height),z=1;
+  let x=(canvas.width-img.width*scale)/2,y=(canvas.height-img.height*scale)/2;
+  let dragging=false,lastX=0,lastY=0;
+  const clamp=()=>{
+    const w=img.width*scale*z,h=img.height*scale*z;
+    if(w<=canvas.width)x=(canvas.width-w)/2;else x=Math.min(0,Math.max(canvas.width-w,x));
+    if(h<=canvas.height)y=(canvas.height-h)/2;else y=Math.min(0,Math.max(canvas.height-h,y));
+  };
+  const draw=()=>{clamp();ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,x,y,img.width*scale*z,img.height*scale*z)};
+  const setZoom=v=>{const old=z;z=Number(v);const cx=canvas.width/2,cy=canvas.height/2;x=cx-(cx-x)*(z/old);y=cy-(cy-y)*(z/old);draw()};
+  zoom.oninput=()=>setZoom(zoom.value);
+  const pos=e=>{const p=e.touches?e.touches[0]:e;return{x:p.clientX,y:p.clientY}};
+  const down=e=>{dragging=true;const p=pos(e);lastX=p.x;lastY=p.y;e.preventDefault()};
+  const move=e=>{if(!dragging)return;const p=pos(e);x+=p.x-lastX;y+=p.y-lastY;lastX=p.x;lastY=p.y;draw();e.preventDefault()};
+  const up=()=>dragging=false;
+  canvas.addEventListener("mousedown",down);window.addEventListener("mousemove",move);window.addEventListener("mouseup",up);
+  canvas.addEventListener("touchstart",down,{passive:false});canvas.addEventListener("touchmove",move,{passive:false});canvas.addEventListener("touchend",up);
+  const close=()=>wrap.remove();
+  wrap.querySelector("#cropClose").onclick=close;wrap.querySelector("#cropCancel").onclick=close;
+  wrap.querySelector("#cropSave").onclick=()=>{
+    const out=document.createElement("canvas");out.width=256;out.height=256;
+    out.getContext("2d").drawImage(canvas,0,0,320,320,0,0,256,256);
+    saveLocalAvatar(role,out.toDataURL("image/jpeg",.84));
+    close();toast("Foto de perfil atualizada 📸");renderApp();
+  };
+  draw();
 }
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const showLoader=v=>document.getElementById("loader").classList.toggle("show",!!v);
@@ -300,7 +335,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3113</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3114</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -319,7 +354,7 @@ function renderMenu(){
   const changePhoto=document.getElementById("changeProfilePhoto");
   const removePhoto=document.getElementById("removeProfilePhoto");
   if(changePhoto)changePhoto.onclick=()=>photoInput.click();
-  if(photoInput)photoInput.onchange=async()=>{const file=photoInput.files&&photoInput.files[0];if(!file)return;showLoader(true);try{const img=await fileToAvatarData(file);saveLocalAvatar(role,img);toast("Foto de perfil atualizada 📸");renderApp()}catch(e){toast(e.message||"Não foi possível usar a foto.")}finally{showLoader(false)}};
+  if(photoInput)photoInput.onchange=async()=>{const file=photoInput.files&&photoInput.files[0];if(!file)return;try{await openAvatarCropper(file,role)}catch(e){toast(e.message||"Não foi possível usar a foto.")}finally{photoInput.value=""}};
   if(removePhoto)removePhoto.onclick=()=>{if(!getLocalAvatar(role)){toast("Nenhuma foto personalizada.");return}if(!confirm("Remover a foto de perfil?"))return;saveLocalAvatar(role,"");toast("Foto removida.");renderApp()};
   document.getElementById("menuHome").onclick=()=>{activeSection="home";renderApp()};
   const ms=document.getElementById("menuStore");if(ms)ms.onclick=()=>{activeSection="store";renderApp()};
