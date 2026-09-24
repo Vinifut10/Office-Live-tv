@@ -143,13 +143,14 @@ function renderHome(){
       <button data-task="${t.id}" data-status="${t.status}" title="Marcar missão">${icon}</button>
     </div>`;
   }).join(""):`<div class="empty"><div class="big">🌈</div>Nenhuma missão programada para hoje.</div>`;
+  const milestones=[3,7,14,30], nextMilestone=milestones.find(m=>data.streak<m), bonusMap=data.streakBonuses||{};
+  const streakGoal=nextMilestone?`<div class="card"><div class="card-title"><h2>🔥 Sequência de missões</h2><span>${data.streak} dias</span></div><p style="margin:4px 0 10px">${data.streak===0?"Complete todas as missões de hoje para começar sua sequência!":`Você está com <b>${data.streak} dias seguidos</b>!`}</p>${nextMilestone?`<div class="bar"><i style="width:${Math.min(100,Math.round(data.streak/nextMilestone*100))}%"></i></div><p class="small" style="margin-top:8px">Faltam <b>${nextMilestone-data.streak} dias</b> para ganhar <b>+${bonusMap[nextMilestone]||0} ⭐</b></p>`:`<p class="small">👑 Sequência máxima conquistada! Continue mantendo o ritmo.</p>`}</div>`;
   el.innerHTML=`
   <div class="hero">
     <div class="hero-top"><div><h2>Missões de hoje</h2><p>${data.todayTasks.filter(t=>t.status==="completed").length} de ${data.todayTasks.length} concluídas</p></div>
     <div class="ring" style="--p:${data.todayPercent}"><b>${data.todayPercent}%</b></div></div>
     <div class="stats"><div class="stat"><b>⭐ ${data.totalPoints}</b><span>estrelas</span></div><div class="stat"><b>🔥 ${data.streak}</b><span>sequência</span></div><div class="stat"><b>🏅 ${data.level}</b><span>nível</span></div></div>
-  </div>
-  <div class="card"><div class="reward"><div class="gift">${data.rewardUnlocked?"🎉":"🎁"}</div><div class="reward-main"><div class="small">Recompensa do mês</div><h3>${esc(f.current_reward_name||"Presente surpresa")}</h3><div class="small">${data.monthPercent}% de ${f.reward_goal_percent}% necessários</div><div class="bar"><i style="width:${giftPct}%"></i></div></div></div></div>
+  </div>\n  ${streakGoal}\n  <div class="card"><div class="reward"><div class="gift">${data.rewardUnlocked?"🎉":"🎁"}</div><div class="reward-main"><div class="small">Recompensa do mês</div><h3>${esc(f.current_reward_name||"Presente surpresa")}</h3><div class="small">${data.monthPercent}% de ${f.reward_goal_percent}% necessários</div><div class="bar"><i style="width:${giftPct}%"></i></div></div></div></div>
   <div class="card"><div class="card-title"><h2>🎯 Suas missões</h2><span>${levelTitle(data.level)}</span></div><div class="missions">${missions}</div></div>
   <div class="card"><div class="card-title"><h2>🚀 Próximo nível</h2><span>${data.levelPoints}/250</span></div><div class="bar"><i style="width:${Math.round(data.levelPoints/250*100)}%;background:linear-gradient(90deg,#6d4aff,#a977ff)"></i></div></div>`;
   el.querySelectorAll("[data-task]").forEach(b=>b.onclick=async()=>{
