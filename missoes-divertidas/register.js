@@ -8,7 +8,7 @@ window.MissoesRegister = {
   async submit(){
     const payload={family_name:regFamily.value,parent_name:regParentName.value,child_name:regChildName.value,parent_username:regParentUser.value,parent_password:regParentPass.value,child_username:regChildUser.value,child_password:regChildPass.value};
     showLoader(true);
-    try{await callApi("register",payload);toast("Família criada! 🎉");renderLogin()}
+    try{const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("O cadastro demorou demais. Tente novamente.")),15000));await Promise.race([callApi("register",payload),timeout]);toast("Família criada! 🎉");renderLogin()}
     catch(e){window.MissoesRegister.render(e.message)}
     finally{showLoader(false)}
   }
