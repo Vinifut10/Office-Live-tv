@@ -71,8 +71,8 @@ body{background:radial-gradient(circle at 15% 0,#f7d7ff 0,transparent 30%),radia
 <body>
 <div id="root"></div><div id="toast" class="toast"></div><div id="loader" class="loader"><div class="spinner"></div></div>
 <script>
-const API="https://oikcupbvshhzorxkbxsk.supabase.co/functions/v1/family-api";
-const ADMIN="https://oikcupbvshhzorxkbxsk.supabase.co/functions/v1/family-admin";
+const API="/api/family";
+const ADMIN="/api/admin";
 let session=localStorage.getItem("md_session")||"";
 let loginRole=localStorage.getItem("md_role")||"child";
 let data=null, adminData=null, activeSection="home", adminTab="family", editingTask=null;
@@ -144,7 +144,7 @@ function renderHome(){
     </div>`;
   }).join(""):`<div class="empty"><div class="big">🌈</div>Nenhuma missão programada para hoje.</div>`;
   const milestones=[3,7,14,30], nextMilestone=milestones.find(m=>data.streak<m), bonusMap=data.streakBonuses||{};
-  const streakGoal=nextMilestone?`<div class="card"><div class="card-title"><h2>🔥 Sequência de missões</h2><span>${data.streak} dias</span></div><p style="margin:4px 0 10px">${data.streak===0?"Complete todas as missões de hoje para começar sua sequência!":`Você está com <b>${data.streak} dias seguidos</b>!`}</p>${nextMilestone?`<div class="bar"><i style="width:${Math.min(100,Math.round(data.streak/nextMilestone*100))}%"></i></div><p class="small" style="margin-top:8px">Faltam <b>${nextMilestone-data.streak} dias</b> para ganhar <b>+${bonusMap[nextMilestone]||0} ⭐</b></p>`:`<p class="small">👑 Sequência máxima conquistada! Continue mantendo o ritmo.</p>`}</div>`;
+  const streakGoal=`<div class="card"><div class="card-title"><h2>🔥 Sequência de missões</h2><span>${data.streak} dias</span></div><p style="margin:4px 0 10px">${data.streak===0?"Complete todas as missões de hoje para começar sua sequência!":`Você está com <b>${data.streak} dias seguidos</b>!`}</p>${nextMilestone?`<div class="bar"><i style="width:${Math.min(100,Math.round(data.streak/nextMilestone*100))}%"></i></div><p class="small" style="margin-top:8px">Faltam <b>${nextMilestone-data.streak} dias</b> para ganhar <b>+${bonusMap[nextMilestone]||0} ⭐</b></p>`:`<p class="small">👑 Sequência máxima conquistada! Continue mantendo o ritmo.</p>`}</div>`;
   el.innerHTML=`
   <div class="hero">
     <div class="hero-top"><div><h2>Missões de hoje</h2><p>${data.todayTasks.filter(t=>t.status==="completed").length} de ${data.todayTasks.length} concluídas</p></div>
