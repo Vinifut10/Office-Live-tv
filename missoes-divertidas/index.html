@@ -105,6 +105,10 @@ function renderLogin(error=""){
 }
 async function doLogin(){const username=document.getElementById("username").value.trim(),password=document.getElementById("password").value;if(!username||!password){renderLogin("Preencha usuário e senha.");return}showLoader(true);try{const j=await callApi("login",{username,password});session=j.session.token;localStorage.setItem("md_session",session);localStorage.setItem("md_role",j.session.role);await loadDashboard()}catch(e){renderLogin(e.message)}finally{showLoader(false)}}
 function logout(render=true){session="";data=null;adminData=null;localStorage.removeItem("md_session");if(render)renderLogin()}
+let pullStartY=0,pullArmed=false,pullBusy=false;
+document.addEventListener("touchstart",e=>{if(window.scrollY<=2&&e.touches?.length===1){pullStartY=e.touches[0].clientY;pullArmed=true}}, {passive:true});
+document.addEventListener("touchmove",e=>{if(!pullArmed||pullBusy)return;const d=e.touches[0].clientY-pullStartY;if(d>70){const t=document.getElementById("toast");if(t){t.textContent="↓ Solte para atualizar";t.classList.add("show")}}}, {passive:true});
+document.addEventListener("touchend",async e=>{if(!pullArmed||pullBusy)return;pullArmed=false;const t=document.getElementById("toast");t?.classList.remove("show");const y=e.changedTouches?.[0]?.clientY||0;if(y-pullStartY<70||!session)return;pullBusy=true;showLoader(true);try{data=await callApi("dashboard");adminData=null;renderApp();toast("Atualizado! ✨")}catch(err){toast(err.message)}finally{showLoader(false);pullBusy=false}});
 async function loadDashboard(){
   showLoader(true);
   try{data=await callApi("dashboard");renderApp()}catch(e){renderLogin(e.message)}finally{showLoader(false)}
@@ -133,7 +137,7 @@ function renderApp(){
 }
 function renderMenu(){
  const el=document.getElementById("sec-menu");if(!el)return;
- el.innerHTML=`<div class="card"><div class="card-title"><h2>⚙️ Menu</h2><span>Minha conta</span></div><div class="missions"><div class="mission"><div class="mission-emoji">👤</div><div class="mission-info"><h3>Perfil</h3><p>${esc(session?.display_name||data.family.child_name||"Jogador")}</p></div></div><div class="mission"><div class="mission-emoji">ℹ️</div><div class="mission-info"><h3>Missões Divertidas</h3><p>Versão 1.12.3094</p></div></div><div class="mission"><div class="mission-emoji">🚪</div><div class="mission-info"><h3>Sair do aplicativo</h3><p>Encerrar esta sessão neste aparelho</p></div><button id="menuLogout">Sair</button></div></div></div>`;
+ el.innerHTML=`<div class="card"><div class="card-title"><h2>⚙️ Menu</h2><span>Minha conta</span></div><div class="missions"><div class="mission"><div class="mission-emoji">👤</div><div class="mission-info"><h3>Perfil</h3><p>${esc(session?.display_name||data.family.child_name||"Jogador")}</p></div></div><div class="mission"><div class="mission-emoji">ℹ️</div><div class="mission-info"><h3>Missões Divertidas</h3><p>Versão 1.12.3095</p></div></div><div class="mission"><div class="mission-emoji">🚪</div><div class="mission-info"><h3>Sair do aplicativo</h3><p>Encerrar esta sessão neste aparelho</p></div><button id="menuLogout">Sair</button></div></div></div>`;
  document.getElementById("menuLogout").onclick=async()=>{if(!confirm("Deseja realmente sair do Missões Divertidas?"))return;showLoader(true);try{await callApi("logout")}catch{}finally{showLoader(false);logout()}};
 }
 function renderHome(){
