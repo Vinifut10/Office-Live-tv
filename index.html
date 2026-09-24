@@ -1,41 +1,252 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live TV – Gestão</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6d4aff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Missões Divertidas">
+<title>Missões Divertidas</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#f7f5ff;--card:#fff;--text:#27233a;--muted:#7c7892;--primary:#6d4aff;--primary2:#9c73ff;
+  --green:#26b873;--yellow:#ffbd3b;--red:#ee5b69;--line:#ebe7f6;--shadow:0 12px 35px rgba(66,48,130,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:linear-gradient(180deg,#eee9ff 0,#f9f7ff 42%,#fff 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.shell{width:min(760px,100%);margin:auto;min-height:100vh;padding:18px 16px 100px}
+.login-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login{width:min(460px,100%);background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.75);box-shadow:var(--shadow);border-radius:30px;padding:28px}
+.logo-bubble{width:96px;height:96px;margin:-4px auto 12px;border-radius:28px;display:grid;place-items:center;font-size:54px;background:linear-gradient(145deg,#7650ff,#b585ff);box-shadow:0 14px 30px rgba(109,74,255,.3);transform:rotate(-4deg)}
+h1,h2,h3,p{margin-top:0}.login h1{text-align:center;margin-bottom:8px;font-size:31px}.login .subtitle{text-align:center;color:var(--muted);line-height:1.45;margin-bottom:22px}
+.role-switch{display:grid;grid-template-columns:1fr 1fr;background:#f0edfa;padding:5px;border-radius:16px;margin-bottom:16px}
+.role-switch button{border:0;background:transparent;padding:11px;border-radius:12px;font-weight:800;color:var(--muted)}
+.role-switch button.active{background:#fff;color:var(--primary);box-shadow:0 3px 12px rgba(71,50,130,.1)}
+.field{display:flex;flex-direction:column;gap:7px;margin:12px 0}.field label{font-size:13px;font-weight:800;color:#5e5873}
+.field input,.field textarea,.field select{width:100%;border:1.5px solid #ded8ef;border-radius:15px;padding:13px 14px;background:#fff;outline:none;color:var(--text)}
+.field input:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(109,74,255,.1)}
+.primary{width:100%;border:0;border-radius:17px;padding:14px 18px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;font-weight:900;box-shadow:0 8px 20px rgba(109,74,255,.28)}
+.secondary{border:1px solid var(--line);border-radius:14px;padding:10px 14px;background:#fff;color:var(--text);font-weight:800}
+.danger{border:0;border-radius:14px;padding:10px 14px;background:#fff0f2;color:#c63b4a;font-weight:800}
+.error{margin:12px 0 0;padding:11px 12px;border-radius:12px;background:#fff1f3;color:#b83245;font-size:14px;font-weight:700;display:none}
+.header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 16px}
+.userline{display:flex;align-items:center;gap:11px}.avatar{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;font-size:28px;background:linear-gradient(145deg,#fff5c7,#ffd86f);box-shadow:0 8px 18px rgba(145,107,10,.14)}
+.header h1{font-size:24px;margin:0}.small{font-size:13px;color:var(--muted)}.role-badge{display:inline-flex;padding:6px 9px;border-radius:999px;background:#ece7ff;color:var(--primary);font-size:12px;font-weight:900}
+.logout{border:0;background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 5px 15px rgba(44,34,90,.08)}
+.hero{background:linear-gradient(135deg,#6d4aff,#9b6eff 55%,#c088ff);border-radius:28px;padding:20px;color:#fff;box-shadow:0 18px 40px rgba(109,74,255,.26);position:relative;overflow:hidden}
+.hero:after{content:"⭐";position:absolute;right:-8px;top:-18px;font-size:100px;opacity:.13;transform:rotate(18deg)}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.hero h2{font-size:22px;margin-bottom:5px}.hero p{opacity:.88;margin:0}
+.ring{--p:0;width:92px;height:92px;border-radius:50%;background:conic-gradient(#fff calc(var(--p)*1%),rgba(255,255,255,.2) 0);display:grid;place-items:center;flex:0 0 auto}
+.ring:before{content:"";width:70px;height:70px;border-radius:50%;background:#7650f2;position:absolute}.ring b{position:relative;font-size:20px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.stat{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.18);border-radius:17px;padding:11px;text-align:center}.stat b{display:block;font-size:17px}.stat span{font-size:11px;opacity:.9}
+.card{background:var(--card);border:1px solid rgba(235,231,246,.85);border-radius:24px;padding:17px;box-shadow:0 10px 30px rgba(58,45,110,.08);margin-top:14px}
+.card-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.card-title h2{font-size:18px;margin:0}.card-title span{font-size:13px;color:var(--muted)}
+.reward{display:flex;align-items:center;gap:14px}.gift{width:62px;height:62px;display:grid;place-items:center;border-radius:20px;background:#fff4cd;font-size:34px;flex:0 0 auto}.reward-main{flex:1}.reward-main h3{margin:0 0 4px;font-size:17px}.bar{height:11px;border-radius:999px;background:#eeeaf7;overflow:hidden;margin-top:9px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#ffb82f,#ff7e45);border-radius:999px;width:0}
+.missions{display:grid;gap:10px}.mission{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--line);border-radius:19px;background:#fff}.mission.done{background:#f0fff7;border-color:#bcebd2}.mission.waiting{background:#fffaf0;border-color:#f4daa0}.mission-emoji{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:#f3efff;font-size:26px;flex:0 0 auto}.mission-info{flex:1;min-width:0}.mission-info h3{font-size:15px;margin:0 0 3px}.mission-info p{font-size:12px;color:var(--muted);margin:0}.points{font-size:12px;font-weight:900;color:#8b65ee}.mission button{border:0;min-width:48px;height:48px;border-radius:16px;background:#ede7ff;color:var(--primary);font-size:22px;font-weight:900}.mission.done button{background:#26b873;color:#fff}.mission.waiting button{background:#ffbd3b;color:#fff}
+.empty{text-align:center;padding:24px 12px;color:var(--muted)}.empty .big{font-size:48px;margin-bottom:8px}
+.nav{position:fixed;z-index:20;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(720px,calc(100% - 24px));background:rgba(255,255,255,.95);backdrop-filter:blur(18px);border:1px solid #ece8f6;box-shadow:0 12px 35px rgba(46,34,95,.18);border-radius:22px;padding:8px;display:grid;grid-template-columns:repeat(4,1fr)}
+.nav.child{grid-template-columns:repeat(3,1fr)}.nav button{border:0;background:transparent;border-radius:16px;padding:9px 3px;color:#80798e;font-size:11px;font-weight:800}.nav button b{display:block;font-size:21px;margin-bottom:2px}.nav button.active{background:#efeaff;color:var(--primary)}
+.section{display:none}.section.active{display:block}
+.calendar-head{display:flex;align-items:center;justify-content:space-between}.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:10px 0}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:3px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}.weekday{font-size:11px;color:var(--muted);font-weight:800;padding:4px}.day{aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#f6f4fa;font-weight:800;font-size:13px}.day small{font-size:9px}.day.complete{background:#ddf8e9;color:#168657}.day.partial{background:#fff1c7;color:#9a6a00}.day.missed{background:#ffe5e9;color:#c24454}.day.future{opacity:.35}.day.today{outline:3px solid #b7a7ff}
+.achievement-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.achievement{border-radius:20px;padding:16px;background:#fff;border:1px solid var(--line);min-height:120px}.achievement.locked{filter:grayscale(1);opacity:.48}.achievement .medal{font-size:33px;margin-bottom:8px}.achievement h3{font-size:14px;margin:0 0 4px}.achievement p{font-size:12px;color:var(--muted);margin:0}
+.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:4px}.tabs button{white-space:nowrap;border:1px solid var(--line);background:#fff;padding:9px 12px;border-radius:13px;font-weight:800;color:var(--muted)}.tabs button.active{background:#eee8ff;color:var(--primary);border-color:#d9ceff}
+.admin-panel{display:none}.admin-panel.active{display:block}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.weekdays label{display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 2px;font-size:11px;font-weight:800;background:#fff}.weekdays input{margin:0 0 5px}
+.task-admin{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.task-admin:last-child{border-bottom:0}.task-admin .mission-emoji{width:42px;height:42px}.task-admin .grow{flex:1}.task-admin h3{font-size:14px;margin:0}.task-admin p{font-size:11px;color:var(--muted);margin:3px 0 0}
+.pending{padding:11px;border:1px solid #f3ddb0;background:#fffaf0;border-radius:16px;margin:8px 0;display:flex;gap:10px;align-items:center}.pending .grow{flex:1}.pending button{border:0;border-radius:12px;padding:9px 11px;background:#26b873;color:#fff;font-weight:800}
+.toast{position:fixed;z-index:100;left:50%;top:max(18px,env(safe-area-inset-top));transform:translate(-50%,-30px);opacity:0;background:#2c273d;color:#fff;padding:11px 16px;border-radius:999px;font-weight:800;box-shadow:0 9px 25px rgba(0,0,0,.18);transition:.25s;pointer-events:none}.toast.show{transform:translate(-50%,0);opacity:1}
+.loader{position:fixed;inset:0;background:rgba(247,245,255,.78);backdrop-filter:blur(5px);z-index:90;display:none;place-items:center}.loader.show{display:grid}.spinner{width:46px;height:46px;border:5px solid #dfd8f4;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+.confetti{position:fixed;top:-20px;z-index:120;font-size:22px;animation:fall 1.8s linear forwards;pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.8}}
+@media(max-width:440px){.shell{padding-left:12px;padding-right:12px}.hero{padding:17px}.stats{gap:6px}.stat{padding:9px 5px}.achievement-grid{grid-template-columns:1fr 1fr}.row2{grid-template-columns:1fr}}
+body{background:radial-gradient(circle at 15% 0,#f7d7ff 0,transparent 30%),radial-gradient(circle at 90% 10%,#fff0b7 0,transparent 28%),linear-gradient(180deg,#f4e9ff,#fff7fd 58%,#fff)}.login{border:3px solid #fff;box-shadow:0 18px 45px rgba(86,26,151,.2);position:relative;overflow:hidden}.login:before{content:"⭐";position:absolute;left:18px;top:18px;font-size:30px}.login:after{content:"💜";position:absolute;right:18px;top:20px;font-size:30px}.logo-bubble,.avatar{overflow:hidden;padding:0;background:#4a176f;border:3px solid #fff;transform:none}.logo-bubble img,.avatar img{width:100%;height:100%;object-fit:cover}.primary{background:linear-gradient(135deg,#6d22d8,#b93cff 55%,#ff4ca3)}.hero{background:linear-gradient(135deg,#4b1677,#7427c9 55%,#b437e9);border:3px solid rgba(255,255,255,.7)}.card{border:2px solid #f0e4ff}.mission:nth-child(3n+1) .mission-emoji{background:#f1e6ff}.mission:nth-child(3n+2) .mission-emoji{background:#fff1c9}.mission:nth-child(3n) .mission-emoji{background:#ffe3f2}</style>
+<script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
-
-    <header>
-        <h1>Live TV – Gestão</h1>
-        <button id="toggleTheme">🌓</button>
-    </header>
-
-    <div class="tabs">
-        <div class="tab active" data-tab="diario">Diário</div>
-        <div class="tab" data-tab="mensal">Mensal</div>
-        <div class="tab" data-tab="anual">Anual</div>
-    </div>
-
-    <main id="content">
-        <!-- Conteúdo inicial -->
-        <h2 class="section-title">Resumo Diário</h2>
-
-        <div class="card green">
-            <span class="card-title">Ativações Hoje</span>
-            <span class="card-value" id="ativacoesHoje">0</span>
-        </div>
-
-        <div class="card blue">
-            <span class="card-title">Clientes Ativos</span>
-            <span class="card-value" id="clientesAtivos">0</span>
-        </div>
-
-        <button class="btn btn-green" id="btnAdd">Registrar Ativação</button>
+<div id="root"></div><div id="toast" class="toast"></div><div id="loader" class="loader"><div class="spinner"></div></div>
+<script>
+const API="/api/family";
+const ADMIN="/api/admin";
+let session=localStorage.getItem("md_session")||"";
+let loginRole=localStorage.getItem("md_role")||"child";
+let data=null, adminData=null, activeSection="home", adminTab="family", editingTask=null;
+const root=document.getElementById("root");
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const showLoader=v=>document.getElementById("loader").classList.toggle("show",!!v);
+function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2200)}
+async function callApi(action,payload={}){
+  const headers={"content-type":"application/json"}; if(session) headers["x-family-session"]=session;
+  const r=await fetch(API,{method:"POST",headers,body:JSON.stringify({action,...payload})});
+  const j=await r.json().catch(()=>({error:"Erro de conexão."}));
+  if(r.status===401 && action!=="login"){logout(false);throw new Error("Sessão expirada.");}
+  if(!r.ok) throw new Error(j.error||"Não foi possível concluir.");
+  return j;
+}
+async function callAdmin(){
+  const r=await fetch(ADMIN,{method:"POST",headers:{"content-type":"application/json","x-family-session":session},body:"{}"});
+  const j=await r.json(); if(!r.ok) throw new Error(j.error||"Erro."); return j;
+}
+function renderLogin(error=""){
+  root.innerHTML=`<div class="login-shell"><div class="login">
+    <div class="logo-bubble"><img src="data:image/jpeg;base64,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" alt="Avatar"></div><h1>Missões Divertidas</h1>
+    <p class="subtitle">Transforme as tarefas do dia em um jogo cheio de estrelas, conquistas e recompensas!</p>
+    <div class="field"><label>Usuário</label><input id="username" autocomplete="username" autocapitalize="none" placeholder="Seu usuário"></div><div class="field"><label>Senha</label><input id="password" type="password" autocomplete="current-password" placeholder="Sua senha"></div>
+    <button class="primary" id="loginBtn">Entrar no jogo 🚀</button><button class="secondary" id="createBtn" style="width:100%;margin-top:10px">✨ Criar minha conta</button>
+    <div class="error" id="loginError" style="${error?"display:block":""}">${esc(error)}</div>
+    <p class="small" style="text-align:center;margin:18px 0 0">No celular, depois de entrar, use <b>Adicionar à Tela de Início</b> para abrir como um app.</p>
+  </div></div>`;
+  document.getElementById("loginBtn").onclick=doLogin;document.getElementById("createBtn").onclick=()=>window.MissoesRegister.render();
+}
+async function doLogin(){const username=document.getElementById("username").value.trim(),password=document.getElementById("password").value;if(!username||!password){renderLogin("Preencha usuário e senha.");return}showLoader(true);try{const j=await callApi("login",{username,password});session=j.session.token;localStorage.setItem("md_session",session);localStorage.setItem("md_role",j.session.role);await loadDashboard()}catch(e){renderLogin(e.message)}finally{showLoader(false)}}
+function logout(render=true){session="";data=null;adminData=null;localStorage.removeItem("md_session");if(render)renderLogin()}
+async function loadDashboard(){
+  showLoader(true);
+  try{data=await callApi("dashboard");renderApp()}catch(e){renderLogin(e.message)}finally{showLoader(false)}
+}
+function levelTitle(level){return ["Explorador","Ajudante","Super Ajudante","Herói da Casa","Mestre das Missões"][Math.min(level-1,4)]||"Lenda das Missões"}
+function renderApp(){
+  const f=data.family, child=esc(f.child_name||"Criança"), role=data.role;
+  root.innerHTML=`<div class="shell">
+    <header class="header"><div class="userline"><div class="avatar">${role==="parent"?"🧑":'<img src="data:image/jpeg;base64,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" alt="Duda">'}</div><div><div class="small">${role==="parent"?"Painel do responsável":"Olá,"}</div><h1>${role==="parent"?esc(f.display_name):child+"!"}</h1><span class="role-badge">${role==="parent"?"RESPONSÁVEL":"JOGADOR(A)"}</span></div></div><button class="logout" id="logoutBtn">↪️</button></header>
+    <main>
+      <section id="sec-home" class="section ${activeSection==="home"?"active":""}"></section>
+      <section id="sec-calendar" class="section ${activeSection==="calendar"?"active":""}"></section>
+      <section id="sec-achievements" class="section ${activeSection==="achievements"?"active":""}"></section>
+      ${role==="parent"?`<section id="sec-parent" class="section ${activeSection==="parent"?"active":""}"></section>`:""}
     </main>
-
-    <script src="script.js"></script>
-</body>
-</html>
+  </div>
+  <nav class="nav ${role==="child"?"child":""}">
+    <button data-sec="home" class="${activeSection==="home"?"active":""}"><b>🏠</b>Hoje</button>
+    <button data-sec="calendar" class="${activeSection==="calendar"?"active":""}"><b>📅</b>Calendário</button>
+    <button data-sec="achievements" class="${activeSection==="achievements"?"active":""}"><b>🏆</b>Conquistas</button>
+    ${role==="parent"?`<button data-sec="parent" class="${activeSection==="parent"?"active":""}"><b>⚙️</b>Pais</button>`:""}
+  </nav>`;
+  document.getElementById("logoutBtn").onclick=async()=>{try{await callApi("logout")}catch{}logout()};
+  document.querySelectorAll("[data-sec]").forEach(b=>b.onclick=async()=>{activeSection=b.dataset.sec;if(activeSection==="parent"&&!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()});
+  renderHome();renderCalendar();renderAchievements();if(role==="parent")renderParent();
+}
+function renderHome(){
+  const el=document.getElementById("sec-home"), f=data.family;
+  const giftPct=Math.min(100,data.monthPercent);
+  const missions=data.todayTasks.length?data.todayTasks.map(t=>{
+    const done=t.status==="completed",waiting=t.status==="pending_confirmation";
+    const cls=done?"done":waiting?"waiting":"";
+    const icon=done?"✓":waiting?"⌛":"✓";
+    return `<div class="mission ${cls}">
+      <div class="mission-emoji">${esc(t.emoji)}</div><div class="mission-info"><h3>${esc(t.title)}</h3><p>${esc(t.description||"Missão do dia")}</p><span class="points">+${t.points} ⭐</span></div>
+      <button data-task="${t.id}" data-status="${t.status}" title="Marcar missão">${icon}</button>
+    </div>`;
+  }).join(""):`<div class="empty"><div class="big">🌈</div>Nenhuma missão programada para hoje.</div>`;
+  const milestones=[3,7,14,30], nextMilestone=milestones.find(m=>data.streak<m), bonusMap=data.streakBonuses||{};
+  const streakGoal=`<div class="card"><div class="card-title"><h2>🔥 Sequência de missões</h2><span>${data.streak} dias</span></div><p style="margin:4px 0 10px">${data.streak===0?"Complete todas as missões de hoje para começar sua sequência!":`Você está com <b>${data.streak} dias seguidos</b>!`}</p>${nextMilestone?`<div class="bar"><i style="width:${Math.min(100,Math.round(data.streak/nextMilestone*100))}%"></i></div><p class="small" style="margin-top:8px">Faltam <b>${nextMilestone-data.streak} dias</b> para ganhar <b>+${bonusMap[nextMilestone]||0} ⭐</b></p>`:`<p class="small">👑 Sequência máxima conquistada! Continue mantendo o ritmo.</p>`}</div>`;
+  el.innerHTML=`
+  <div class="hero">
+    <div class="hero-top"><div><h2>Missões de hoje</h2><p>${data.todayTasks.filter(t=>t.status==="completed").length} de ${data.todayTasks.length} concluídas</p></div>
+    <div class="ring" style="--p:${data.todayPercent}"><b>${data.todayPercent}%</b></div></div>
+    <div class="stats"><div class="stat"><b>⭐ ${data.totalPoints}</b><span>estrelas</span></div><div class="stat"><b>🔥 ${data.streak}</b><span>sequência</span></div><div class="stat"><b>🏅 ${data.level}</b><span>nível</span></div></div>
+  </div>
+  ${streakGoal}
+  <div class="card"><div class="reward"><div class="gift">${data.rewardUnlocked?"🎉":"🎁"}</div><div class="reward-main"><div class="small">Recompensa do mês</div><h3>${esc(f.current_reward_name||"Presente surpresa")}</h3><div class="small">${data.monthPercent}% de ${f.reward_goal_percent}% necessários</div><div class="bar"><i style="width:${giftPct}%"></i></div></div></div></div>
+  <div class="card"><div class="card-title"><h2>🎯 Suas missões</h2><span>${levelTitle(data.level)}</span></div><div class="missions">${missions}</div></div>
+  <div class="card"><div class="card-title"><h2>🚀 Próximo nível</h2><span>${data.levelPoints}/250</span></div><div class="bar"><i style="width:${Math.round(data.levelPoints/250*100)}%;background:linear-gradient(90deg,#6d4aff,#a977ff)"></i></div></div>`;
+  el.querySelectorAll("[data-task]").forEach(b=>b.onclick=async()=>{
+    const status=b.dataset.status, action=(status==="completed"||status==="pending_confirmation")?"undo_task":"complete_task";
+    showLoader(true);try{
+      const before=data.todayPercent;data=await callApi(action,{task_id:b.dataset.task,due_date:data.today});
+      if(action==="complete_task"){toast(data.todayPercent===100?"Todas as missões concluídas! 🎉":"Missão concluída! ⭐");if(before<100&&data.todayPercent===100)confetti()}
+      else toast("Missão desmarcada.");
+      renderApp();
+    }catch(e){toast(e.message)}finally{showLoader(false)}
+  });
+}
+function renderCalendar(){
+  const el=document.getElementById("sec-calendar"),[y,m]=data.today.split("-").map(Number);
+  const monthName=new Intl.DateTimeFormat("pt-BR",{month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(Date.UTC(y,m-1,1)));
+  const map=new Map(data.calendar.map(d=>[d.date,d]));
+  const first=new Date(Date.UTC(y,m-1,1)).getUTCDay(),days=new Date(Date.UTC(y,m,0)).getUTCDate();
+  let cells="";for(let i=0;i<first;i++)cells+=`<div></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`,rec=map.get(ds);
+    const future=ds>data.today,status=future?"future":(rec?.status||"empty"),today=ds===data.today?"today":"";
+    const symbol=status==="complete"?"✓":status==="partial"?"•":status==="missed"?"×":"";
+    cells+=`<div class="day ${status} ${today}"><span>${d}</span><small>${symbol}</small></div>`;
+  }
+  el.innerHTML=`<div class="card"><div class="calendar-head"><div><div class="small">Seu histórico</div><h2 style="text-transform:capitalize;margin:3px 0">${monthName}</h2></div><div class="role-badge">${data.monthPercent}% no mês</div></div>
+    <div class="legend"><span><i class="dot" style="background:#26b873"></i>Completo</span><span><i class="dot" style="background:#ffbd3b"></i>Parcial</span><span><i class="dot" style="background:#ee5b69"></i>Não concluído</span></div>
+    <div class="week"><div class="weekday">D</div><div class="weekday">S</div><div class="weekday">T</div><div class="weekday">Q</div><div class="weekday">Q</div><div class="weekday">S</div><div class="weekday">S</div>${cells}</div>
+  </div>
+  <div class="card"><div class="card-title"><h2>📊 Resumo do mês</h2></div><div class="stats" style="margin-top:0">
+    <div class="stat" style="background:#f4f0ff"><b style="color:#6d4aff">${data.monthCompleted}</b><span style="color:#6d6680">concluídas</span></div>
+    <div class="stat" style="background:#fff5db"><b style="color:#a36b00">${Math.max(0,data.monthExpected-data.monthCompleted)}</b><span style="color:#6d6680">pendentes</span></div>
+    <div class="stat" style="background:#eafaf2"><b style="color:#168657">${data.monthPercent}%</b><span style="color:#6d6680">aproveitamento</span></div>
+  </div></div>`;
+}
+function renderAchievements(){
+  const list=[
+    ["🌟","Primeira Estrela","Concluiu a primeira missão.",data.totalPoints>=1],
+    ["💯","Clube dos 100","Conquistou 100 estrelas.",data.totalPoints>=100],
+    ["🔥","Trinca de Fogo","3 dias completos em sequência.",data.streak>=3],
+    ["🚀","Semana Campeã","7 dias completos em sequência.",data.streak>=7],
+    ["🎯","Na Meta","Atingiu a meta mensal.",data.monthPercent>=data.family.reward_goal_percent],
+    ["👑","Dia Perfeito","Concluiu 100% das missões de hoje.",data.todayPercent===100&&data.todayTasks.length>0]
+  ];
+  document.getElementById("sec-achievements").innerHTML=`<div class="card"><div class="card-title"><h2>🏆 Conquistas</h2><span>Continue jogando!</span></div><div class="achievement-grid">${list.map(a=>`<div class="achievement ${a[3]?"":"locked"}"><div class="medal">${a[0]}</div><h3>${a[1]}</h3><p>${a[2]}</p></div>`).join("")}</div></div>`;
+}
+function renderParent(){
+  const el=document.getElementById("sec-parent"),f=data.family;
+  el.innerHTML=`<div class="tabs"><button data-at="family" class="${adminTab==="family"?"active":""}">👨‍👩‍👧 Família</button><button data-at="tasks" class="${adminTab==="tasks"?"active":""}">🎯 Tarefas</button><button data-at="access" class="${adminTab==="access"?"active":""}">🔐 Acesso</button><button data-at="pending" class="${adminTab==="pending"?"active":""}">✅ Confirmações ${adminData?.pending?.length?"("+adminData.pending.length+")":""}</button></div>
+  <div id="ap-family" class="admin-panel ${adminTab==="family"?"active":""}"></div>
+  <div id="ap-tasks" class="admin-panel ${adminTab==="tasks"?"active":""}"></div>
+  <div id="ap-access" class="admin-panel ${adminTab==="access"?"active":""}"></div>
+  <div id="ap-pending" class="admin-panel ${adminTab==="pending"?"active":""}"></div>`;
+  el.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{adminTab=b.dataset.at;renderParent()});
+  document.getElementById("ap-family").innerHTML=`<div class="card"><div class="card-title"><h2>👨‍👩‍👧 Configurações da família</h2></div>
+    <div class="field"><label>Nome da família / perfil</label><input id="famName" value="${esc(f.display_name)}"></div>
+    <div class="row2"><div class="field"><label>Nome da criança</label><input id="childName" value="${esc(f.child_name)}"></div><div class="field"><label>Nome do responsável</label><input id="parentName" value="${esc(f.parent_name||"")}"></div></div>
+    <div class="field"><label>Presente / recompensa</label><input id="rewardName" value="${esc(f.current_reward_name||"")}"></div>
+    <div class="field"><label>Meta do mês (%)</label><input id="goalPct" type="number" min="1" max="100" value="${f.reward_goal_percent}"></div>
+    <button class="primary" id="saveFamily">Salvar alterações</button></div>`;
+  document.getElementById("saveFamily").onclick=async()=>{showLoader(true);try{data=await callApi("save_family",{display_name:document.getElementById("famName").value,child_name:document.getElementById("childName").value,parent_name:document.getElementById("parentName").value,current_reward_name:document.getElementById("rewardName").value,reward_goal_percent:Number(document.getElementById("goalPct").value)});toast("Configurações salvas ✅");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}};
+  renderTaskAdmin();
+  document.getElementById("ap-access").innerHTML=`<div class="card"><div class="card-title"><h2>🔐 Usuários e senhas</h2></div><div class="row2"><div class="field"><label>Usuário da criança</label><input id="childUser" value="${esc((adminData?.accounts||[]).find(a=>a.role==='child')?.username||'')}"></div><div class="field"><label>Nova senha</label><input id="childPass" type="password" placeholder="Em branco mantém a atual"></div></div><button class="secondary" style="width:100%;margin-bottom:14px" id="saveChildAccess">Salvar acesso da criança</button><div class="row2"><div class="field"><label>Usuário do responsável</label><input id="parentUser" value="${esc((adminData?.accounts||[]).find(a=>a.role==='parent')?.username||'')}"></div><div class="field"><label>Nova senha</label><input id="parentPass" type="password" placeholder="Em branco mantém a atual"></div></div><button class="primary" id="saveParentAccess">Salvar acesso do responsável</button></div>`;
+  document.getElementById("saveChildAccess").onclick=async()=>{showLoader(true);try{await callApi("update_credentials",{account_role:"child",username:document.getElementById("childUser").value,password:document.getElementById("childPass").value});adminData=await callAdmin();toast("Acesso da criança atualizado 🔐");renderParent()}catch(e){toast(e.message)}finally{showLoader(false)}};document.getElementById("saveParentAccess").onclick=async()=>{showLoader(true);try{await callApi("update_credentials",{account_role:"parent",username:document.getElementById("parentUser").value,password:document.getElementById("parentPass").value});adminData=await callAdmin();toast("Acesso do responsável atualizado 🔐");renderParent()}catch(e){toast(e.message)}finally{showLoader(false)}};
+  const pending=adminData?.pending||[];
+  document.getElementById("ap-pending").innerHTML=`<div class="card"><div class="card-title"><h2>✅ Aprovar missões</h2><span>${pending.length} aguardando</span></div>${pending.length?pending.map(p=>`<div class="pending"><div style="font-size:26px">${esc(p.tasks?.emoji||"⭐")}</div><div class="grow"><b>${esc(p.tasks?.title||"Missão")}</b><div class="small">${esc(p.due_date)} • +${p.tasks?.points||0} estrelas</div></div><button data-approve="${p.id}">Aprovar</button></div>`).join(""):`<div class="empty"><div class="big">👌</div>Nenhuma missão aguardando confirmação.</div>`}</div>`;
+  document.querySelectorAll("[data-approve]").forEach(b=>b.onclick=async()=>{showLoader(true);try{data=await callApi("approve_completion",{completion_id:b.dataset.approve});adminData=await callAdmin();toast("Missão aprovada ⭐");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}});
+}
+function renderTaskAdmin(){
+  const el=document.getElementById("ap-tasks"),tasks=adminData?.tasks||[],t=editingTask;
+  const selected=t?(t.task_schedules||[]).map(x=>Number(x.weekday)):[0,1,2,3,4,5,6];
+  const names=["D","S","T","Q","Q","S","S"];
+  el.innerHTML=`<div class="card"><div class="card-title"><h2>${t?"✏️ Editar missão":"➕ Nova missão"}</h2>${t?'<button class="secondary" id="cancelEdit">Cancelar</button>':""}</div>
+    <div class="row2"><div class="field"><label>Emoji</label><input id="taskEmoji" maxlength="4" value="${esc(t?.emoji||"⭐")}"></div><div class="field"><label>Pontos</label><input id="taskPoints" type="number" min="0" value="${t?.points||10}"></div></div>
+    <div class="field"><label>Nome da missão</label><input id="taskTitle" value="${esc(t?.title||"")}" placeholder="Ex.: Guardar os brinquedos"></div>
+    <div class="field"><label>Descrição opcional</label><input id="taskDesc" value="${esc(t?.description||"")}" placeholder="Uma dica curta"></div>
+    <div class="field"><label>Dias da semana</label><div class="weekdays">${names.map((n,i)=>`<label><input type="checkbox" data-wd="${i}" ${selected.includes(i)?"checked":""}>${n}</label>`).join("")}</div></div>
+    <label style="display:flex;gap:9px;align-items:center;margin:12px 0;font-size:13px;font-weight:800"><input id="taskConfirm" type="checkbox" ${t?.requires_parent_confirmation?"checked":""}> Precisa de confirmação dos pais</label>
+    <button class="primary" id="saveTask">${t?"Salvar missão":"Criar missão"}</button>
+  </div>
+  <div class="card"><div class="card-title"><h2>📋 Missões cadastradas</h2><span>${tasks.length}</span></div>
+    ${tasks.map(x=>`<div class="task-admin"><div class="mission-emoji">${esc(x.emoji)}</div><div class="grow"><h3>${esc(x.title)}</h3><p>${x.points} estrelas • ${(x.task_schedules||[]).length} dia(s) da semana</p></div><button class="secondary" data-edit="${x.id}">Editar</button><button class="danger" data-del="${x.id}">×</button></div>`).join("")||'<div class="empty">Nenhuma missão cadastrada.</div>'}
+  </div>`;
+  if(t)document.getElementById("cancelEdit").onclick=()=>{editingTask=null;renderTaskAdmin()};
+  document.getElementById("saveTask").onclick=async()=>{
+    const weekdays=[...document.querySelectorAll("[data-wd]:checked")].map(x=>Number(x.dataset.wd));
+    showLoader(true);try{
+      data=await callApi("save_task",{id:t?.id||null,emoji:document.getElementById("taskEmoji").value,title:document.getElementById("taskTitle").value,description:document.getElementById("taskDesc").value,points:Number(document.getElementById("taskPoints").value),weekdays,requires_parent_confirmation:document.getElementById("taskConfirm").checked});
+      adminData=await callAdmin();editingTask=null;toast(t?"Missão atualizada ✅":"Missão criada 🎯");renderApp();
+    }catch(e){toast(e.message)}finally{showLoader(false)}
+  };
+  el.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{editingTask=tasks.find(x=>x.id===b.dataset.edit);renderTaskAdmin();window.scrollTo({top:0,behavior:"smooth"})});
+  el.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(!confirm("Remover esta missão?"))return;showLoader(true);try{data=await callApi("delete_task",{task_id:b.dataset.del});adminData=await callAdmin();toast("Missão removida.");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}});
+}
+function confetti(){const chars=["⭐","🎉","✨","💜","🏆"];for(let i=0;i<28;i++){const x=document.createElement("span");x.className="confetti";x.textContent=chars[Math.floor(Math.random()*chars.length)];x.style.left=Math.random()*100+"vw";x.style.animationDelay=(Math.random()*.6)+"s";x.style.animationDuration=(1.3+Math.random()*1.2)+"s";document.body.appendChild(x);setTimeout(()=>x.remove(),2800)}}
+(async()=>{if(session)await loadDashboard();else renderLogin()})();
+</script>
+</body></html>
