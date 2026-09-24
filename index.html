@@ -300,14 +300,14 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3112</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3113</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
       <div class="small">${role==="parent"?"Responsável":"Jogador(a)"} • Missões Divertidas</div>
     </div>
-    <input id="profilePhotoInput" type="file" accept="image/*" capture="user" style="display:none">
-    <button class="secondary" id="changeProfilePhoto" style="width:100%;margin-bottom:10px">📷 Alterar foto de perfil</button>
+    <input id="profilePhotoInput" type="file" accept="image/*" style="display:none">
+    <button class="secondary" id="changeProfilePhoto" style="width:100%;margin-bottom:10px">🖼️ Escolher foto da galeria</button>
     <button class="secondary" id="removeProfilePhoto" style="width:100%;margin-bottom:10px">🗑️ Remover foto</button>
     ${role==="parent"?'<button class="secondary" id="openParentSettings" style="width:100%;margin-bottom:10px">👨‍👩‍👧 Configurações da família</button>':""}
     <button class="secondary" id="menuHome" style="width:100%;margin-bottom:10px">🏠 Voltar para o início</button>
