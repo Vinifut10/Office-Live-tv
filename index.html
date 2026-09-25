@@ -173,6 +173,11 @@ body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe
 
 .avatar-pose{width:100%;height:100%;background-repeat:no-repeat;background-size:400% 200%;background-color:transparent}.avatar-pose-loading,.locked-pose{width:100%;height:100%;display:grid;place-items:center;font-size:42px}.character-picker{display:grid;grid-template-columns:1fr 1fr;gap:12px}.character-picker button{border:2px solid #eadcff;background:#fbf8ff;border-radius:20px;padding:9px;color:#5f2a80;font-weight:900}.character-picker button.active{border-color:#8c24e9;background:linear-gradient(145deg,#f2e7ff,#fff1fb);box-shadow:0 8px 20px rgba(112,34,216,.16)}.char-preview{display:block;width:92px;height:92px;margin:0 auto 5px}.collectible-pose-wrap{width:132px;height:132px;margin:-4px auto -6px;position:relative;z-index:2}.collectible-card .avatar-pose{filter:drop-shadow(0 9px 10px rgba(30,0,60,.28))}.collectible-card.locked .collectible-pose-wrap{filter:grayscale(1)}.collectible-card{min-height:300px}.collectible-icon{position:relative;z-index:3}.collectible-reaction{position:relative;z-index:3}@media(max-width:390px){.collectible-pose-wrap{width:118px;height:118px}.char-preview{width:80px;height:80px}}
 .personalized-pose{width:100%;height:100%;display:grid;place-items:center}.personalized-pose img{width:100%;height:100%;object-fit:cover;border-radius:28%;border:3px solid rgba(255,255,255,.9);box-shadow:0 9px 20px rgba(48,9,77,.24)}#createAiAvatar{background:linear-gradient(135deg,#7b20e8,#d538d4 62%,#ff65b7)}
+.avatar-gallery{width:100%;border-radius:22px;display:block;box-shadow:0 12px 30px rgba(74,32,130,.18);background:#f4efff}
+.avatar-hero{background:linear-gradient(145deg,#21102f,#5920a0 55%,#b22cb8);border-radius:24px;padding:18px;color:#fff;text-align:center;overflow:hidden}
+.avatar-hero .avatar-main{width:180px;height:180px;margin:auto;border-radius:28px;overflow:hidden;background:rgba(255,255,255,.14);border:3px solid rgba(255,255,255,.65)}
+.avatar-hero .avatar-main img{width:100%;height:100%;object-fit:cover}
+.avatar-tags{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin:12px 0}.avatar-tags span{background:rgba(255,255,255,.14);padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800}
 </style>
 <script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
@@ -218,6 +223,32 @@ async function createPersonalizedAvatar(){
     toast("Seu avatar personalizado ficou pronto! 🎨✨");renderApp();
   }catch(e){toast(e.message||"Não foi possível criar o avatar.")}
   finally{showLoader(false)}
+}
+async function createAvatarGallery(){
+  if(data.role!=="child")return;
+  const photo=data.profileAvatar||getLocalAvatar("child");
+  if(!photo){toast("Primeiro crie seu avatar personalizado.");return}
+  showLoader(true);
+  try{
+    toast("Criando suas poses… ✨");
+    const r=await fetch("/api/generate-avatar",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({photo,name:data.childDisplayName||data.family.child_name||"Criança",mode:"gallery"})});
+    const j=await r.json().catch(()=>({}));if(!r.ok||!j.avatar)throw new Error(j.error||"Não foi possível criar as poses.");
+    const gallery=await compressAvatarDataUrl(j.avatar,640);
+    data=await callApi("update_avatar_gallery",{gallery});
+    toast("Seu álbum de poses ficou pronto! 🎭✨");renderMyAvatar();
+  }catch(e){toast(e.message||"Não foi possível criar as poses.")}finally{showLoader(false)}
+}
+function renderMyAvatar(){
+  const old=document.getElementById("myAvatarModal");if(old)old.remove();
+  const wrap=document.createElement("div");wrap.id="myAvatarModal";wrap.className="crop-modal";
+  const name=esc(data.childDisplayName||data.family.child_name||"Meu avatar"),avatar=data.profileAvatar||getLocalAvatar("child");
+  wrap.innerHTML=`<div class="crop-sheet" style="max-width:620px;max-height:92vh;overflow:auto">
+    <div class="crop-head"><h3>🎭 Meu Avatar</h3><button id="myAvatarClose">×</button></div>
+    <div class="avatar-hero"><div class="avatar-main">${avatar?'<img src="'+avatar+'" alt="Avatar">':'⭐'}</div><h2 style="margin:10px 0 4px">${name}</h2><div>Seu personagem oficial no Missões Divertidas</div><div class="avatar-tags"><span>👆 Apontando</span><span>👍 Joinha</span><span>✌️ Paz</span><span>😎 Confiante</span><span>🎉 Festa</span><span>📚 Estudando</span></div></div>
+    ${data.avatarGallery?`<div class="card" style="margin-top:14px"><div class="card-title"><h2>✨ Minhas posições</h2><span>9 poses</span></div><img class="avatar-gallery" src="${data.avatarGallery}" alt="Poses do avatar"><p class="small" style="margin-top:10px">Frente, lado, costas, apontando, joinha, paz, confiante, comemorando e estudando — sempre com a mesma identidade visual.</p></div>`:`<div class="card" style="margin-top:14px;text-align:center"><div style="font-size:45px">🎨</div><h2>Crie suas posições</h2><p class="small">O app usa seu avatar atual para criar uma folha completa no mesmo padrão visual oficial da Duda e do Ryan.</p></div>`}
+    <button class="primary" id="generateAvatarGallery" style="margin-top:10px">${data.avatarGallery?"🔄 Gerar novas posições":"✨ Criar minhas posições"}</button>
+  </div>`;
+  document.body.appendChild(wrap);wrap.querySelector("#myAvatarClose").onclick=()=>wrap.remove();wrap.querySelector("#generateAvatarGallery").onclick=createAvatarGallery;
 }
 async function openAvatarCropper(file,role){
   if(!file||!file.type.startsWith("image/"))throw new Error("Escolha uma imagem.");
@@ -421,7 +452,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3123</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3124</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -430,6 +461,7 @@ function renderMenu(){
     <input id="profilePhotoInput" type="file" accept="image/*" style="display:none">
     <button class="secondary" id="changeProfilePhoto" style="width:100%;margin-bottom:10px">🖼️ Escolher foto da galeria</button>
     ${role==="child"?'<button class="primary" id="createAiAvatar" style="width:100%;margin-bottom:10px">✨ Criar meu avatar com esta foto</button><div class="small" style="text-align:center;margin:-2px 8px 12px">O app transforma a foto em um avatar exclusivo da criança.</div>':""}
+    ${role==="child"?'<button class="secondary" id="openMyAvatar" style="width:100%;margin-bottom:10px">🎭 Meu Avatar • poses e expressões</button>':""}
     <button class="secondary" id="removeProfilePhoto" style="width:100%;margin-bottom:10px">🗑️ Remover foto</button>
     ${role==="parent"?'<button class="secondary" id="openParentSettings" style="width:100%;margin-bottom:10px">👨‍👩‍👧 Configurações da família</button>':""}
     ${role==="parent"&&data.platformAdmin?'<button class="primary" id="openPlatformAdmin" style="width:100%;margin-bottom:10px">🏢 Painel de famílias</button>':""}
@@ -445,6 +477,7 @@ function renderMenu(){
   const removePhoto=document.getElementById("removeProfilePhoto");
   if(changePhoto)changePhoto.onclick=()=>photoInput.click();
   const aiAvatar=document.getElementById("createAiAvatar");if(aiAvatar)aiAvatar.onclick=createPersonalizedAvatar;
+  const myAvatar=document.getElementById("openMyAvatar");if(myAvatar)myAvatar.onclick=renderMyAvatar;
   if(photoInput)photoInput.onchange=async()=>{const file=photoInput.files&&photoInput.files[0];if(!file)return;try{await openAvatarCropper(file,role)}catch(e){toast(e.message||"Não foi possível usar a foto.")}finally{photoInput.value=""}};
   if(removePhoto)removePhoto.onclick=async()=>{if(!(data?.profileAvatar||getLocalAvatar(role))){toast("Nenhuma foto personalizada.");return}if(!confirm("Remover a foto de perfil?"))return;showLoader(true);try{saveLocalAvatar(role,"");data=await callApi("update_avatar",{avatar:""});toast("Foto removida em todos os aparelhos.");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}};
   document.getElementById("menuHome").onclick=()=>{activeSection="home";renderApp()};
