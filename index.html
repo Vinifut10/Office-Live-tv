@@ -168,6 +168,8 @@ body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe
 .crop-modal{position:fixed;inset:0;z-index:10050;background:rgba(24,8,39,.72);display:flex;align-items:flex-end;justify-content:center;padding:18px}.crop-sheet{width:min(100%,430px);background:#fff;border-radius:26px 26px 18px 18px;padding:16px;box-shadow:0 -18px 50px rgba(0,0,0,.28)}.crop-head{display:flex;align-items:center;justify-content:space-between}.crop-head h3{margin:0}.crop-head button{border:0;background:#f2eaff;width:36px;height:36px;border-radius:50%;font-size:24px}.crop-sheet p{font-size:12px;color:#78658b;margin:6px 0 12px}.crop-stage{position:relative;width:min(82vw,320px);aspect-ratio:1;margin:auto;overflow:hidden;border-radius:24px;background:#1a1022;touch-action:none}.crop-stage canvas{width:100%;height:100%;display:block}.crop-ring{position:absolute;inset:10%;border:3px solid rgba(255,255,255,.95);border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.28);pointer-events:none}.crop-zoom{display:flex;gap:10px;align-items:center;font-weight:800;font-size:12px;margin:14px 2px}.crop-zoom input{flex:1}.crop-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.crop-actions button{width:100%}
 
 .weekly-report{position:relative;overflow:hidden}.report-ring{width:150px;height:150px;border-radius:50%;margin:10px auto 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:conic-gradient(#7b20e8 calc(var(--rp,1)*1%),#eee7ff 0);box-shadow:inset 0 0 0 18px #fff;border:1px solid #ede4ff}.report-ring b{font-size:30px;color:#6d20d7}.report-ring span{font-size:11px;color:#796b86}.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.report-grid div{background:#f8f3ff;border:1px solid #eadcff;border-radius:16px;padding:13px;text-align:center}.report-grid b{display:block;font-size:23px;color:#6d20d7}.report-grid span{display:block;font-size:11px;color:#786b83;margin-top:3px}.report-highlight{background:#fff8dc;border:1px solid #ffe89e;border-radius:14px;padding:10px 12px;margin-top:8px;font-size:13px}
+
+.progress-main-card{cursor:pointer;position:relative}.progress-main-card:after{content:"Ver histórico ›";position:absolute;right:14px;bottom:10px;font-size:10px;font-weight:900;color:rgba(255,255,255,.9)}.progress-hero{background:linear-gradient(135deg,#6d20d7,#bc38e6 58%,#ff58ca);color:#fff;border-radius:26px;padding:18px;margin-bottom:12px;box-shadow:0 14px 34px rgba(67,5,117,.24)}.progress-hero h2{margin:10px 0 3px}.progress-big-number{font-size:54px;font-weight:1000;letter-spacing:-2px}.brand-progress.big{height:13px;margin:8px 0}.back-chip{border:0;border-radius:999px;background:rgba(255,255,255,.2);color:#fff;padding:7px 11px;font-weight:900}.progress-summary{margin-bottom:12px}.history-list{display:flex;flex-direction:column;gap:8px}.history-row{border:1px solid #eee5fb;background:#fff;border-radius:15px;padding:11px 12px;display:flex;justify-content:space-between;gap:10px;text-align:left;color:inherit}.history-row span{display:block;font-size:11px;color:#81738c;margin-top:3px}.history-side{text-align:right}.history-side strong{display:block;color:#7022d8}.history-side small{font-size:10px;color:#7a6f82;white-space:nowrap}.collectible-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.collectible-card{position:relative;overflow:hidden;border-radius:22px;padding:14px;background:linear-gradient(150deg,#5f18c8,#a927de 58%,#ff57c9);color:#fff;text-align:center;box-shadow:0 10px 24px rgba(90,27,150,.18);min-height:250px}.collectible-card.locked{filter:grayscale(.8);opacity:.55}.collectible-shine{position:absolute;inset:-80px auto auto -70px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.16)}.collectible-icon{font-size:38px}.collectible-avatar{width:74px;height:74px;border-radius:50%;margin:7px auto;border:4px solid #fff;overflow:hidden;background:#fff;display:grid;place-items:center;font-size:34px}.collectible-avatar img{width:100%;height:100%;object-fit:cover}.collectible-reaction{font-size:30px;margin-bottom:6px}.collectible-card b{display:block;font-size:14px}.collectible-card span{display:block;font-size:10px;min-height:30px;margin:5px 0 9px;opacity:.92}.collectible-card button{width:100%;padding:8px;font-size:11px;background:rgba(255,255,255,.94)}.store-actions{display:flex;gap:6px;margin-top:9px}.store-actions button{flex:1;padding:7px;font-size:11px}@media(max-width:360px){.collectible-grid{grid-template-columns:1fr}}
 </style>
 <script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
@@ -186,7 +188,7 @@ const avatarStorageKey=role=>"md_avatar_"+role;
 function getLocalAvatar(role){try{return localStorage.getItem(avatarStorageKey(role))||""}catch{return""}}
 function saveLocalAvatar(role,dataUrl){try{if(dataUrl)localStorage.setItem(avatarStorageKey(role),dataUrl);else localStorage.removeItem(avatarStorageKey(role))}catch{}}
 function profileAvatarHtml(role,fallback){
-  const src=getLocalAvatar(role);
+  const src=(data&&data.profileAvatar)||getLocalAvatar(role);
   return src?'<img src="'+src+'" alt="Foto de perfil">':fallback;
 }
 async function openAvatarCropper(file,role){
@@ -222,11 +224,17 @@ async function openAvatarCropper(file,role){
   canvas.addEventListener("touchstart",down,{passive:false});canvas.addEventListener("touchmove",move,{passive:false});canvas.addEventListener("touchend",up);
   const close=()=>wrap.remove();
   wrap.querySelector("#cropClose").onclick=close;wrap.querySelector("#cropCancel").onclick=close;
-  wrap.querySelector("#cropSave").onclick=()=>{
+  wrap.querySelector("#cropSave").onclick=async()=>{
     const out=document.createElement("canvas");out.width=256;out.height=256;
     out.getContext("2d").drawImage(canvas,0,0,320,320,0,0,256,256);
-    saveLocalAvatar(role,out.toDataURL("image/jpeg",.84));
-    close();toast("Foto de perfil atualizada 📸");renderApp();
+    const avatar=out.toDataURL("image/jpeg",.84);
+    showLoader(true);
+    try{
+      saveLocalAvatar(role,avatar);
+      data=await callApi("update_avatar",{avatar});
+      close();toast("Foto sincronizada em todos os aparelhos 📸");renderApp();
+    }catch(e){toast(e.message||"Não foi possível salvar a foto.")}
+    finally{showLoader(false)}
   };
   draw();
 }
@@ -260,7 +268,12 @@ async function doLogin(){const username=document.getElementById("username").valu
 function logout(render=true){session="";data=null;adminData=null;localStorage.removeItem("md_session");if(render)renderLogin()}
 async function loadDashboard(){
   showLoader(true);
-  try{data=await callApi("dashboard");renderApp();startLiveSync()}catch(e){renderLogin(e.message)}finally{showLoader(false)}
+  try{
+    data=await callApi("dashboard");
+    const localAvatar=getLocalAvatar(data.role);
+    if(!data.profileAvatar&&localAvatar){try{data=await callApi("update_avatar",{avatar:localAvatar})}catch{}}
+    renderApp();startLiveSync()
+  }catch(e){renderLogin(e.message)}finally{showLoader(false)}
 }
 async function refreshAppFromPull(){
   if(pullRefreshing||!session)return;
@@ -335,7 +348,7 @@ function renderApp(){
   const f=data.family, child=esc(f.child_name||"Criança"), role=data.role;
   const childNav=role==="child";
   root.innerHTML=`<div id="pullRefresh" class="pull-refresh"><b>↻</b><span>Puxe para atualizar</span></div><div class="shell">
-    <div class="app-brand app-brand-expanded">
+    <div class="app-brand app-brand-expanded progress-main-card" id="openProgressCard" role="button" tabindex="0">
   <img src="./app-icon.jpg" alt="Missões Divertidas">
   <div class="brand-copy"><strong>Missões Divertidas</strong><small>Tarefas, estrelas e recompensas!</small>
     <div class="brand-month"><span>Progresso do mês</span><b>${data.monthPercent}%</b></div>
@@ -350,6 +363,7 @@ function renderApp(){
       <section id="sec-friends" class="section ${activeSection==="friends"?"active":""}"></section>
       <section id="sec-store" class="section ${activeSection==="store"?"active":""}"></section>
       <section id="sec-menu" class="section ${activeSection==="menu"?"active":""}"></section>\n      <section id="sec-report" class="section ${activeSection==="report"?"active":""}"></section>
+      <section id="sec-progress" class="section ${activeSection==="progress"?"active":""}"></section>
       ${role==="parent"?`<section id="sec-parent" class="section ${activeSection==="parent"?"active":""}"></section>`:""}
     </main>
   </div>
@@ -360,14 +374,16 @@ function renderApp(){
     <button data-sec="menu" class="${activeSection==="menu"?"active":""}"><b>☰</b>Menu</button>
   </nav>`;
   document.getElementById("profileMenuBtn").onclick=()=>{activeSection="menu";renderApp()};
+  const progressCard=document.getElementById("openProgressCard");
+  if(progressCard){progressCard.onclick=()=>{activeSection="progress";renderApp()};progressCard.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();activeSection="progress";renderApp()}}}
   document.querySelectorAll("[data-sec]").forEach(b=>b.onclick=async()=>{activeSection=b.dataset.sec;if(activeSection==="parent"&&!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()});
-  renderHome();renderCalendar();renderAchievements();renderMenu();renderWeeklyReport();renderStore();if(role==="child")renderFriends();if(role==="parent")renderParent();bindPullToRefresh();
+  renderHome();renderCalendar();renderAchievements();renderMenu();renderWeeklyReport();renderProgressHistory();renderStore();if(role==="child")renderFriends();if(role==="parent")renderParent();bindPullToRefresh();
 }
 function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3115</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3116</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -389,15 +405,67 @@ function renderMenu(){
   const removePhoto=document.getElementById("removeProfilePhoto");
   if(changePhoto)changePhoto.onclick=()=>photoInput.click();
   if(photoInput)photoInput.onchange=async()=>{const file=photoInput.files&&photoInput.files[0];if(!file)return;try{await openAvatarCropper(file,role)}catch(e){toast(e.message||"Não foi possível usar a foto.")}finally{photoInput.value=""}};
-  if(removePhoto)removePhoto.onclick=()=>{if(!getLocalAvatar(role)){toast("Nenhuma foto personalizada.");return}if(!confirm("Remover a foto de perfil?"))return;saveLocalAvatar(role,"");toast("Foto removida.");renderApp()};
+  if(removePhoto)removePhoto.onclick=async()=>{if(!(data?.profileAvatar||getLocalAvatar(role))){toast("Nenhuma foto personalizada.");return}if(!confirm("Remover a foto de perfil?"))return;showLoader(true);try{saveLocalAvatar(role,"");data=await callApi("update_avatar",{avatar:""});toast("Foto removida em todos os aparelhos.");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}};
   document.getElementById("menuHome").onclick=()=>{activeSection="home";renderApp()};
   const ms=document.getElementById("menuStore");if(ms)ms.onclick=()=>{activeSection="store";renderApp()};
   const mr=document.getElementById("menuReport");if(mr)mr.onclick=()=>{activeSection="report";renderApp()};
   const mn=document.getElementById("menuNotifications");if(mn)mn.onclick=async()=>{if(!("Notification" in window)){toast("Notificações não são suportadas neste navegador.");return}try{const p=await Notification.requestPermission();toast(p==="granted"?"Notificações ativadas 🔔":"Permissão de notificações não concedida.")}catch{toast("Não foi possível ativar notificações.")}};
   const ma=document.getElementById("menuAchievements");if(ma)ma.onclick=()=>{activeSection="achievements";renderApp()};
-  const ps=document.getElementById("openParentSettings");if(ps)ps.onclick=async()=>{activeSection="parent";adminTab="family";if(!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()};
+  const ps=document.getElementById("openParentSettings");if(ps)ps.onclick=async()=>{
+    if(data.parentPinConfigured){
+      const pin=prompt("Digite o PIN da área dos pais:");
+      if(pin===null)return;
+      try{await callApi("verify_parent_pin",{pin})}catch(e){toast(e.message);return}
+    }
+    activeSection="parent";adminTab="family";if(!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()
+  };
   document.getElementById("menuLogout").onclick=async()=>{if(!confirm("Deseja realmente sair do aplicativo?"))return;showLoader(true);try{await callApi("logout")}catch{}finally{showLoader(false)}logout()};
 }
+function renderProgressHistory(){
+  const el=document.getElementById("sec-progress");if(!el)return;
+  const cal=[...(data.calendar||[])].reverse();
+  const valid=cal.filter(d=>d.status==="complete").length;
+  const perfect=cal.filter(d=>d.perfect===true||(Number(d.expected||0)>0&&Number(d.completed||0)===Number(d.expected||0))).length;
+  const pending=cal.reduce((s,d)=>s+Number(d.pending_confirmation||0),0);
+  const priorityDone=cal.reduce((s,d)=>s+Number(d.priority_completed||0),0);
+  const priorityExpected=cal.reduce((s,d)=>s+Number(d.priority_expected||0),0);
+  const monthLabel=new Intl.DateTimeFormat("pt-BR",{month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(data.today+"T12:00:00Z"));
+  const rows=cal.map(d=>{
+    const dt=new Date(d.date+"T12:00:00Z");
+    const label=new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short",timeZone:"UTC"}).format(dt);
+    const pct=d.expected?Math.round(Number(d.completed||0)/Number(d.expected||1)*100):0;
+    const badge=d.perfect?"👑 Perfeito":d.status==="complete"?"⭐ Dia válido":d.status==="partial"?"🟡 Parcial":d.status==="missed"?"🔴 Incompleto":"⚪ Sem missões";
+    return `<button class="history-row" data-history-date="${d.date}">
+      <div><b style="text-transform:capitalize">${label}</b><span>${d.completed||0}/${d.expected||0} concluídas • ${d.pending_confirmation||0} aguardando</span></div>
+      <div class="history-side"><strong>${pct}%</strong><small>${badge}</small></div>
+    </button>`;
+  }).join("");
+  el.innerHTML=`
+    <div class="progress-hero">
+      <button class="back-chip" id="progressBack">← Voltar</button>
+      <div class="small" style="text-transform:capitalize">${monthLabel}</div>
+      <h2>📈 Meu progresso</h2>
+      <div class="progress-big-number">${data.monthPercent}%</div>
+      <div class="brand-progress big"><i style="width:${Math.min(100,data.monthPercent)}%"></i></div>
+      <div class="small">${data.monthCompleted} de ${data.monthExpected} missões concluídas no mês</div>
+    </div>
+    <div class="report-grid progress-summary">
+      <div><b>${valid}</b><span>dias válidos</span></div>
+      <div><b>${perfect}</b><span>dias perfeitos</span></div>
+      <div><b>${data.streak}</b><span>sequência atual</span></div>
+      <div><b>${data.totalPoints}</b><span>estrelas</span></div>
+    </div>
+    <div class="card"><div class="card-title"><h2>⭐ Prioridades do mês</h2><span>${priorityDone}/${priorityExpected}</span></div>
+      <div class="bar"><i style="width:${priorityExpected?Math.round(priorityDone/priorityExpected*100):0}%"></i></div>
+      <div class="small" style="margin-top:8px">${pending} missão(ões) ainda aguardando aprovação.</div>
+    </div>
+    <div class="card"><div class="card-title"><h2>🗓️ Histórico</h2><span>Toque em um dia</span></div>
+      <div class="history-list">${rows||'<div class="empty">Sem histórico neste mês.</div>'}</div>
+    </div>`;
+  const back=document.getElementById("progressBack");if(back)back.onclick=()=>{activeSection="home";renderApp()};
+  el.querySelectorAll("[data-history-date]").forEach(b=>b.onclick=()=>{selectedDate=b.dataset.historyDate;activeSection="calendar";renderApp()});
+}
+
 function renderWeeklyReport(){
   const el=document.getElementById("sec-report");if(!el)return;
   const cal=(data.calendar||[]).slice(-7);
@@ -531,24 +599,73 @@ function renderCalendar(){
   </div></div>`;
   el.querySelectorAll("[data-date],[data-pick-date]").forEach(node=>node.onclick=()=>{const ds=node.dataset.date||node.dataset.pickDate;if(!ds||ds>data.today||ds.slice(0,7)!==data.today.slice(0,7))return;selectedDate=ds;renderCalendar()});
 }
-function renderAchievements(){
+function achievementData(){
   const priorityDone=Number(data.todayPriorityCompleted||0),priorityExpected=Number(data.todayPriorityExpected||0);
-  const list=[
-    ["🌟","Primeira Estrela","Conquistou a primeira estrela.",data.totalPoints>=1],
-    ["✨","50 Estrelas","Chegou a 50 estrelas.",data.totalPoints>=50],
-    ["💯","Clube dos 100","Conquistou 100 estrelas.",data.totalPoints>=100],
-    ["💎","Tesouro de 500","Conquistou 500 estrelas.",data.totalPoints>=500],
-    ["🔥","Trinca de Fogo","3 dias válidos em sequência.",data.streak>=3],
-    ["🚀","Semana Campeã","7 dias válidos em sequência.",data.streak>=7],
-    ["🏅","Duas Semanas","14 dias válidos em sequência.",data.streak>=14],
-    ["👑","Mestre das Missões","30 dias válidos em sequência.",data.streak>=30],
-    ["⭐","Prioridade é Prioridade","Concluiu todas as prioritárias de hoje.",priorityExpected>0&&priorityDone>=priorityExpected],
-    ["🎯","Na Meta","Atingiu a meta mensal.",data.monthPercent>=data.family.reward_goal_percent],
-    ["👑","Dia Perfeito","Concluiu 100% das missões de hoje.",data.todayPercent===100&&data.todayTasks.length>0],
-    ["🌈","Mês em Alta","Chegou a 75% no mês.",data.monthPercent>=75]
+  return [
+    ["🌟","Primeira Estrela","Conquistou a primeira estrela.",data.totalPoints>=1,"Uhuu!","victory"],
+    ["✨","50 Estrelas","Chegou a 50 estrelas.",data.totalPoints>=50,"Brilhando!","spark"],
+    ["💯","Clube dos 100","Conquistou 100 estrelas.",data.totalPoints>=100,"Consegui!","proud"],
+    ["💎","Tesouro de 500","Conquistou 500 estrelas.",data.totalPoints>=500,"Sou demais!","cool"],
+    ["🔥","Trinca de Fogo","3 dias válidos em sequência.",data.streak>=3,"Pegando fogo!","fire"],
+    ["🚀","Semana Campeã","7 dias válidos em sequência.",data.streak>=7,"Decolei!","rocket"],
+    ["🏅","Duas Semanas","14 dias válidos em sequência.",data.streak>=14,"Foco total!","focus"],
+    ["👑","Mestre das Missões","30 dias válidos em sequência.",data.streak>=30,"Missão cumprida!","king"],
+    ["⭐","Prioridade é Prioridade","Concluiu todas as prioritárias de hoje.",priorityExpected>0&&priorityDone>=priorityExpected,"Primeiro o importante!","hero"],
+    ["🎯","Na Meta","Atingiu a meta mensal.",data.monthPercent>=data.family.reward_goal_percent,"Na mosca!","target"],
+    ["👑","Dia Perfeito","Concluiu 100% das missões de hoje.",data.todayPercent===100&&data.todayTasks.length>0,"Perfeito!","celebrate"],
+    ["🌈","Mês em Alta","Chegou a 75% no mês.",data.monthPercent>=75,"Que mês!","rainbow"]
   ];
-  const unlocked=list.filter(a=>a[3]).length;
-  document.getElementById("sec-achievements").innerHTML=`<div class="card"><div class="card-title"><h2>🏆 Conquistas</h2><span>${unlocked}/${list.length} desbloqueadas</span></div><div class="achievement-grid">${list.map(a=>`<div class="achievement ${a[3]?"":"locked"}"><div class="medal">${a[0]}</div><h3>${a[1]}</h3><p>${a[2]}</p></div>`).join("")}</div></div>`;
+}
+function cardReaction(style){
+  const map={victory:"✌️😄",spark:"🤩✨",proud:"😎👍",cool:"😏💎",fire:"🔥😄",rocket:"🚀🤩",focus:"💪🙂",king:"👑😎",hero:"🦸⭐",target:"🎯😄",celebrate:"🙌🥳",rainbow:"🌈😁"};
+  return map[style]||"⭐😄";
+}
+async function shareAchievementCard(index){
+  const a=achievementData()[index];if(!a||!a[3]){toast("Essa cartinha ainda está bloqueada 🔒");return}
+  const canvas=document.createElement("canvas");canvas.width=1080;canvas.height=1350;const ctx=canvas.getContext("2d");
+  const g=ctx.createLinearGradient(0,0,1080,1350);g.addColorStop(0,"#6e24dc");g.addColorStop(.55,"#b832e8");g.addColorStop(1,"#ff5ccf");ctx.fillStyle=g;ctx.fillRect(0,0,1080,1350);
+  ctx.fillStyle="rgba(255,255,255,.14)";for(let i=0;i<26;i++){ctx.beginPath();ctx.arc((i*173)%1080,(i*257)%1350,18+(i%4)*8,0,Math.PI*2);ctx.fill()}
+  ctx.fillStyle="#fff";ctx.font="900 58px -apple-system,Arial";ctx.textAlign="center";ctx.fillText("MISSÕES DIVERTIDAS",540,105);
+  ctx.font="150px Arial";ctx.fillText(a[0],540,285);
+  const avatar=(data.profileAvatar||getLocalAvatar(data.role)||"");
+  if(avatar){
+    try{
+      const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=avatar});
+      ctx.save();ctx.beginPath();ctx.arc(540,545,170,0,Math.PI*2);ctx.clip();ctx.drawImage(img,370,375,340,340);ctx.restore();
+      ctx.strokeStyle="#fff";ctx.lineWidth=18;ctx.beginPath();ctx.arc(540,545,179,0,Math.PI*2);ctx.stroke();
+    }catch{}
+  }else{
+    ctx.font="180px Arial";ctx.fillText(data.role==="parent"?"🧑":"⭐",540,610);
+  }
+  ctx.font="78px Arial";ctx.fillText(cardReaction(a[5]),540,795);
+  ctx.fillStyle="#fff";ctx.font="900 66px -apple-system,Arial";wrapCanvasText(ctx,a[1],540,915,900,76);
+  ctx.font="500 38px -apple-system,Arial";ctx.fillStyle="rgba(255,255,255,.94)";wrapCanvasText(ctx,a[2],540,1040,860,50);
+  ctx.fillStyle="#ffe76a";ctx.font="900 44px -apple-system,Arial";ctx.fillText(a[4],540,1190);
+  ctx.fillStyle="rgba(255,255,255,.86)";ctx.font="700 28px -apple-system,Arial";ctx.fillText((data.family.child_name||"Jogador(a)")+" • "+new Date().toLocaleDateString("pt-BR"),540,1280);
+  const blob=await new Promise(res=>canvas.toBlob(res,"image/png",.95));if(!blob)return;
+  const file=new File([blob],"conquista-"+a[1].toLowerCase().replace(/[^a-z0-9]+/gi,"-")+".png",{type:"image/png"});
+  if(navigator.share&&navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:"Minha conquista - Missões Divertidas"});return}catch(e){if(e.name==="AbortError")return}}
+  const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=file.name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight){
+  const words=String(text).split(" ");let line="",yy=y;
+  for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,yy);line=word;yy+=lineHeight}else line=test}
+  if(line)ctx.fillText(line,x,yy);return yy;
+}
+function renderAchievements(){
+  const list=achievementData(),unlocked=list.filter(a=>a[3]).length;
+  document.getElementById("sec-achievements").innerHTML=`
+    <div class="card"><div class="card-title"><h2>🏆 Conquistas</h2><span>${unlocked}/${list.length} desbloqueadas</span></div><div class="achievement-grid">${list.map((a,i)=>`<div class="achievement ${a[3]?"":"locked"}"><div class="medal">${a[0]}</div><h3>${a[1]}</h3><p>${a[2]}</p></div>`).join("")}</div></div>
+    <div class="card"><div class="card-title"><div><h2>🃏 Cartinhas de Conquista</h2><div class="small">Colecione e compartilhe suas conquistas.</div></div><span>${unlocked}</span></div>
+      <div class="collectible-grid">${list.map((a,i)=>`<div class="collectible-card ${a[3]?"":"locked"}">
+        <div class="collectible-shine"></div><div class="collectible-icon">${a[0]}</div>
+        <div class="collectible-avatar">${a[3]?profileAvatarHtml(data.role,'⭐'):'🔒'}</div>
+        <div class="collectible-reaction">${a[3]?cardReaction(a[5]):"❔"}</div>
+        <b>${a[1]}</b><span>${a[3]?a[4]:"Continue jogando para desbloquear"}</span>
+        ${a[3]?`<button class="secondary" data-share-card="${i}">📤 Compartilhar</button>`:""}
+      </div>`).join("")}</div>
+    </div>`;
+  document.querySelectorAll("[data-share-card]").forEach(b=>b.onclick=()=>shareAchievementCard(Number(b.dataset.shareCard)));
 }
 async function renderFriends(){
   const el=document.getElementById("sec-friends");if(!el)return;
@@ -570,7 +687,7 @@ async function renderStore(){
         <div class="field"><label>Nome da recompensa</label><input id="rewardTitle" placeholder="Ex.: Escolher o filme da noite"></div>
         <button class="primary" id="addReward">Adicionar à loja</button></div>`:""}
       ${isParent?'<div id="rewardRequests"></div>':""}
-      <div class="store-grid">${items.map(x=>`<div class="store-item"><div class="reward-icon">${esc(x.emoji||"🎁")}</div><b>${esc(x.title)}</b><div class="small">⭐ ${x.cost}</div>${isParent?'<div class="small" style="margin-top:8px">Disponível na loja</div>':`<button class="primary" style="margin-top:10px;padding:10px" data-redeem="${x.id}">Resgatar</button>`}</div>`).join("")||`<div class="card" style="grid-column:1/-1"><div class="empty"><div class="big">🎁</div>${isParent?"Cadastre a primeira recompensa acima.":"Nenhuma recompensa cadastrada ainda."}</div></div>`}</div>`;
+      <div class="store-grid">${items.map(x=>`<div class="store-item"><div class="reward-icon">${esc(x.emoji||"🎁")}</div><b>${esc(x.title)}</b><div class="small">⭐ ${x.cost}</div>${isParent?`<div class="small" style="margin-top:8px">Disponível na loja</div><div class="store-actions"><button class="secondary" data-edit-reward="${x.id}" data-title="${esc(x.title)}" data-cost="${x.cost}" data-emoji="${esc(x.emoji||"🎁")}">Editar</button><button class="danger" data-delete-reward="${x.id}">×</button></div>`:`<button class="primary" style="margin-top:10px;padding:10px" data-redeem="${x.id}">Resgatar</button>`}</div>`).join("")||`<div class="card" style="grid-column:1/-1"><div class="empty"><div class="big">🎁</div>${isParent?"Cadastre a primeira recompensa acima.":"Nenhuma recompensa cadastrada ainda."}</div></div>`}</div>`;
     if(isParent){
       try{
         const pr=await callApi("pending_rewards");
@@ -581,6 +698,8 @@ async function renderStore(){
           box.querySelectorAll("[data-reward-decision]").forEach(btn=>btn.onclick=async()=>{showLoader(true);try{await callApi("decide_reward",{redemption_id:btn.dataset.rewardId,status:btn.dataset.rewardDecision});toast(btn.dataset.rewardDecision==="approved"?"Recompensa aprovada 🎁":"Pedido recusado.");renderStore()}catch(e){toast(e.message)}finally{showLoader(false)}});
         }
       }catch{}
+      document.querySelectorAll("[data-edit-reward]").forEach(btn=>btn.onclick=async()=>{const title=prompt("Nome da recompensa:",btn.dataset.title);if(title===null)return;const cost=Number(prompt("Custo em estrelas:",btn.dataset.cost));if(!title.trim()||!cost)return;showLoader(true);try{await callApi("save_reward",{id:btn.dataset.editReward,title:title.trim(),cost,emoji:btn.dataset.emoji});toast("Recompensa atualizada ✅");renderStore()}catch(e){toast(e.message)}finally{showLoader(false)}});
+      document.querySelectorAll("[data-delete-reward]").forEach(btn=>btn.onclick=async()=>{if(!confirm("Remover esta recompensa da loja?"))return;showLoader(true);try{await callApi("delete_reward",{id:btn.dataset.deleteReward});toast("Recompensa removida.");renderStore()}catch(e){toast(e.message)}finally{showLoader(false)}});
       const add=document.getElementById("addReward");
       if(add)add.onclick=async()=>{
         const title=document.getElementById("rewardTitle").value.trim();
@@ -617,7 +736,11 @@ function renderParent(){
     <button class="primary" id="saveFamily">Salvar alterações</button></div>`;
   document.getElementById("saveFamily").onclick=async()=>{showLoader(true);try{data=await callApi("save_family",{display_name:document.getElementById("famName").value,child_name:document.getElementById("childName").value,parent_name:document.getElementById("parentName").value,current_reward_name:document.getElementById("rewardName").value,reward_goal_percent:Number(document.getElementById("goalPct").value)});toast("Configurações salvas ✅");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}};
   renderTaskAdmin();
-  document.getElementById("ap-access").innerHTML=`<div class="card"><div class="card-title"><h2>🔐 Usuários e senhas</h2></div><div class="row2"><div class="field"><label>Usuário da criança</label><input id="childUser" value="${esc((adminData?.accounts||[]).find(a=>a.role==='child')?.username||'')}"></div><div class="field"><label>Nova senha</label><input id="childPass" type="password" placeholder="Em branco mantém a atual"></div></div><button class="secondary" style="width:100%;margin-bottom:14px" id="saveChildAccess">Salvar acesso da criança</button><div class="row2"><div class="field"><label>Usuário do responsável</label><input id="parentUser" value="${esc((adminData?.accounts||[]).find(a=>a.role==='parent')?.username||'')}"></div><div class="field"><label>Nova senha</label><input id="parentPass" type="password" placeholder="Em branco mantém a atual"></div></div><button class="primary" id="saveParentAccess">Salvar acesso do responsável</button></div>`;
+  document.getElementById("ap-access").innerHTML=`<div class="card"><div class="card-title"><h2>🔐 Usuários e senhas</h2></div><div class="row2"><div class="field"><label>Usuário da criança</label><input id="childUser" value="${esc((adminData?.accounts||[]).find(a=>a.role==='child')?.username||'')}"></div><div class="field"><label>Nova senha</label><input id="childPass" type="password" placeholder="Em branco mantém a atual"></div></div><button class="secondary" style="width:100%;margin-bottom:14px" id="saveChildAccess">Salvar acesso da criança</button><div class="row2"><div class="field"><label>Usuário do responsável</label><input id="parentUser" value="${esc((adminData?.accounts||[]).find(a=>a.role==='parent')?.username||'')}"></div><div class="field"><label>Nova senha</label><input id="parentPass" type="password" placeholder="Em branco mantém a atual"></div></div><button class="primary" id="saveParentAccess">Salvar acesso do responsável</button>
+    <div class="card-title" style="margin-top:20px"><h2>🔢 PIN da área dos pais</h2><span>${adminData?.parent_pin_configured?"Ativo":"Não configurado"}</span></div>
+    <div class="field"><label>Novo PIN (4 a 8 números)</label><input id="parentPin" inputmode="numeric" maxlength="8" placeholder="Ex.: 2580"></div>
+    <button class="secondary" id="saveParentPin" style="width:100%">Salvar PIN</button></div>`;
+  document.getElementById("saveParentPin").onclick=async()=>{const pin=document.getElementById("parentPin").value.trim();if(!/^\d{4,8}$/.test(pin)){toast("O PIN deve ter de 4 a 8 números.");return}showLoader(true);try{await callApi("update_access",{parent_pin:pin});adminData=await callAdmin();data.parentPinConfigured=true;toast("PIN da área dos pais atualizado 🔐");renderParent()}catch(e){toast(e.message)}finally{showLoader(false)}};
   document.getElementById("saveChildAccess").onclick=async()=>{showLoader(true);try{await callApi("update_credentials",{account_role:"child",username:document.getElementById("childUser").value,password:document.getElementById("childPass").value});adminData=await callAdmin();toast("Acesso da criança atualizado 🔐");renderParent()}catch(e){toast(e.message)}finally{showLoader(false)}};document.getElementById("saveParentAccess").onclick=async()=>{showLoader(true);try{await callApi("update_credentials",{account_role:"parent",username:document.getElementById("parentUser").value,password:document.getElementById("parentPass").value});adminData=await callAdmin();toast("Acesso do responsável atualizado 🔐");renderParent()}catch(e){toast(e.message)}finally{showLoader(false)}};
   const pending=adminData?.pending||[],todayPending=pending.filter(p=>p.due_date===data.today);
   document.getElementById("ap-pending").innerHTML=`<div class="card"><div class="card-title"><h2>✅ Aprovar missões</h2><span>${pending.length} aguardando</span></div>${todayPending.length?`<button class="primary" id="approveAllToday" style="margin-bottom:12px">✅ Aprovar todas de hoje (${todayPending.length})</button>`:""}${pending.length?pending.map(p=>`<div class="pending"><div style="font-size:26px">${esc(p.tasks?.emoji||"⭐")}</div><div class="grow"><b>${esc(p.tasks?.title||"Missão")}</b><div class="small">${esc(p.due_date)} • +${p.tasks?.points||0} estrelas</div></div><button data-approve="${p.id}">Aprovar</button></div>`).join(""):`<div class="empty"><div class="big">👌</div>Nenhuma missão aguardando confirmação.</div>`}</div>`;
@@ -642,6 +765,11 @@ function renderTaskAdmin(){
       <div class="field"><label>Importância</label><label class="priority-toggle"><input id="taskPriority" type="checkbox" ${t?.is_priority?"checked":""}><span>⭐ Tarefa prioritária</span></label></div>
     </div>
 
+    <div class="row2">
+      <div class="field"><label>Categoria</label><select id="taskCategory"><option>Casa</option><option>Organização</option><option>Estudos</option><option>Higiene</option><option>Pets</option><option>Alimentação</option><option>Comportamento</option><option>Outros</option></select></div>
+      <div class="field"><label>Período</label><select id="taskPeriod"><option value="any">Qualquer horário</option><option value="morning">Manhã</option><option value="afternoon">Tarde</option><option value="evening">Noite</option></select></div>
+    </div>
+    <div class="field"><label>Horário opcional</label><input id="taskTime" type="time" value="${esc((t?.due_time||"").slice(0,5))}"></div>
     <div class="field"><label>Recorrência</label><div class="recurrence-row">
       <button type="button" class="secondary recurrence-btn" data-days="0,1,2,3,4,5,6">Todos os dias</button>
       <button type="button" class="secondary recurrence-btn" data-days="1,2,3,4,5">Seg–Sex</button>
@@ -654,8 +782,9 @@ function renderTaskAdmin(){
     <button class="primary" id="saveTask">${t?"Salvar missão":"Criar missão"}</button>
   </div>
   <div class="card"><div class="card-title"><h2>📋 Missões cadastradas</h2><span>${tasks.length}</span></div>
-    ${tasks.map(x=>`<div class="task-admin ${x.is_priority?"task-priority-row":""}"><div class="mission-emoji">${esc(x.emoji)}</div><div class="grow"><h3>${esc(x.title)} ${x.is_priority?'<span class="priority-badge">⭐ Prioritária</span>':""}</h3><p>${x.points} estrelas • ${(x.task_schedules||[]).length} dia(s) da semana</p></div><button class="secondary" data-edit="${x.id}">Editar</button><button class="danger" data-del="${x.id}">×</button></div>`).join("")||'<div class="empty">Nenhuma missão cadastrada.</div>'}
+    ${tasks.map(x=>`<div class="task-admin ${x.is_priority?"task-priority-row":""}"><div class="mission-emoji">${esc(x.emoji)}</div><div class="grow"><h3>${esc(x.title)} ${x.is_priority?'<span class="priority-badge">⭐ Prioritária</span>':""}</h3><p>${x.points} estrelas • ${esc(x.category||"Casa")} • ${x.period==="morning"?"Manhã":x.period==="afternoon"?"Tarde":x.period==="evening"?"Noite":"Qualquer horário"} • ${(x.task_schedules||[]).length} dia(s)</p></div><button class="secondary" data-edit="${x.id}">Editar</button><button class="danger" data-del="${x.id}">×</button></div>`).join("")||'<div class="empty">Nenhuma missão cadastrada.</div>'}
   </div>`;
+  const cat=document.getElementById("taskCategory"),per=document.getElementById("taskPeriod");if(cat)cat.value=t?.category||"Casa";if(per)per.value=t?.period||"any";
   if(t)document.getElementById("cancelEdit").onclick=()=>{editingTask=null;renderTaskAdmin()};
   el.querySelectorAll("[data-icon]").forEach(b=>b.onclick=()=>{document.getElementById("taskEmoji").value=b.dataset.icon;el.querySelectorAll("[data-icon]").forEach(x=>x.classList.toggle("active",x===b))});
   el.querySelectorAll(".recurrence-btn").forEach(b=>b.onclick=()=>{const set=new Set(b.dataset.days.split(",").map(Number));document.querySelectorAll("[data-wd]").forEach(x=>x.checked=set.has(Number(x.dataset.wd)))});
@@ -663,7 +792,7 @@ function renderTaskAdmin(){
     const weekdays=[...document.querySelectorAll("[data-wd]:checked")].map(x=>Number(x.dataset.wd));
     if(!weekdays.length){toast("Escolha pelo menos um dia da semana.");return}
     showLoader(true);try{
-      data=await callApi("save_task",{id:t?.id||null,emoji:document.getElementById("taskEmoji").value,title:document.getElementById("taskTitle").value,description:document.getElementById("taskDesc").value,points:Number(document.getElementById("taskPoints").value),weekdays,is_priority:document.getElementById("taskPriority").checked,requires_parent_confirmation:true});
+      data=await callApi("save_task",{id:t?.id||null,emoji:document.getElementById("taskEmoji").value,title:document.getElementById("taskTitle").value,description:document.getElementById("taskDesc").value,points:Number(document.getElementById("taskPoints").value),weekdays,is_priority:document.getElementById("taskPriority").checked,category:document.getElementById("taskCategory").value,period:document.getElementById("taskPeriod").value,due_time:document.getElementById("taskTime").value||null,requires_parent_confirmation:true});
       adminData=await callAdmin();editingTask=null;toast(t?"Missão atualizada ✅":"Missão criada 🎯");renderApp();
     }catch(e){toast(e.message)}finally{showLoader(false)}
   };
