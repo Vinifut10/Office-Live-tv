@@ -166,6 +166,8 @@ body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe
 #changeProfilePhoto{border-color:#cda8ff;background:#f7f0ff}
 
 .crop-modal{position:fixed;inset:0;z-index:10050;background:rgba(24,8,39,.72);display:flex;align-items:flex-end;justify-content:center;padding:18px}.crop-sheet{width:min(100%,430px);background:#fff;border-radius:26px 26px 18px 18px;padding:16px;box-shadow:0 -18px 50px rgba(0,0,0,.28)}.crop-head{display:flex;align-items:center;justify-content:space-between}.crop-head h3{margin:0}.crop-head button{border:0;background:#f2eaff;width:36px;height:36px;border-radius:50%;font-size:24px}.crop-sheet p{font-size:12px;color:#78658b;margin:6px 0 12px}.crop-stage{position:relative;width:min(82vw,320px);aspect-ratio:1;margin:auto;overflow:hidden;border-radius:24px;background:#1a1022;touch-action:none}.crop-stage canvas{width:100%;height:100%;display:block}.crop-ring{position:absolute;inset:10%;border:3px solid rgba(255,255,255,.95);border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.28);pointer-events:none}.crop-zoom{display:flex;gap:10px;align-items:center;font-weight:800;font-size:12px;margin:14px 2px}.crop-zoom input{flex:1}.crop-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.crop-actions button{width:100%}
+
+.weekly-report{position:relative;overflow:hidden}.report-ring{width:150px;height:150px;border-radius:50%;margin:10px auto 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:conic-gradient(#7b20e8 calc(var(--rp,1)*1%),#eee7ff 0);box-shadow:inset 0 0 0 18px #fff;border:1px solid #ede4ff}.report-ring b{font-size:30px;color:#6d20d7}.report-ring span{font-size:11px;color:#796b86}.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.report-grid div{background:#f8f3ff;border:1px solid #eadcff;border-radius:16px;padding:13px;text-align:center}.report-grid b{display:block;font-size:23px;color:#6d20d7}.report-grid span{display:block;font-size:11px;color:#786b83;margin-top:3px}.report-highlight{background:#fff8dc;border:1px solid #ffe89e;border-radius:14px;padding:10px 12px;margin-top:8px;font-size:13px}
 </style>
 <script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
@@ -178,6 +180,7 @@ let session=localStorage.getItem("md_session")||"";
 let loginRole=localStorage.getItem("md_role")||"child";
 let data=null, adminData=null, activeSection="home", adminTab="family", editingTask=null, selectedDate=null;
 let pullStartY=0,pullDistance=0,pullRefreshing=false,pullBound=false;
+let liveSyncTimer=null,lastSyncFingerprint="",lastPendingCount=0;
 const root=document.getElementById("root");
 const avatarStorageKey=role=>"md_avatar_"+role;
 function getLocalAvatar(role){try{return localStorage.getItem(avatarStorageKey(role))||""}catch{return""}}
@@ -257,7 +260,7 @@ async function doLogin(){const username=document.getElementById("username").valu
 function logout(render=true){session="";data=null;adminData=null;localStorage.removeItem("md_session");if(render)renderLogin()}
 async function loadDashboard(){
   showLoader(true);
-  try{data=await callApi("dashboard");renderApp()}catch(e){renderLogin(e.message)}finally{showLoader(false)}
+  try{data=await callApi("dashboard");renderApp();startLiveSync()}catch(e){renderLogin(e.message)}finally{showLoader(false)}
 }
 async function refreshAppFromPull(){
   if(pullRefreshing||!session)return;
@@ -298,6 +301,35 @@ function bindPullToRefresh(){
     if(doRefresh) refreshAppFromPull(); else resetPullIndicator();
   },{passive:true});
 }
+function dataFingerprint(d){
+  if(!d)return"";
+  return JSON.stringify([d.todayPercent,d.monthPercent,d.totalPoints,d.streak,d.pendingConfirmations,d.todayPriorityCompleted,d.todayTasks?.map(t=>[t.id,t.status,t.is_priority])]);
+}
+function maybeNotify(title,body){
+  try{if("Notification" in window&&Notification.permission==="granted"&&document.visibilityState!=="visible")new Notification(title,{body,icon:"./app-icon.jpg"})}catch{}
+}
+async function liveSync(){
+  if(!session||pullRefreshing)return;
+  try{
+    const fresh=await callApi("dashboard");
+    const fp=dataFingerprint(fresh);
+    if(data?.role==="parent"&&Number(fresh.pendingConfirmations||0)>Number(lastPendingCount||0)){
+      maybeNotify("Missões aguardando aprovação","Há novas missões prontas para você conferir.");
+    }
+    lastPendingCount=Number(fresh.pendingConfirmations||0);
+    if(fp!==lastSyncFingerprint){
+      data=fresh;lastSyncFingerprint=fp;
+      if(data.role==="parent"&&activeSection==="parent")try{adminData=await callAdmin()}catch{}
+      renderApp();
+    }
+  }catch{}
+}
+function startLiveSync(){
+  if(liveSyncTimer)clearInterval(liveSyncTimer);
+  lastSyncFingerprint=dataFingerprint(data);lastPendingCount=Number(data?.pendingConfirmations||0);
+  liveSyncTimer=setInterval(liveSync,20000);
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&session)liveSync()});
 function levelTitle(level){return ["Explorador","Ajudante","Super Ajudante","Herói da Casa","Mestre das Missões"][Math.min(level-1,4)]||"Lenda das Missões"}
 function renderApp(){
   const f=data.family, child=esc(f.child_name||"Criança"), role=data.role;
@@ -317,7 +349,7 @@ function renderApp(){
       <section id="sec-achievements" class="section ${activeSection==="achievements"?"active":""}"></section>
       <section id="sec-friends" class="section ${activeSection==="friends"?"active":""}"></section>
       <section id="sec-store" class="section ${activeSection==="store"?"active":""}"></section>
-      <section id="sec-menu" class="section ${activeSection==="menu"?"active":""}"></section>
+      <section id="sec-menu" class="section ${activeSection==="menu"?"active":""}"></section>\n      <section id="sec-report" class="section ${activeSection==="report"?"active":""}"></section>
       ${role==="parent"?`<section id="sec-parent" class="section ${activeSection==="parent"?"active":""}"></section>`:""}
     </main>
   </div>
@@ -329,13 +361,13 @@ function renderApp(){
   </nav>`;
   document.getElementById("profileMenuBtn").onclick=()=>{activeSection="menu";renderApp()};
   document.querySelectorAll("[data-sec]").forEach(b=>b.onclick=async()=>{activeSection=b.dataset.sec;if(activeSection==="parent"&&!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()});
-  renderHome();renderCalendar();renderAchievements();renderMenu();renderStore();if(role==="child")renderFriends();if(role==="parent")renderParent();bindPullToRefresh();
+  renderHome();renderCalendar();renderAchievements();renderMenu();renderWeeklyReport();renderStore();if(role==="child")renderFriends();if(role==="parent")renderParent();bindPullToRefresh();
 }
 function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3114</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3115</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -347,6 +379,8 @@ function renderMenu(){
     ${role==="parent"?'<button class="secondary" id="openParentSettings" style="width:100%;margin-bottom:10px">👨‍👩‍👧 Configurações da família</button>':""}
     <button class="secondary" id="menuHome" style="width:100%;margin-bottom:10px">🏠 Voltar para o início</button>
     <button class="secondary" id="menuStore" style="width:100%;margin-bottom:10px">🛍️ Loja de Estrelas</button>
+    <button class="secondary" id="menuReport" style="width:100%;margin-bottom:10px">📊 Relatório semanal</button>
+    <button class="secondary" id="menuNotifications" style="width:100%;margin-bottom:10px">🔔 Ativar notificações</button>
     ${role==="child"?'<button class="secondary" id="menuAchievements" style="width:100%;margin-bottom:10px">🏆 Minhas conquistas</button>':""}
     <button class="danger" id="menuLogout" style="width:100%">🚪 Sair do aplicativo</button>
   </div>`;
@@ -358,10 +392,38 @@ function renderMenu(){
   if(removePhoto)removePhoto.onclick=()=>{if(!getLocalAvatar(role)){toast("Nenhuma foto personalizada.");return}if(!confirm("Remover a foto de perfil?"))return;saveLocalAvatar(role,"");toast("Foto removida.");renderApp()};
   document.getElementById("menuHome").onclick=()=>{activeSection="home";renderApp()};
   const ms=document.getElementById("menuStore");if(ms)ms.onclick=()=>{activeSection="store";renderApp()};
+  const mr=document.getElementById("menuReport");if(mr)mr.onclick=()=>{activeSection="report";renderApp()};
+  const mn=document.getElementById("menuNotifications");if(mn)mn.onclick=async()=>{if(!("Notification" in window)){toast("Notificações não são suportadas neste navegador.");return}try{const p=await Notification.requestPermission();toast(p==="granted"?"Notificações ativadas 🔔":"Permissão de notificações não concedida.")}catch{toast("Não foi possível ativar notificações.")}};
   const ma=document.getElementById("menuAchievements");if(ma)ma.onclick=()=>{activeSection="achievements";renderApp()};
   const ps=document.getElementById("openParentSettings");if(ps)ps.onclick=async()=>{activeSection="parent";adminTab="family";if(!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()};
   document.getElementById("menuLogout").onclick=async()=>{if(!confirm("Deseja realmente sair do aplicativo?"))return;showLoader(true);try{await callApi("logout")}catch{}finally{showLoader(false)}logout()};
 }
+function renderWeeklyReport(){
+  const el=document.getElementById("sec-report");if(!el)return;
+  const cal=(data.calendar||[]).slice(-7);
+  const exp=cal.reduce((s,d)=>s+Number(d.expected||0),0);
+  const done=cal.reduce((s,d)=>s+Number(d.completed||0),0);
+  const pending=cal.reduce((s,d)=>s+Number(d.pending_confirmation||0),0);
+  const valid=cal.filter(d=>d.status==="complete").length;
+  const perfect=cal.filter(d=>d.perfect===true||(Number(d.expected||0)>0&&Number(d.completed||0)===Number(d.expected||0))).length;
+  const pct=exp?Math.round(done/exp*100):0;
+  const best=cal.reduce((a,b)=>Number(b.completed||0)>Number(a?.completed||0)?b:a,cal[0]||null);
+  const bestLabel=best?new Intl.DateTimeFormat("pt-BR",{weekday:"long",day:"2-digit",timeZone:"UTC"}).format(new Date(best.date+"T12:00:00Z")):"—";
+  el.innerHTML=`<div class="card weekly-report">
+    <div class="card-title"><div><h2>📊 Relatório semanal</h2><div class="small">Últimos 7 dias</div></div><span class="role-badge">${pct}%</span></div>
+    <div class="report-ring" style="background:conic-gradient(#7b20e8 ${pct}%,#eee7ff 0)"><b>${pct}%</b><span>concluído</span></div>
+    <div class="report-grid">
+      <div><b>${done}</b><span>missões concluídas</span></div>
+      <div><b>${valid}</b><span>dias válidos</span></div>
+      <div><b>${perfect}</b><span>dias perfeitos</span></div>
+      <div><b>${pending}</b><span>aguardando aprovação</span></div>
+    </div>
+    <div class="report-highlight">🏅 Melhor dia: <b style="text-transform:capitalize">${bestLabel}</b></div>
+    <div class="report-highlight">🔥 Sequência atual: <b>${data.streak} dia(s)</b></div>
+    <div class="report-highlight">⭐ Total de estrelas: <b>${data.totalPoints}</b></div>
+  </div>`;
+}
+
 function renderHome(){
   const el=document.getElementById("sec-home"), f=data.family;
   const completedToday=data.todayTasks.filter(t=>t.status==="completed").length;
@@ -419,8 +481,8 @@ function renderHome(){
   el.querySelectorAll("[data-task]").forEach(b=>b.onclick=async()=>{
     const status=b.dataset.status, action=(status==="completed"||status==="pending_confirmation")?"undo_task":"complete_task";
     showLoader(true);try{
-      const before=data.todayPercent;data=await callApi(action,{task_id:b.dataset.task,due_date:data.today});
-      if(action==="complete_task"){toast("Missão enviada para aprovação ⭐");if(before<100&&data.todayPercent===100)confetti()}
+      const before=data.todayPercent,beforePriorities=Boolean(data.todayPrioritiesDone);data=await callApi(action,{task_id:b.dataset.task,due_date:data.today});
+      if(action==="complete_task"){toast("Missão enviada para aprovação ⭐");if((before<100&&data.todayPercent===100)||(!beforePriorities&&data.todayPrioritiesDone)){confetti();if(data.todayPrioritiesDone)toast("Prioridades concluídas! 🌟")}}
       else toast("Missão desmarcada.");
       renderApp();
     }catch(e){toast(e.message)}finally{showLoader(false)}
@@ -470,15 +532,23 @@ function renderCalendar(){
   el.querySelectorAll("[data-date],[data-pick-date]").forEach(node=>node.onclick=()=>{const ds=node.dataset.date||node.dataset.pickDate;if(!ds||ds>data.today||ds.slice(0,7)!==data.today.slice(0,7))return;selectedDate=ds;renderCalendar()});
 }
 function renderAchievements(){
+  const priorityDone=Number(data.todayPriorityCompleted||0),priorityExpected=Number(data.todayPriorityExpected||0);
   const list=[
-    ["🌟","Primeira Estrela","Concluiu a primeira missão.",data.totalPoints>=1],
+    ["🌟","Primeira Estrela","Conquistou a primeira estrela.",data.totalPoints>=1],
+    ["✨","50 Estrelas","Chegou a 50 estrelas.",data.totalPoints>=50],
     ["💯","Clube dos 100","Conquistou 100 estrelas.",data.totalPoints>=100],
-    ["🔥","Trinca de Fogo","3 dias completos em sequência.",data.streak>=3],
-    ["🚀","Semana Campeã","7 dias completos em sequência.",data.streak>=7],
+    ["💎","Tesouro de 500","Conquistou 500 estrelas.",data.totalPoints>=500],
+    ["🔥","Trinca de Fogo","3 dias válidos em sequência.",data.streak>=3],
+    ["🚀","Semana Campeã","7 dias válidos em sequência.",data.streak>=7],
+    ["🏅","Duas Semanas","14 dias válidos em sequência.",data.streak>=14],
+    ["👑","Mestre das Missões","30 dias válidos em sequência.",data.streak>=30],
+    ["⭐","Prioridade é Prioridade","Concluiu todas as prioritárias de hoje.",priorityExpected>0&&priorityDone>=priorityExpected],
     ["🎯","Na Meta","Atingiu a meta mensal.",data.monthPercent>=data.family.reward_goal_percent],
-    ["👑","Dia Perfeito","Concluiu 100% das missões de hoje.",data.todayPercent===100&&data.todayTasks.length>0]
+    ["👑","Dia Perfeito","Concluiu 100% das missões de hoje.",data.todayPercent===100&&data.todayTasks.length>0],
+    ["🌈","Mês em Alta","Chegou a 75% no mês.",data.monthPercent>=75]
   ];
-  document.getElementById("sec-achievements").innerHTML=`<div class="card"><div class="card-title"><h2>🏆 Conquistas</h2><span>Continue jogando!</span></div><div class="achievement-grid">${list.map(a=>`<div class="achievement ${a[3]?"":"locked"}"><div class="medal">${a[0]}</div><h3>${a[1]}</h3><p>${a[2]}</p></div>`).join("")}</div></div>`;
+  const unlocked=list.filter(a=>a[3]).length;
+  document.getElementById("sec-achievements").innerHTML=`<div class="card"><div class="card-title"><h2>🏆 Conquistas</h2><span>${unlocked}/${list.length} desbloqueadas</span></div><div class="achievement-grid">${list.map(a=>`<div class="achievement ${a[3]?"":"locked"}"><div class="medal">${a[0]}</div><h3>${a[1]}</h3><p>${a[2]}</p></div>`).join("")}</div></div>`;
 }
 async function renderFriends(){
   const el=document.getElementById("sec-friends");if(!el)return;
@@ -499,8 +569,18 @@ async function renderStore(){
         <div class="row2"><div class="field"><label>Ícone</label><input id="rewardEmoji" value="🎁" maxlength="8"></div><div class="field"><label>Custo em estrelas</label><input id="rewardCost" type="number" min="1" value="50"></div></div>
         <div class="field"><label>Nome da recompensa</label><input id="rewardTitle" placeholder="Ex.: Escolher o filme da noite"></div>
         <button class="primary" id="addReward">Adicionar à loja</button></div>`:""}
+      ${isParent?'<div id="rewardRequests"></div>':""}
       <div class="store-grid">${items.map(x=>`<div class="store-item"><div class="reward-icon">${esc(x.emoji||"🎁")}</div><b>${esc(x.title)}</b><div class="small">⭐ ${x.cost}</div>${isParent?'<div class="small" style="margin-top:8px">Disponível na loja</div>':`<button class="primary" style="margin-top:10px;padding:10px" data-redeem="${x.id}">Resgatar</button>`}</div>`).join("")||`<div class="card" style="grid-column:1/-1"><div class="empty"><div class="big">🎁</div>${isParent?"Cadastre a primeira recompensa acima.":"Nenhuma recompensa cadastrada ainda."}</div></div>`}</div>`;
     if(isParent){
+      try{
+        const pr=await callApi("pending_rewards");
+        const box=document.getElementById("rewardRequests");
+        if(box){
+          const reqs=pr.items||[];
+          box.innerHTML=reqs.length?`<div class="card"><div class="card-title"><h2>⏳ Pedidos de recompensa</h2><span>${reqs.length}</span></div>${reqs.map(q=>`<div class="pending"><div style="font-size:28px">${esc(q.reward_store?.emoji||"🎁")}</div><div class="grow"><b>${esc(q.reward_store?.title||"Recompensa")}</b><div class="small">⭐ ${q.cost} • aguardando decisão</div></div><button class="secondary" data-reward-decision="approved" data-reward-id="${q.id}">Aprovar</button><button class="danger" data-reward-decision="rejected" data-reward-id="${q.id}">×</button></div>`).join("")}</div>`:"";
+          box.querySelectorAll("[data-reward-decision]").forEach(btn=>btn.onclick=async()=>{showLoader(true);try{await callApi("decide_reward",{redemption_id:btn.dataset.rewardId,status:btn.dataset.rewardDecision});toast(btn.dataset.rewardDecision==="approved"?"Recompensa aprovada 🎁":"Pedido recusado.");renderStore()}catch(e){toast(e.message)}finally{showLoader(false)}});
+        }
+      }catch{}
       const add=document.getElementById("addReward");
       if(add)add.onclick=async()=>{
         const title=document.getElementById("rewardTitle").value.trim();
