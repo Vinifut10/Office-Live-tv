@@ -222,19 +222,9 @@ async function createPersonalizedAvatar(){
   if(data.role!=="child"){toast("O avatar personalizado é da criança.");return}
   const photo=data.profileAvatar||getLocalAvatar("child");
   if(!photo){toast("Primeiro escolha uma foto da criança na galeria.");document.getElementById("profilePhotoInput")?.click();return}
-  if(!confirm("Criar um avatar personalizado usando a foto atual da criança?"))return;
-  showLoader(true);
-  try{
-    toast("Criando seu avatar mágico… ✨");
-    const r=await fetch("/api/generate-avatar",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({photo,name:data.family.child_name||"Criança"})});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok||!j.avatar)throw new Error(j.error||"Não foi possível criar o avatar.");
-    const avatar=await compressAvatarDataUrl(j.avatar,256);
-    saveLocalAvatar("child",avatar);
-    data=await callApi("update_avatar",{avatar});
-    toast("Seu avatar personalizado ficou pronto! 🎨✨");renderApp();
-  }catch(e){toast(e.message||"Não foi possível criar o avatar.")}
-  finally{showLoader(false)}
+  if(!confirm("Criar uma nova versão do seu avatar no padrão oficial Duda/Ryan?"))return;
+  try{await runAvatarGeneration("master","avatar","Criando seu avatar oficial");toast("Avatar criado! Agora confira e salve como oficial. 🎨✨");renderApp();setTimeout(()=>renderMyAvatar("resumo"),250)}
+  catch(e){toast(e.message||"Não foi possível criar o avatar.")}
 }
 function avatarStudioCompletion(){
   let p=0;if(data.profileAvatar)p+=25;if(data.avatarMasterApproved)p+=15;if(data.avatarGallery)p+=20;if(data.avatarExpressions)p+=15;if(data.avatarStickers)p+=15;if(data.avatarOutfits)p+=10;return Math.min(100,p)
