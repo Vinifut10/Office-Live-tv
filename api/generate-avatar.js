@@ -12,12 +12,17 @@ export default async function handler(req,res){
     const token=process.env.CLOUDFLARE_AI_TOKEN;
     const account=process.env.CLOUDFLARE_ACCOUNT_ID;
     if(!token||!account)throw new Error("Cloudflare Workers AI não configurado.");
-    const {photo,name}=req.body||{};
+    const {photo,name,mode}=req.body||{};
     if(typeof photo!=="string"||!photo.startsWith("data:image/")||photo.length>600000)return res.status(400).json({error:"Escolha uma foto válida e enquadre o rosto."});
     const parsed=parseDataUrl(photo);if(!parsed)return res.status(400).json({error:"Formato de foto inválido."});
     const child=String(name||"criança").slice(0,40);
     const form=new FormData();
-    form.append("prompt",`Transforme a criança da imagem de referência em um avatar infantil 3D/cartoon alegre e amigável para o aplicativo Missões Divertidas. Preserve de forma reconhecível características visuais não sensíveis da mesma criança, especialmente cabelo, formato geral do rosto, olhos e sorriso. Não infira etnia, saúde, personalidade ou atributos sensíveis. Nome do perfil: ${child}. Meio-corpo, olhando para a câmera, sorriso natural, roupa infantil colorida em roxo, rosa e azul sem marcas, iluminação suave, acabamento 3D polido, fundo simples em degradê lilás, composição quadrada centralizada, sem texto, sem logotipos e sem objetos cobrindo o rosto.`);
+    const gallery=mode==="gallery";
+    const style="3D cartoon premium semi-realista, acabamento polido de animação cinematográfica, olhos grandes expressivos porém naturais, cabelo muito detalhado com reflexos roxos sutis, iluminação neon roxa e rosa suave, visual moderno infantil/juvenil, roupa urbana preta e roxa sem marcas, tênis branco e roxo, proporções de personagem de corpo inteiro, alta consistência facial";
+    const prompt=gallery
+      ? `Crie uma FOLHA DE PERSONAGEM quadrada com a MESMA criança da imagem de referência, mantendo identidade facial, cabelo, olhos e aparência reconhecível em todos os quadros. Estilo obrigatório: ${style}. Organize uma grade limpa 3x3, SEM TEXTO: 1 frente corpo inteiro, 2 perfil/lado, 3 costas/3-4, 4 apontando, 5 joinha, 6 sinal de paz, 7 braços cruzados confiante, 8 comemorando com braços levantados, 9 estudando com livro. Fundo claro/lilás uniforme, cada quadro bem separado, personagem inteiro quando aplicável. Nome do perfil apenas como contexto: ${child}. Não infira atributos sensíveis. Não inclua palavras, logotipos ou marcas.`
+      : `Transforme a criança da imagem de referência em um avatar oficial do aplicativo Missões Divertidas. Preserve de forma reconhecível características visuais não sensíveis, especialmente cabelo, formato geral do rosto, olhos e sorriso. Estilo obrigatório: ${style}. Nome do perfil: ${child}. Corpo inteiro em pose alegre e confiante, olhando para a câmera, fundo simples em degradê lilás, composição quadrada centralizada, sem texto, sem logotipos. Não infira etnia, saúde, personalidade ou atributos sensíveis.`;
+    form.append("prompt",prompt);
     form.append("width","512");form.append("height","512");
     form.append("input_image_0",new Blob([parsed.bytes],{type:parsed.mime}),"reference.jpg");
     const url=`https://api.cloudflare.com/client/v4/accounts/${account}/ai/run/@cf/black-forest-labs/flux-2-klein-4b`;
