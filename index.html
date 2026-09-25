@@ -410,7 +410,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3119</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3120</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -809,10 +809,19 @@ function renderParent(){
   el.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{adminTab=b.dataset.at;renderParent()});
   document.getElementById("ap-family").innerHTML=`<div class="card"><div class="card-title"><h2>👨‍👩‍👧 Configurações da família</h2></div>
     <div class="field"><label>Nome da família / perfil</label><input id="famName" value="${esc(f.display_name)}"></div>
+    <div class="card-title" style="margin-top:18px"><h2>👧👦 Crianças</h2><span>${(adminData?.accounts||[]).filter(a=>a.role==="child").length}</span></div>
+    <div id="childrenList">${(adminData?.accounts||[]).filter(a=>a.role==="child").map(c=>`<button class="secondary child-select" data-child="${c.id}" style="width:100%;margin-bottom:8px;text-align:left">${c.avatar_key?'<span>🖼️</span>':'<span>⭐</span>'} <b>${esc(c.display_name)}</b> <span class="small">@${esc(c.username)}</span>${data.childAccountId===c.id?' • selecionada':""}</button>`).join("")}</div>
+    <div class="card" style="background:#faf8ff"><div class="card-title"><h2>➕ Adicionar criança</h2></div>
+      <div class="field"><label>Nome</label><input id="newChildName" placeholder="Nome da criança"></div>
+      <div class="row2"><div class="field"><label>Usuário</label><input id="newChildUser" autocapitalize="none" placeholder="Ex.: teste"></div><div class="field"><label>Senha</label><input id="newChildPass" type="password" placeholder="4+ caracteres"></div></div>
+      <button class="secondary" id="createChildBtn" style="width:100%">Criar nova criança</button>
+    </div>
     <div class="row2"><div class="field"><label>Nome da criança</label><input id="childName" value="${esc(f.child_name)}"></div><div class="field"><label>Nome do responsável</label><input id="parentName" value="${esc(f.parent_name||"")}"></div></div>
     <div class="field"><label>Presente / recompensa</label><input id="rewardName" value="${esc(f.current_reward_name||"")}"></div>
     <div class="field"><label>Meta do mês (%)</label><input id="goalPct" type="number" min="1" max="100" value="${f.reward_goal_percent}"></div>
     <button class="primary" id="saveFamily">Salvar alterações</button></div>`;
+  document.querySelectorAll(".child-select").forEach(b=>b.onclick=async()=>{showLoader(true);try{data=await callApi("select_child",{child_account_id:b.dataset.child});toast("Perfil de "+(data.childDisplayName||"criança")+" selecionado.");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}});
+  const createChildBtn=document.getElementById("createChildBtn");if(createChildBtn)createChildBtn.onclick=async()=>{const name=document.getElementById("newChildName").value.trim(),username=document.getElementById("newChildUser").value.trim(),password=document.getElementById("newChildPass").value;if(!name||!username||password.length<4){toast("Preencha nome, usuário e senha.");return}showLoader(true);try{const r=await callApi("create_child",{name,username,password});adminData=await callAdmin();data=await callApi("select_child",{child_account_id:r.child.id});toast("Criança criada sem alterar os dados existentes ✅");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}};
   document.getElementById("saveFamily").onclick=async()=>{showLoader(true);try{data=await callApi("save_family",{display_name:document.getElementById("famName").value,child_name:document.getElementById("childName").value,parent_name:document.getElementById("parentName").value,current_reward_name:document.getElementById("rewardName").value,reward_goal_percent:Number(document.getElementById("goalPct").value)});toast("Configurações salvas ✅");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}};
   renderTaskAdmin();
   document.getElementById("ap-access").innerHTML=`<div class="card"><div class="card-title"><h2>🔐 Usuários e senhas</h2></div><div class="row2"><div class="field"><label>Usuário da criança</label><input id="childUser" value="${esc((adminData?.accounts||[]).find(a=>a.role==='child')?.username||'')}"></div><div class="field"><label>Nova senha</label><input id="childPass" type="password" placeholder="Em branco mantém a atual"></div></div><button class="secondary" style="width:100%;margin-bottom:14px" id="saveChildAccess">Salvar acesso da criança</button><div class="row2"><div class="field"><label>Usuário do responsável</label><input id="parentUser" value="${esc((adminData?.accounts||[]).find(a=>a.role==='parent')?.username||'')}"></div><div class="field"><label>Nova senha</label><input id="parentPass" type="password" placeholder="Em branco mantém a atual"></div></div><button class="primary" id="saveParentAccess">Salvar acesso do responsável</button>
