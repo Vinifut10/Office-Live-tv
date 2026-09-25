@@ -170,6 +170,8 @@ body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe
 .weekly-report{position:relative;overflow:hidden}.report-ring{width:150px;height:150px;border-radius:50%;margin:10px auto 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:conic-gradient(#7b20e8 calc(var(--rp,1)*1%),#eee7ff 0);box-shadow:inset 0 0 0 18px #fff;border:1px solid #ede4ff}.report-ring b{font-size:30px;color:#6d20d7}.report-ring span{font-size:11px;color:#796b86}.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.report-grid div{background:#f8f3ff;border:1px solid #eadcff;border-radius:16px;padding:13px;text-align:center}.report-grid b{display:block;font-size:23px;color:#6d20d7}.report-grid span{display:block;font-size:11px;color:#786b83;margin-top:3px}.report-highlight{background:#fff8dc;border:1px solid #ffe89e;border-radius:14px;padding:10px 12px;margin-top:8px;font-size:13px}
 
 .progress-main-card{cursor:pointer;position:relative}.progress-main-card:after{content:"Ver histórico ›";position:absolute;right:14px;bottom:10px;font-size:10px;font-weight:900;color:rgba(255,255,255,.9)}.progress-hero{background:linear-gradient(135deg,#6d20d7,#bc38e6 58%,#ff58ca);color:#fff;border-radius:26px;padding:18px;margin-bottom:12px;box-shadow:0 14px 34px rgba(67,5,117,.24)}.progress-hero h2{margin:10px 0 3px}.progress-big-number{font-size:54px;font-weight:1000;letter-spacing:-2px}.brand-progress.big{height:13px;margin:8px 0}.back-chip{border:0;border-radius:999px;background:rgba(255,255,255,.2);color:#fff;padding:7px 11px;font-weight:900}.progress-summary{margin-bottom:12px}.history-list{display:flex;flex-direction:column;gap:8px}.history-row{border:1px solid #eee5fb;background:#fff;border-radius:15px;padding:11px 12px;display:flex;justify-content:space-between;gap:10px;text-align:left;color:inherit}.history-row span{display:block;font-size:11px;color:#81738c;margin-top:3px}.history-side{text-align:right}.history-side strong{display:block;color:#7022d8}.history-side small{font-size:10px;color:#7a6f82;white-space:nowrap}.collectible-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.collectible-card{position:relative;overflow:hidden;border-radius:22px;padding:14px;background:linear-gradient(150deg,#5f18c8,#a927de 58%,#ff57c9);color:#fff;text-align:center;box-shadow:0 10px 24px rgba(90,27,150,.18);min-height:250px}.collectible-card.locked{filter:grayscale(.8);opacity:.55}.collectible-shine{position:absolute;inset:-80px auto auto -70px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.16)}.collectible-icon{font-size:38px}.collectible-avatar{width:74px;height:74px;border-radius:50%;margin:7px auto;border:4px solid #fff;overflow:hidden;background:#fff;display:grid;place-items:center;font-size:34px}.collectible-avatar img{width:100%;height:100%;object-fit:cover}.collectible-reaction{font-size:30px;margin-bottom:6px}.collectible-card b{display:block;font-size:14px}.collectible-card span{display:block;font-size:10px;min-height:30px;margin:5px 0 9px;opacity:.92}.collectible-card button{width:100%;padding:8px;font-size:11px;background:rgba(255,255,255,.94)}.store-actions{display:flex;gap:6px;margin-top:9px}.store-actions button{flex:1;padding:7px;font-size:11px}@media(max-width:360px){.collectible-grid{grid-template-columns:1fr}}
+
+.avatar-pose{width:100%;height:100%;background-repeat:no-repeat;background-size:400% 200%;background-color:transparent}.avatar-pose-loading,.locked-pose{width:100%;height:100%;display:grid;place-items:center;font-size:42px}.character-picker{display:grid;grid-template-columns:1fr 1fr;gap:12px}.character-picker button{border:2px solid #eadcff;background:#fbf8ff;border-radius:20px;padding:9px;color:#5f2a80;font-weight:900}.character-picker button.active{border-color:#8c24e9;background:linear-gradient(145deg,#f2e7ff,#fff1fb);box-shadow:0 8px 20px rgba(112,34,216,.16)}.char-preview{display:block;width:92px;height:92px;margin:0 auto 5px}.collectible-pose-wrap{width:132px;height:132px;margin:-4px auto -6px;position:relative;z-index:2}.collectible-card .avatar-pose{filter:drop-shadow(0 9px 10px rgba(30,0,60,.28))}.collectible-card.locked .collectible-pose-wrap{filter:grayscale(1)}.collectible-card{min-height:300px}.collectible-icon{position:relative;z-index:3}.collectible-reaction{position:relative;z-index:3}@media(max-width:390px){.collectible-pose-wrap{width:118px;height:118px}.char-preview{width:80px;height:80px}}
 </style>
 <script src="./register.js"></script><script>window.addEventListener("error",function(e){document.body.innerHTML="<div style=\"font-family:system-ui;padding:24px\"><h2>Missões Divertidas</h2><p>Erro ao iniciar o aplicativo.</p><pre style=\"white-space:pre-wrap\">"+String(e.message||"Erro desconhecido")+"</pre></div>"});</script></head>
 <body>
@@ -316,7 +318,7 @@ function bindPullToRefresh(){
 }
 function dataFingerprint(d){
   if(!d)return"";
-  return JSON.stringify([d.todayPercent,d.monthPercent,d.totalPoints,d.streak,d.pendingConfirmations,d.todayPriorityCompleted,d.todayTasks?.map(t=>[t.id,t.status,t.is_priority])]);
+  return JSON.stringify([d.todayPercent,d.monthPercent,d.totalPoints,d.streak,d.pendingConfirmations,d.todayPriorityCompleted,d.profileAvatar,d.profileCharacter,d.todayTasks?.map(t=>[t.id,t.status,t.is_priority])]);
 }
 function maybeNotify(title,body){
   try{if("Notification" in window&&Notification.permission==="granted"&&document.visibilityState!=="visible")new Notification(title,{body,icon:"./app-icon.jpg"})}catch{}
@@ -383,7 +385,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3116</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3117</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -599,6 +601,17 @@ function renderCalendar(){
   </div></div>`;
   el.querySelectorAll("[data-date],[data-pick-date]").forEach(node=>node.onclick=()=>{const ds=node.dataset.date||node.dataset.pickDate;if(!ds||ds>data.today||ds.slice(0,7)!==data.today.slice(0,7))return;selectedDate=ds;renderCalendar()});
 }
+let avatarSpriteDataUrl="",avatarSpritePromise=null;
+async function ensureAvatarSprite(){
+  if(avatarSpriteDataUrl)return avatarSpriteDataUrl;
+  if(avatarSpritePromise)return avatarSpritePromise;
+  avatarSpritePromise=(async()=>{
+    const parts=await Promise.all([0,1,2,3,4,5].map(i=>fetch("./assets/avatars/sprite-0"+i+".txt",{cache:"force-cache"}).then(r=>{if(!r.ok)throw new Error("avatar");return r.text()})));
+    avatarSpriteDataUrl="data:image/webp;base64,"+parts.join("").replace(/\s+/g,"");
+    return avatarSpriteDataUrl;
+  })().catch(()=>{avatarSpritePromise=null;return""});
+  return avatarSpritePromise;
+}
 function achievementData(){
   const priorityDone=Number(data.todayPriorityCompleted||0),priorityExpected=Number(data.todayPriorityExpected||0);
   return [
@@ -620,28 +633,55 @@ function cardReaction(style){
   const map={victory:"✌️😄",spark:"🤩✨",proud:"😎👍",cool:"😏💎",fire:"🔥😄",rocket:"🚀🤩",focus:"💪🙂",king:"👑😎",hero:"🦸⭐",target:"🎯😄",celebrate:"🙌🥳",rainbow:"🌈😁"};
   return map[style]||"⭐😄";
 }
+function avatarPoseInfo(character,style){
+  const c=character==="ryan"?"ryan":"duda";
+  if(c==="duda"){
+    if(["focus"].includes(style))return{col:1,row:0,name:"Duda estudando"};
+    if(["proud","hero","target"].includes(style))return{col:2,row:0,name:"Duda missão concluída"};
+    if(["king","cool"].includes(style))return{col:3,row:0,name:"Duda campeã"};
+    return{col:0,row:0,name:"Duda comemorando"};
+  }
+  if(["cool"].includes(style))return{col:1,row:1,name:"Ryan jogando"};
+  if(["focus"].includes(style))return{col:2,row:1,name:"Ryan estudando"};
+  if(["victory","spark","fire","rocket","celebrate","rainbow"].includes(style))return{col:3,row:1,name:"Ryan comemorando"};
+  return{col:0,row:1,name:"Ryan mandando joinha"};
+}
+function avatarPoseHtml(character,style){
+  const p=avatarPoseInfo(character,style);
+  if(!avatarSpriteDataUrl)return'<div class="avatar-pose-loading">✨</div>';
+  return '<div class="avatar-pose" role="img" aria-label="'+p.name+'" style="background-image:url('+avatarSpriteDataUrl+');background-position:'+(p.col*33.333333)+'% '+(p.row*100)+'%"></div>';
+}
+async function setCardCharacter(character){
+  const next=character==="ryan"?"ryan":"duda";
+  showLoader(true);
+  try{data=await callApi("update_character",{character:next});toast("Personagem das cartinhas: "+(next==="duda"?"Duda 💜":"Ryan 💜"));renderApp()}
+  catch(e){toast(e.message)}
+  finally{showLoader(false)}
+}
 async function shareAchievementCard(index){
   const a=achievementData()[index];if(!a||!a[3]){toast("Essa cartinha ainda está bloqueada 🔒");return}
+  const sprite=await ensureAvatarSprite();
+  const character=data.profileCharacter==="ryan"?"ryan":"duda";
   const canvas=document.createElement("canvas");canvas.width=1080;canvas.height=1350;const ctx=canvas.getContext("2d");
   const g=ctx.createLinearGradient(0,0,1080,1350);g.addColorStop(0,"#6e24dc");g.addColorStop(.55,"#b832e8");g.addColorStop(1,"#ff5ccf");ctx.fillStyle=g;ctx.fillRect(0,0,1080,1350);
   ctx.fillStyle="rgba(255,255,255,.14)";for(let i=0;i<26;i++){ctx.beginPath();ctx.arc((i*173)%1080,(i*257)%1350,18+(i%4)*8,0,Math.PI*2);ctx.fill()}
   ctx.fillStyle="#fff";ctx.font="900 58px -apple-system,Arial";ctx.textAlign="center";ctx.fillText("MISSÕES DIVERTIDAS",540,105);
-  ctx.font="150px Arial";ctx.fillText(a[0],540,285);
-  const avatar=(data.profileAvatar||getLocalAvatar(data.role)||"");
-  if(avatar){
+  ctx.font="150px Arial";ctx.fillText(a[0],540,255);
+  if(sprite){
     try{
-      const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=avatar});
-      ctx.save();ctx.beginPath();ctx.arc(540,545,170,0,Math.PI*2);ctx.clip();ctx.drawImage(img,370,375,340,340);ctx.restore();
-      ctx.strokeStyle="#fff";ctx.lineWidth=18;ctx.beginPath();ctx.arc(540,545,179,0,Math.PI*2);ctx.stroke();
+      const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=sprite});
+      const p=avatarPoseInfo(character,a[5]),sx=p.col*80,sy=p.row*80;
+      ctx.save();
+      ctx.shadowColor="rgba(58,5,92,.32)";ctx.shadowBlur=32;ctx.shadowOffsetY=15;
+      ctx.drawImage(img,sx,sy,80,80,265,285,550,550);
+      ctx.restore();
     }catch{}
-  }else{
-    ctx.font="180px Arial";ctx.fillText(data.role==="parent"?"🧑":"⭐",540,610);
   }
-  ctx.font="78px Arial";ctx.fillText(cardReaction(a[5]),540,795);
-  ctx.fillStyle="#fff";ctx.font="900 66px -apple-system,Arial";wrapCanvasText(ctx,a[1],540,915,900,76);
-  ctx.font="500 38px -apple-system,Arial";ctx.fillStyle="rgba(255,255,255,.94)";wrapCanvasText(ctx,a[2],540,1040,860,50);
-  ctx.fillStyle="#ffe76a";ctx.font="900 44px -apple-system,Arial";ctx.fillText(a[4],540,1190);
-  ctx.fillStyle="rgba(255,255,255,.86)";ctx.font="700 28px -apple-system,Arial";ctx.fillText((data.family.child_name||"Jogador(a)")+" • "+new Date().toLocaleDateString("pt-BR"),540,1280);
+  ctx.font="74px Arial";ctx.fillText(cardReaction(a[5]),540,835);
+  ctx.fillStyle="#fff";ctx.font="900 66px -apple-system,Arial";wrapCanvasText(ctx,a[1],540,940,900,76);
+  ctx.font="500 38px -apple-system,Arial";ctx.fillStyle="rgba(255,255,255,.94)";wrapCanvasText(ctx,a[2],540,1065,860,50);
+  ctx.fillStyle="#ffe76a";ctx.font="900 44px -apple-system,Arial";ctx.fillText(a[4],540,1200);
+  ctx.fillStyle="rgba(255,255,255,.86)";ctx.font="700 28px -apple-system,Arial";ctx.fillText((data.family.child_name||"Jogador(a)")+" • "+(character==="duda"?"Duda":"Ryan")+" • "+new Date().toLocaleDateString("pt-BR"),540,1285);
   const blob=await new Promise(res=>canvas.toBlob(res,"image/png",.95));if(!blob)return;
   const file=new File([blob],"conquista-"+a[1].toLowerCase().replace(/[^a-z0-9]+/gi,"-")+".png",{type:"image/png"});
   if(navigator.share&&navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:"Minha conquista - Missões Divertidas"});return}catch(e){if(e.name==="AbortError")return}}
@@ -654,18 +694,29 @@ function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight){
 }
 function renderAchievements(){
   const list=achievementData(),unlocked=list.filter(a=>a[3]).length;
+  const character=data.profileCharacter==="ryan"?"ryan":"duda";
   document.getElementById("sec-achievements").innerHTML=`
     <div class="card"><div class="card-title"><h2>🏆 Conquistas</h2><span>${unlocked}/${list.length} desbloqueadas</span></div><div class="achievement-grid">${list.map((a,i)=>`<div class="achievement ${a[3]?"":"locked"}"><div class="medal">${a[0]}</div><h3>${a[1]}</h3><p>${a[2]}</p></div>`).join("")}</div></div>
-    <div class="card"><div class="card-title"><div><h2>🃏 Cartinhas de Conquista</h2><div class="small">Colecione e compartilhe suas conquistas.</div></div><span>${unlocked}</span></div>
+    <div class="card character-picker-card">
+      <div class="card-title"><div><h2>🎭 Personagem das cartinhas</h2><div class="small">Escolha quem vai aparecer nas suas conquistas.</div></div></div>
+      <div class="character-picker">
+        <button class="${character==="duda"?"active":""}" data-character="duda"><span class="char-preview">${avatarPoseHtml("duda","victory")}</span><b>Duda</b></button>
+        <button class="${character==="ryan"?"active":""}" data-character="ryan"><span class="char-preview">${avatarPoseHtml("ryan","victory")}</span><b>Ryan</b></button>
+      </div>
+      <div class="small" style="text-align:center;margin-top:8px">A escolha fica salva na conta e aparece nos outros aparelhos.</div>
+    </div>
+    <div class="card"><div class="card-title"><div><h2>🃏 Cartinhas de Conquista</h2><div class="small">Colecione, veja poses diferentes e compartilhe.</div></div><span>${unlocked}</span></div>
       <div class="collectible-grid">${list.map((a,i)=>`<div class="collectible-card ${a[3]?"":"locked"}">
         <div class="collectible-shine"></div><div class="collectible-icon">${a[0]}</div>
-        <div class="collectible-avatar">${a[3]?profileAvatarHtml(data.role,'⭐'):'🔒'}</div>
+        <div class="collectible-pose-wrap">${a[3]?avatarPoseHtml(character,a[5]):'<div class="locked-pose">🔒</div>'}</div>
         <div class="collectible-reaction">${a[3]?cardReaction(a[5]):"❔"}</div>
         <b>${a[1]}</b><span>${a[3]?a[4]:"Continue jogando para desbloquear"}</span>
-        ${a[3]?`<button class="secondary" data-share-card="${i}">📤 Compartilhar</button>`:""}
+        ${a[3]?`<button class="secondary" data-share-card="${i}">📤 Compartilhar cartinha</button>`:""}
       </div>`).join("")}</div>
     </div>`;
   document.querySelectorAll("[data-share-card]").forEach(b=>b.onclick=()=>shareAchievementCard(Number(b.dataset.shareCard)));
+  document.querySelectorAll("[data-character]").forEach(b=>b.onclick=()=>{if(b.dataset.character!==character)setCardCharacter(b.dataset.character)});
+  if(!avatarSpriteDataUrl)ensureAvatarSprite().then(src=>{if(src&&activeSection==="achievements")renderAchievements()});
 }
 async function renderFriends(){
   const el=document.getElementById("sec-friends");if(!el)return;
