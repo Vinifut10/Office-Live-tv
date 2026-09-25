@@ -18,9 +18,16 @@ export default async function handler(req,res){
     const child=String(name||"criança").slice(0,40);
     const form=new FormData();
     const gallery=mode==="gallery";
+    const expressions=mode==="expressions",stickers=mode==="stickers",outfits=mode==="outfits";
     const style="3D cartoon premium semi-realista, acabamento polido de animação cinematográfica, olhos grandes expressivos porém naturais, cabelo muito detalhado com reflexos roxos sutis, iluminação neon roxa e rosa suave, visual moderno infantil/juvenil, roupa urbana preta e roxa sem marcas, tênis branco e roxo, proporções de personagem de corpo inteiro, alta consistência facial";
     const prompt=gallery
       ? `Crie uma FOLHA DE PERSONAGEM quadrada com a MESMA criança da imagem de referência, mantendo identidade facial, cabelo, olhos e aparência reconhecível em todos os quadros. Estilo obrigatório: ${style}. Organize uma grade limpa 3x3, SEM TEXTO: 1 frente corpo inteiro, 2 perfil/lado, 3 costas/3-4, 4 apontando, 5 joinha, 6 sinal de paz, 7 braços cruzados confiante, 8 comemorando com braços levantados, 9 estudando com livro. Fundo claro/lilás uniforme, cada quadro bem separado, personagem inteiro quando aplicável. Nome do perfil apenas como contexto: ${child}. Não infira atributos sensíveis. Não inclua palavras, logotipos ou marcas.`
+      : expressions
+      ? `Crie uma folha quadrada 3x3 de EXPRESSÕES com a MESMA criança da imagem de referência, mantendo rosto, cabelo, roupa e identidade consistentes em todos os quadros. Estilo obrigatório: ${style}. Mostrar sorriso, piscada, surpresa, pensativo(a), confiante, bravo(a), rindo, triste e tranquilo(a). Fundo claro/lilás uniforme, sem texto, sem marcas.`
+      : stickers
+      ? `Crie uma folha quadrada 3x3 de FIGURINHAS/EMOJIS com a MESMA criança da imagem de referência, mantendo identidade e roupa consistentes. Estilo obrigatório: ${style}. Poses: oi/aceno, bom dia, boa noite, valeu/joinha, top, bora, foco, tchau, comemoração. Fundo transparente aparente ou branco limpo, contorno de sticker, sem palavras nem marcas.`
+      : outfits
+      ? `Crie uma folha quadrada 2x3 de LOOKS com a MESMA criança da imagem de referência, mantendo rosto, cabelo e identidade consistentes. Estilo obrigatório: ${style}. Mostrar 6 looks: casual preto/roxo, esportivo, escola, moletom, viagem e festa. Corpo inteiro, fundo claro, sem texto, sem logotipos.`
       : `Transforme a criança da imagem de referência em um avatar oficial do aplicativo Missões Divertidas. Preserve de forma reconhecível características visuais não sensíveis, especialmente cabelo, formato geral do rosto, olhos e sorriso. Estilo obrigatório: ${style}. Nome do perfil: ${child}. Corpo inteiro em pose alegre e confiante, olhando para a câmera, fundo simples em degradê lilás, composição quadrada centralizada, sem texto, sem logotipos. Não infira etnia, saúde, personalidade ou atributos sensíveis.`;
     form.append("prompt",prompt);
     form.append("width","512");form.append("height","512");
