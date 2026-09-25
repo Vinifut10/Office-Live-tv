@@ -173,6 +173,18 @@ body{background:linear-gradient(180deg,#6f16d7 0,#9a25ef 16%,#f3dfff 36%,#fff8fe
 
 .avatar-pose{width:100%;height:100%;background-repeat:no-repeat;background-size:400% 200%;background-color:transparent}.avatar-pose-loading,.locked-pose{width:100%;height:100%;display:grid;place-items:center;font-size:42px}.character-picker{display:grid;grid-template-columns:1fr 1fr;gap:12px}.character-picker button{border:2px solid #eadcff;background:#fbf8ff;border-radius:20px;padding:9px;color:#5f2a80;font-weight:900}.character-picker button.active{border-color:#8c24e9;background:linear-gradient(145deg,#f2e7ff,#fff1fb);box-shadow:0 8px 20px rgba(112,34,216,.16)}.char-preview{display:block;width:92px;height:92px;margin:0 auto 5px}.collectible-pose-wrap{width:132px;height:132px;margin:-4px auto -6px;position:relative;z-index:2}.collectible-card .avatar-pose{filter:drop-shadow(0 9px 10px rgba(30,0,60,.28))}.collectible-card.locked .collectible-pose-wrap{filter:grayscale(1)}.collectible-card{min-height:300px}.collectible-icon{position:relative;z-index:3}.collectible-reaction{position:relative;z-index:3}@media(max-width:390px){.collectible-pose-wrap{width:118px;height:118px}.char-preview{width:80px;height:80px}}
 .personalized-pose{width:100%;height:100%;display:grid;place-items:center}.personalized-pose img{width:100%;height:100%;object-fit:cover;border-radius:28%;border:3px solid rgba(255,255,255,.9);box-shadow:0 9px 20px rgba(48,9,77,.24)}#createAiAvatar{background:linear-gradient(135deg,#7b20e8,#d538d4 62%,#ff65b7)}
+.avatar-gen{position:fixed;inset:0;z-index:9999;background:rgba(17,7,31,.72);backdrop-filter:blur(8px);display:grid;place-items:center;padding:22px}
+.avatar-gen-card{width:min(430px,94vw);background:#fff;border-radius:28px;padding:24px;box-shadow:0 28px 80px rgba(0,0,0,.35);text-align:center}
+.avatar-gen-orb{width:92px;height:92px;border-radius:30px;margin:0 auto 14px;display:grid;place-items:center;font-size:46px;background:linear-gradient(145deg,#6d4aff,#d93ac9);box-shadow:0 13px 32px rgba(109,74,255,.32);animation:avatarPulse 1.25s ease-in-out infinite}
+@keyframes avatarPulse{50%{transform:scale(1.06) rotate(2deg)}}
+.avatar-gen-track{height:18px;background:#eee9fb;border-radius:999px;overflow:hidden;margin:16px 0 9px}.avatar-gen-bar{height:100%;width:0;background:linear-gradient(90deg,#6d4aff,#c83bdd,#ff77bd);transition:width .55s ease;border-radius:999px}
+.avatar-gen-pct{font-size:32px;font-weight:1000;color:#6d4aff}.avatar-gen-stage{font-weight:850;margin-top:4px;color:#403751}
+.avatar-tabs{display:flex;gap:7px;overflow:auto;padding:5px 0 12px;scrollbar-width:none}.avatar-tabs::-webkit-scrollbar{display:none}.avatar-tabs button{white-space:nowrap;border:1px solid #e6def7;background:#fff;border-radius:999px;padding:9px 12px;font-weight:900;color:#6b6380}.avatar-tabs button.active{background:linear-gradient(135deg,#6d4aff,#a758ed);color:#fff;border-color:transparent}
+.avatar-studio-progress{background:#f3effd;border-radius:18px;padding:12px;margin:12px 0}.avatar-studio-progress .row{display:flex;justify-content:space-between;font-weight:900}.avatar-studio-progress .track{height:11px;background:#ddd5ef;border-radius:999px;overflow:hidden;margin-top:8px}.avatar-studio-progress .fill{height:100%;background:linear-gradient(90deg,#6d4aff,#e148c1);border-radius:999px}
+.avatar-grid-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.avatar-feature{border:1px solid #e8e1f4;border-radius:18px;padding:13px;background:#fff;text-align:left}.avatar-feature b{display:block;margin-bottom:4px}.avatar-feature .done{color:#15965b;font-size:12px;font-weight:900}.avatar-feature .pending{color:#8a829c;font-size:12px;font-weight:900}
+.avatar-action{width:100%;margin-top:9px}.avatar-locked{opacity:.6;filter:saturate(.65)}
+.avatar-room{min-height:170px;border-radius:22px;background:linear-gradient(145deg,#efe6ff,#ffdff2);display:grid;place-items:center;text-align:center;padding:18px;position:relative;overflow:hidden}.avatar-room:before{content:"⭐ ✨ 💜";position:absolute;top:12px;right:14px;font-size:22px}.avatar-room .big{font-size:52px}.avatar-sheet-wrap{margin-top:12px}.avatar-sheet-wrap img{width:100%;border-radius:20px;display:block;box-shadow:0 10px 24px rgba(57,31,102,.14)}
+.avatar-official{display:inline-flex;align-items:center;gap:6px;background:#eafff3;color:#087f4a;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:950}
 .avatar-gallery{width:100%;border-radius:22px;display:block;box-shadow:0 12px 30px rgba(74,32,130,.18);background:#f4efff}
 .avatar-hero{background:linear-gradient(145deg,#21102f,#5920a0 55%,#b22cb8);border-radius:24px;padding:18px;color:#fff;text-align:center;overflow:hidden}
 .avatar-hero .avatar-main{width:180px;height:180px;margin:auto;border-radius:28px;overflow:hidden;background:rgba(255,255,255,.14);border:3px solid rgba(255,255,255,.65)}
@@ -193,7 +205,7 @@ let data=null, adminData=null, platformData=null, activeSection="home", adminTab
 let pullStartY=0,pullDistance=0,pullRefreshing=false,pullBound=false;
 let liveSyncTimer=null,lastSyncFingerprint="",lastPendingCount=0;
 const root=document.getElementById("root");
-const avatarStorageKey=role=>"md_avatar_"+role;
+const avatarStorageKey=role=>"md_avatar_"+(data?.childAccountId||role);
 function getLocalAvatar(role){try{return localStorage.getItem(avatarStorageKey(role))||""}catch{return""}}
 function saveLocalAvatar(role,dataUrl){try{if(dataUrl)localStorage.setItem(avatarStorageKey(role),dataUrl);else localStorage.removeItem(avatarStorageKey(role))}catch{}}
 function profileAvatarHtml(role,fallback){
@@ -224,31 +236,68 @@ async function createPersonalizedAvatar(){
   }catch(e){toast(e.message||"Não foi possível criar o avatar.")}
   finally{showLoader(false)}
 }
-async function createAvatarGallery(){
-  if(data.role!=="child")return;
-  const photo=data.profileAvatar||getLocalAvatar("child");
-  if(!photo){toast("Primeiro crie seu avatar personalizado.");return}
-  showLoader(true);
-  try{
-    toast("Criando suas poses… ✨");
-    const r=await fetch("/api/generate-avatar",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({photo,name:data.childDisplayName||data.family.child_name||"Criança",mode:"gallery"})});
-    const j=await r.json().catch(()=>({}));if(!r.ok||!j.avatar)throw new Error(j.error||"Não foi possível criar as poses.");
-    const gallery=await compressAvatarDataUrl(j.avatar,640);
-    data=await callApi("update_avatar_gallery",{gallery});
-    toast("Seu álbum de poses ficou pronto! 🎭✨");renderMyAvatar();
-  }catch(e){toast(e.message||"Não foi possível criar as poses.")}finally{showLoader(false)}
+function avatarStudioCompletion(){
+  let p=0;if(data.profileAvatar)p+=25;if(data.avatarMasterApproved)p+=15;if(data.avatarGallery)p+=20;if(data.avatarExpressions)p+=15;if(data.avatarStickers)p+=15;if(data.avatarOutfits)p+=10;return Math.min(100,p)
 }
-function renderMyAvatar(){
+function avatarGenOverlay(title){
+  const old=document.getElementById("avatarGenOverlay");if(old)old.remove();
+  const el=document.createElement("div");el.id="avatarGenOverlay";el.className="avatar-gen";
+  el.innerHTML=`<div class="avatar-gen-card"><div class="avatar-gen-orb">🎨</div><h2 style="margin-bottom:5px">${esc(title)}</h2><div class="small">A inteligência artificial está trabalhando no seu personagem.</div><div class="avatar-gen-track"><div class="avatar-gen-bar" id="avatarGenBar"></div></div><div class="avatar-gen-pct" id="avatarGenPct">4%</div><div class="avatar-gen-stage" id="avatarGenStage">Preparando sua referência…</div><p class="small" style="margin-top:12px">Não feche esta tela enquanto a criação estiver em andamento.</p></div>`;
+  document.body.appendChild(el);return el
+}
+async function runAvatarGeneration(mode,type,title){
+  const photo=data.profileAvatar||getLocalAvatar("child");if(!photo)throw new Error("Primeiro crie seu avatar principal.");
+  if(mode!=="master"&&!data.avatarMasterApproved)throw new Error("Aprove primeiro o avatar principal como oficial.");
+  const overlay=avatarGenOverlay(title),bar=overlay.querySelector("#avatarGenBar"),pct=overlay.querySelector("#avatarGenPct"),stage=overlay.querySelector("#avatarGenStage");
+  const steps=[[8,"Analisando o avatar…"],[18,"Fixando rosto e cabelo…"],[31,"Aplicando o estilo oficial…"],[46,"Montando proporções e roupa…"],[61,"Criando detalhes 3D…"],[74,"Gerando variações…"],[86,"Refinando iluminação e expressão…"],[94,"Finalizando a arte…"]];
+  let si=0;const timer=setInterval(()=>{if(si>=steps.length)return;const [v,t]=steps[si++];bar.style.width=v+"%";pct.textContent=v+"%";stage.textContent=t},1250);
+  try{
+    const r=await fetch("/api/generate-avatar",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({photo,name:data.childDisplayName||data.family.child_name||"Criança",mode:mode==="master"?undefined:mode})});
+    const j=await r.json().catch(()=>({}));if(!r.ok||!j.avatar)throw new Error(j.error||"Não foi possível gerar esta etapa.");
+    bar.style.width="98%";pct.textContent="98%";stage.textContent="Sincronizando com sua conta…";
+    const asset=await compressAvatarDataUrl(j.avatar,type==="avatar"?320:640);
+    if(type==="avatar"){saveLocalAvatar("child",asset);data=await callApi("update_avatar",{avatar:asset})}
+    else data=await callApi("update_avatar_asset",{type,asset});
+    bar.style.width="100%";pct.textContent="100%";stage.textContent="Pronto! ✨";
+    await new Promise(r=>setTimeout(r,650));return asset
+  }finally{clearInterval(timer);overlay.remove()}
+}
+async function createAvatarGallery(){try{await runAvatarGeneration("gallery","gallery","Criando suas posições");toast("Poses criadas! 🎭");renderMyAvatar("poses")}catch(e){toast(e.message)}}
+async function createAvatarExpressions(){try{await runAvatarGeneration("expressions","expressions","Criando suas expressões");toast("Expressões criadas! 😄");renderMyAvatar("expressoes")}catch(e){toast(e.message)}}
+async function createAvatarStickers(){try{await runAvatarGeneration("stickers","stickers","Criando suas figurinhas");toast("Figurinhas criadas! ✨");renderMyAvatar("figurinhas")}catch(e){toast(e.message)}}
+async function createAvatarOutfits(){try{await runAvatarGeneration("outfits","outfits","Criando seus looks");toast("Looks criados! 👕");renderMyAvatar("personalizar")}catch(e){toast(e.message)}}
+async function approveAvatarMaster(){if(!data.profileAvatar){toast("Crie seu avatar primeiro.");return}if(!confirm("Usar este personagem como seu avatar oficial? As próximas poses e expressões serão criadas a partir dele."))return;showLoader(true);try{data=await callApi("approve_avatar_master");toast("Avatar oficial aprovado! ✅");renderMyAvatar("resumo")}catch(e){toast(e.message)}finally{showLoader(false)}}
+function avatarAssetCard(title,emoji,done,action,label){
+  return `<div class="avatar-feature ${!data.avatarMasterApproved&&!done?"avatar-locked":""}"><b>${emoji} ${title}</b><span class="${done?"done":"pending"}">${done?"✓ Criado":"Ainda não criado"}</span><button class="secondary avatar-action" data-avatar-action="${action}">${done?"🔄 Refazer":"✨ "+label}</button></div>`
+}
+function renderMyAvatar(tab="resumo"){
   const old=document.getElementById("myAvatarModal");if(old)old.remove();
   const wrap=document.createElement("div");wrap.id="myAvatarModal";wrap.className="crop-modal";
-  const name=esc(data.childDisplayName||data.family.child_name||"Meu avatar"),avatar=data.profileAvatar||getLocalAvatar("child");
-  wrap.innerHTML=`<div class="crop-sheet" style="max-width:620px;max-height:92vh;overflow:auto">
-    <div class="crop-head"><h3>🎭 Meu Avatar</h3><button id="myAvatarClose">×</button></div>
-    <div class="avatar-hero"><div class="avatar-main">${avatar?'<img src="'+avatar+'" alt="Avatar">':'⭐'}</div><h2 style="margin:10px 0 4px">${name}</h2><div>Seu personagem oficial no Missões Divertidas</div><div class="avatar-tags"><span>👆 Apontando</span><span>👍 Joinha</span><span>✌️ Paz</span><span>😎 Confiante</span><span>🎉 Festa</span><span>📚 Estudando</span></div></div>
-    ${data.avatarGallery?`<div class="card" style="margin-top:14px"><div class="card-title"><h2>✨ Minhas posições</h2><span>9 poses</span></div><img class="avatar-gallery" src="${data.avatarGallery}" alt="Poses do avatar"><p class="small" style="margin-top:10px">Frente, lado, costas, apontando, joinha, paz, confiante, comemorando e estudando — sempre com a mesma identidade visual.</p></div>`:`<div class="card" style="margin-top:14px;text-align:center"><div style="font-size:45px">🎨</div><h2>Crie suas posições</h2><p class="small">O app usa seu avatar atual para criar uma folha completa no mesmo padrão visual oficial da Duda e do Ryan.</p></div>`}
-    <button class="primary" id="generateAvatarGallery" style="margin-top:10px">${data.avatarGallery?"🔄 Gerar novas posições":"✨ Criar minhas posições"}</button>
-  </div>`;
-  document.body.appendChild(wrap);wrap.querySelector("#myAvatarClose").onclick=()=>wrap.remove();wrap.querySelector("#generateAvatarGallery").onclick=createAvatarGallery;
+  const name=esc(data.childDisplayName||data.family.child_name||"Meu avatar"),avatar=data.profileAvatar||getLocalAvatar("child"),complete=avatarStudioCompletion();
+  const levelTitle=data.level>=10?"Lendário":data.level>=7?"Super Missões":data.level>=5?"Campeão":data.level>=3?"Esforçado":"Iniciante";
+  const tabs=[["resumo","🏠 Resumo"],["poses","🕺 Poses"],["expressoes","😄 Expressões"],["conquistas","🏆 Conquistas"],["figurinhas","💬 Figurinhas"],["personalizar","✨ Personalizar"]];
+  let body="";
+  if(tab==="resumo")body=`<div class="avatar-hero"><div class="avatar-main">${avatar?'<img src="'+avatar+'" alt="Avatar">':'⭐'}</div><h2 style="margin:10px 0 4px">${name}</h2><div>${data.avatarMasterApproved?'<span class="avatar-official">✅ Avatar oficial aprovado</span>':'Seu personagem ainda precisa ser aprovado'}</div><div class="avatar-tags"><span>⭐ ${data.totalPoints||0}</span><span>🔥 ${data.streak||0} dias</span><span>🎮 Nível ${data.level||1}</span><span>👑 ${levelTitle}</span></div></div>
+    <div class="avatar-studio-progress"><div class="row"><span>Criação do avatar</span><span>${complete}%</span></div><div class="track"><div class="fill" style="width:${complete}%"></div></div><div class="small" style="margin-top:7px">Complete avatar oficial, poses, expressões, figurinhas e looks para chegar a 100%.</div></div>
+    <div class="avatar-grid-cards">
+      ${avatarAssetCard("Avatar principal","🎭",!!avatar,"master",avatar?"Gerar nova versão":"Criar avatar")}
+      ${avatarAssetCard("Poses","🕺",!!data.avatarGallery,"gallery","Criar poses")}
+      ${avatarAssetCard("Expressões","😄",!!data.avatarExpressions,"expressions","Criar expressões")}
+      ${avatarAssetCard("Figurinhas","💬",!!data.avatarStickers,"stickers","Criar figurinhas")}
+      ${avatarAssetCard("Looks","👕",!!data.avatarOutfits,"outfits","Criar looks")}
+      <div class="avatar-feature"><b>🏅 Avatar oficial</b><span class="${data.avatarMasterApproved?"done":"pending"}">${data.avatarMasterApproved?"✓ Aprovado":"Aguardando aprovação"}</span><button class="primary avatar-action" id="approveAvatarMaster" ${!avatar||data.avatarMasterApproved?"disabled":""}>${data.avatarMasterApproved?"✅ Aprovado":"Salvar como oficial"}</button></div>
+    </div>`;
+  if(tab==="poses")body=data.avatarGallery?`<div class="card"><div class="card-title"><h2>🕺 Minhas posições</h2><span>9 variações</span></div><div class="avatar-sheet-wrap"><img src="${data.avatarGallery}"></div><button class="secondary avatar-action" data-avatar-action="gallery">🔄 Gerar novas posições</button></div>`:`<div class="card" style="text-align:center"><div style="font-size:54px">🕺</div><h2>Suas poses ainda não foram criadas</h2><p class="small">Frente, lado, costas, apontando, joinha, paz, confiante, comemorando e estudando.</p><button class="primary" data-avatar-action="gallery">✨ Criar minhas posições</button></div>`;
+  if(tab==="expressoes")body=data.avatarExpressions?`<div class="card"><div class="card-title"><h2>😄 Expressões</h2><span>9 expressões</span></div><div class="avatar-sheet-wrap"><img src="${data.avatarExpressions}"></div><button class="secondary avatar-action" data-avatar-action="expressions">🔄 Gerar novas expressões</button></div>`:`<div class="card" style="text-align:center"><div style="font-size:54px">😄</div><h2>Crie suas expressões</h2><p class="small">Sorriso, piscada, surpresa, pensativo, confiante, bravo, rindo, triste e tranquilo.</p><button class="primary" data-avatar-action="expressions">✨ Criar expressões</button></div>`;
+  if(tab==="conquistas")body=`<div class="card"><div class="card-title"><h2>🏆 Conquistas do avatar</h2><span>Nível ${data.level||1}</span></div><div class="avatar-grid-cards"><div class="avatar-feature"><b>⭐ Primeiros passos</b><span class="done">Avatar criado</span></div><div class="avatar-feature"><b>🔥 Sequência</b><span class="${data.streak>=7?"done":"pending"}">${data.streak>=7?"Desbloqueado":"Chegue a 7 dias"}</span></div><div class="avatar-feature"><b>🎭 Artista</b><span class="${complete>=60?"done":"pending"}">${complete>=60?"Desbloqueado":"Complete 60% do avatar"}</span></div><div class="avatar-feature"><b>👑 Colecionador</b><span class="${complete===100?"done":"pending"}">${complete===100?"Desbloqueado":"Complete o avatar em 100%"}</span></div></div><button class="secondary avatar-action" id="avatarGoAchievements">Ver todas as conquistas</button></div>`;
+  if(tab==="figurinhas")body=data.avatarStickers?`<div class="card"><div class="card-title"><h2>💬 Minhas figurinhas</h2><span>9 reações</span></div><div class="avatar-sheet-wrap"><img src="${data.avatarStickers}"></div><button class="secondary avatar-action" data-avatar-action="stickers">🔄 Gerar novas figurinhas</button></div>`:`<div class="card" style="text-align:center"><div style="font-size:54px">💬</div><h2>Seu pacote de figurinhas</h2><p class="small">Aceno, joinha, comemoração, foco e outras reações usando seu próprio avatar.</p><button class="primary" data-avatar-action="stickers">✨ Criar figurinhas</button></div>`;
+  if(tab==="personalizar")body=`<div class="card"><div class="card-title"><h2>✨ Personalizar</h2><span>${levelTitle}</span></div>${data.avatarOutfits?`<div class="avatar-sheet-wrap"><img src="${data.avatarOutfits}"></div>`:""}<button class="primary avatar-action" data-avatar-action="outfits">${data.avatarOutfits?"🔄 Gerar novos looks":"👕 Criar meus looks"}</button></div><div class="card"><div class="card-title"><h2>🏠 Meu espaço</h2><span>Desbloqueios</span></div><div class="avatar-room"><div><div class="big">${data.level>=5?"🛋️🎮":"🛏️⭐"}</div><b>Quarto nível ${Math.max(1,data.level||1)}</b><div class="small">Seu espaço evolui conforme você ganha estrelas e sobe de nível.</div></div></div><div class="avatar-grid-cards" style="margin-top:10px"><div class="avatar-feature"><b>💜 Tema Roxo</b><span class="done">Disponível</span></div><div class="avatar-feature ${data.level<3?"avatar-locked":""}"><b>🎮 Espaço Gamer</b><span class="${data.level>=3?"done":"pending"}">${data.level>=3?"Desbloqueado":"Nível 3"}</span></div><div class="avatar-feature ${data.level<5?"avatar-locked":""}"><b>✨ Neon</b><span class="${data.level>=5?"done":"pending"}">${data.level>=5?"Desbloqueado":"Nível 5"}</span></div><div class="avatar-feature ${data.level<10?"avatar-locked":""}"><b>👑 Lendário</b><span class="${data.level>=10?"done":"pending"}">${data.level>=10?"Desbloqueado":"Nível 10"}</span></div></div></div>`;
+  wrap.innerHTML=`<div class="crop-sheet" style="max-width:620px;max-height:94vh;overflow:auto"><div class="crop-head"><h3>🎭 Meu Avatar</h3><button id="myAvatarClose">×</button></div><div class="avatar-tabs">${tabs.map(t=>'<button data-avatar-tab="'+t[0]+'" class="'+(tab===t[0]?"active":"")+'">'+t[1]+'</button>').join("")}</div>${body}</div>`;
+  document.body.appendChild(wrap);wrap.querySelector("#myAvatarClose").onclick=()=>wrap.remove();
+  wrap.querySelectorAll("[data-avatar-tab]").forEach(b=>b.onclick=()=>renderMyAvatar(b.dataset.avatarTab));
+  wrap.querySelectorAll("[data-avatar-action]").forEach(b=>b.onclick=async()=>{const a=b.dataset.avatarAction;if(a==="master"){wrap.remove();document.getElementById("createAiAvatar")?.click()}else if(a==="gallery")await createAvatarGallery();else if(a==="expressions")await createAvatarExpressions();else if(a==="stickers")await createAvatarStickers();else if(a==="outfits")await createAvatarOutfits()});
+  const approve=wrap.querySelector("#approveAvatarMaster");if(approve&&!approve.disabled)approve.onclick=approveAvatarMaster;
+  const ach=wrap.querySelector("#avatarGoAchievements");if(ach)ach.onclick=()=>{wrap.remove();activeSection="achievements";renderApp()};
 }
 async function openAvatarCropper(file,role){
   if(!file||!file.type.startsWith("image/"))throw new Error("Escolha uma imagem.");
@@ -452,7 +501,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3124</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3125</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
