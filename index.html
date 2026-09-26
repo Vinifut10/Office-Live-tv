@@ -349,6 +349,22 @@ function monthlyStarEconomy(tasks,ym){
   const bonuses=[3,7,14,30].filter(x=>x<=days).reduce((s,x)=>s+Number(data?.streakBonuses?.[x]||0),0);
   const total=taskMax+bonuses;return{days,taskMax,bonuses,total,daily:Math.round(total/days),week:Math.round(total/days*7)};
 }
+function b64urlToUint8Array(v){const p="=".repeat((4-v.length%4)%4),b=(v+p).replace(/-/g,"+").replace(/_/g,"/"),raw=atob(b);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
+async function enableParentPush(){
+  if(data?.role!=="parent")return;
+  if(!("serviceWorker"in navigator)||!("PushManager"in window)||!("Notification"in window)){toast("Este aparelho não oferece notificações push pelo navegador.");return}
+  if(Notification.permission==="denied"){toast("As notificações estão bloqueadas. Libere nas configurações do aparelho.");return}
+  try{
+    const permission=await Notification.requestPermission();if(permission!=="granted"){toast("Permissão de notificação não concedida.");return}
+    const reg=await navigator.serviceWorker.register("/sw.js");
+    const k=await callApi("push_public_key");
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64urlToUint8Array(k.publicKey)});
+    await callApi("subscribe_push",{subscription:sub.toJSON()});
+    localStorage.setItem("md_push_enabled","1");toast("Notificações de aprovação ativadas 🔔");renderMenu();
+  }catch(e){toast("Não foi possível ativar: "+(e.message||"erro de notificação"))}
+}
+async function ensurePushRegistration(){if(data?.role==="parent"&&localStorage.getItem("md_push_enabled")==="1"&&Notification?.permission==="granted"){try{const reg=await navigator.serviceWorker.register("/sw.js");const k=await callApi("push_public_key");let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64urlToUint8Array(k.publicKey)});await callApi("subscribe_push",{subscription:sub.toJSON()})}catch{}}}
 async function callApi(action,payload={}){
   const headers={"content-type":"application/json"}; if(session) headers["x-family-session"]=session;
   const r=await fetch(API,{method:"POST",headers,body:JSON.stringify({action,...payload})});
@@ -491,7 +507,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3126</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3127</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -503,6 +519,7 @@ function renderMenu(){
     ${role==="child"?'<button class="secondary" id="openMyAvatar" style="width:100%;margin-bottom:10px">🎭 Meu Avatar • poses e expressões</button>':""}
     <button class="secondary" id="removeProfilePhoto" style="width:100%;margin-bottom:10px">🗑️ Remover foto</button>
     ${role==="parent"?'<button class="secondary" id="openParentSettings" style="width:100%;margin-bottom:10px">👨‍👩‍👧 Configurações da família</button>':""}
+    ${role==="parent"?'<button class="secondary" id="enableParentPush" style="width:100%;margin-bottom:10px">🔔 '+(localStorage.getItem("md_push_enabled")==="1"?"Notificações de aprovação ativas":"Ativar notificações de aprovação")+'</button>':""}
     ${role==="parent"&&data.platformAdmin?'<button class="primary" id="openPlatformAdmin" style="width:100%;margin-bottom:10px">🏢 Painel de famílias</button>':""}
     <button class="secondary" id="menuHome" style="width:100%;margin-bottom:10px">🏠 Voltar para o início</button>
     <button class="secondary" id="menuStore" style="width:100%;margin-bottom:10px">🛍️ Loja de Estrelas</button>
@@ -525,6 +542,7 @@ function renderMenu(){
   const mn=document.getElementById("menuNotifications");if(mn)mn.onclick=async()=>{if(!("Notification" in window)){toast("Notificações não são suportadas neste navegador.");return}try{const p=await Notification.requestPermission();toast(p==="granted"?"Notificações ativadas 🔔":"Permissão de notificações não concedida.")}catch{toast("Não foi possível ativar notificações.")}};
   const ma=document.getElementById("menuAchievements");if(ma)ma.onclick=()=>{activeSection="achievements";renderApp()};
   const pa=document.getElementById("openPlatformAdmin");if(pa)pa.onclick=async()=>{showLoader(true);try{platformData=await callPlatform("list");renderPlatformAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}};
+  const pushBtn=document.getElementById("enableParentPush");if(pushBtn)pushBtn.onclick=enableParentPush;
   const ps=document.getElementById("openParentSettings");if(ps)ps.onclick=async()=>{
     if(data.parentPinConfigured){
       const pin=prompt("Digite o PIN da área dos pais:");
