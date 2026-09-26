@@ -509,7 +509,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3129</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3130</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -874,22 +874,24 @@ async function createCardImage(card){
 async function renderCardShop(el){
   el.innerHTML='<div class="card"><div class="empty">✨ Abrindo sua coleção…</div></div>';
   try{
-    const r=await callApi("card_store"),cards=r.cards||[],filtered=cardFilter==="all"?cards:cards.filter(c=>c.rarity===cardFilter);
+    const r=await callApi("card_store"),settings=r.settings||{normal_price:10,special_price:25,legendary_price:50,pack_price:30,pack_size:3},cards=r.cards||[],filtered=cardFilter==="all"?cards:cards.filter(c=>c.rarity===cardFilter);
     const avatar=r.avatar||getLocalAvatar("child");
     const counts={normal:cards.filter(c=>c.rarity==="normal").length,special:cards.filter(c=>c.rarity==="special").length,legendary:cards.filter(c=>c.rarity==="legendary").length};
     el.innerHTML=`<div class="card-shop"><div class="card-shop-head"><div><h2>🃏 Loja de Cartinhas</h2><div class="small" style="color:#d9c8ff">Colecione cartinhas personalizadas com seu avatar!</div></div><div class="star-wallet">⭐ ${r.availablePoints||0}</div></div>
       <div class="pack-grid">
-        <button class="card-pack normal" data-buy-card="normal"><div class="pack-icon">🎴</div><div><div class="pack-title">Cartinha Normal</div><div class="small" style="color:#d7e8ff">Comum • personalizada</div></div><div class="pack-price">⭐ 10</div></button>
-        <button class="card-pack special" data-buy-card="special"><div class="pack-icon">💖</div><div><div class="pack-title">Cartinha Especial</div><div class="small" style="color:#ffe0fa">Rara • efeitos especiais</div></div><div class="pack-price">⭐ 25</div></button>
-        <button class="card-pack legendary" data-buy-card="legendary"><div class="pack-icon">👑</div><div><div class="pack-title">Cartinha Lendária</div><div class="small" style="color:#fff0bf">Muito rara • visual dourado</div></div><div class="pack-price">⭐ 50</div></button>
+        <button class="card-pack normal" data-buy-card="normal"><div class="pack-icon">🎴</div><div><div class="pack-title">Cartinha Normal</div><div class="small" style="color:#d7e8ff">Comum • personalizada</div></div><div class="pack-price">⭐ ${settings.normal_price}</div></button>
+        <button class="card-pack special" data-buy-card="special"><div class="pack-icon">💖</div><div><div class="pack-title">Cartinha Especial</div><div class="small" style="color:#ffe0fa">Rara • efeitos especiais</div></div><div class="pack-price">⭐ ${settings.special_price}</div></button>
+        <button class="card-pack legendary" data-buy-card="legendary"><div class="pack-icon">👑</div><div><div class="pack-title">Cartinha Lendária</div><div class="small" style="color:#fff0bf">Muito rara • visual dourado</div></div><div class="pack-price">⭐ ${settings.legendary_price}</div></button>
       </div>
+      <button class="primary" id="buyCardPack" style="width:100%;margin-top:12px">🎁 Pacote Surpresa • ${settings.pack_size} cartinhas sorteadas • ⭐ ${settings.pack_price}</button>
+      <div class="small" style="text-align:center;color:#d9c8ff;margin:8px 4px 0">Chances: 65% Normal • 27% Especial • 8% Lendária</div>
       <div class="collection-tabs"><button data-card-filter="all" class="${cardFilter==="all"?"active":""}">Todas (${cards.length})</button><button data-card-filter="normal" class="${cardFilter==="normal"?"active":""}">Normal (${counts.normal})</button><button data-card-filter="special" class="${cardFilter==="special"?"active":""}">Especial (${counts.special})</button><button data-card-filter="legendary" class="${cardFilter==="legendary"?"active":""}">Lendária (${counts.legendary})</button></div>
       <h2 style="margin:8px 0 12px">Minhas Cartinhas</h2>
       <div class="collect-grid">${filtered.map(c=>`<div class="collect-card ${c.rarity}"><span class="rarity-chip">${c.rarity==="legendary"?"Lendária":c.rarity==="special"?"Especial":"Normal"}</span><span class="serial-chip">#${String(c.serial_no).padStart(2,"0")}</span>${c.image_key?'<img src="'+c.image_key+'" alt="">':avatar?'<img src="'+avatar+'" alt="">':'<div style="font-size:60px;margin:auto">⭐</div>'}<div class="collect-info"><b>${esc(c.theme||"⭐")} ${esc(c.title)}</b><span style="font-size:12px">${c.rarity==="legendary"?"⭐⭐⭐⭐":c.rarity==="special"?"⭐⭐⭐":"⭐"}</span></div></div>`).join("")||'<div class="empty" style="grid-column:1/-1;color:#d9c8ff">Sua coleção ainda está vazia. Compre sua primeira cartinha! ✨</div>'}</div>
     </div>`;
     el.querySelectorAll("[data-card-filter]").forEach(b=>b.onclick=()=>{cardFilter=b.dataset.cardFilter;renderCardShop(el)});
     el.querySelectorAll("[data-buy-card]").forEach(b=>b.onclick=async()=>{
-      const rarity=b.dataset.buyCard,price={normal:10,special:25,legendary:50}[rarity];
+      const rarity=b.dataset.buyCard,price={normal:settings.normal_price,special:settings.special_price,legendary:settings.legendary_price}[rarity];
       if(!confirm("Comprar uma cartinha "+(rarity==="legendary"?"lendária":rarity==="special"?"especial":"normal")+" por ⭐ "+price+"?"))return;
       showLoader(true);try{
         const x=await callApi("buy_card",{rarity});toast("Cartinha "+x.card.title+" desbloqueada! 🎉");
@@ -898,6 +900,7 @@ async function renderCardShop(el){
         await renderCardShop(el)
       }catch(e){toast(e.message)}finally{showLoader(false)}
     });
+    const packBtn=el.querySelector("#buyCardPack");if(packBtn)packBtn.onclick=async()=>{if(!confirm("Abrir um pacote surpresa com "+settings.pack_size+" cartinhas por ⭐ "+settings.pack_price+"?"))return;showLoader(true);try{const x=await callApi("buy_card_pack");toast("Pacote aberto! Você ganhou "+x.cards.length+" cartinhas 🎁✨");for(const c of x.cards){const img=await createCardImage(c);if(img){try{await callApi("save_card_image",{card_id:c.id,image:img})}catch{}}}await renderCardShop(el)}catch(e){toast(e.message)}finally{showLoader(false)}};
   }catch(e){el.innerHTML=`<div class="card"><div class="empty">${esc(e.message)}</div></div>`}
 }
 async function renderStore(){
@@ -907,10 +910,13 @@ async function renderStore(){
   el.innerHTML=`<div class="card"><div class="card-title"><h2>🛍️ Loja de Estrelas</h2><span>Carregando...</span></div></div>`;
   try{
     const r=await callApi("reward_store"),items=r.items||[];
+    const cardData=await callApi("card_store"),cs=cardData.settings||{};
     el.innerHTML=`<div class="hero" style="margin-bottom:14px"><div class="hero-top"><div><h2>🛍️ Loja de Estrelas</h2><p>Cadastre recompensas para a criança trocar pelas estrelas.</p></div><div style="font-size:32px">⭐ ${r.availablePoints||0}</div></div></div>
+    <div class="card"><div class="card-title"><h2>🃏 Cartinhas das Crianças</h2><span>${cardData.cards?.length||0} na coleção</span></div><p class="small">Acompanhe a coleção e configure quanto cada tipo custa.</p><div class="row2"><div class="field"><label>Normal ⭐</label><input id="cardPriceNormal" type="number" min="1" value="${cs.normal_price||10}"></div><div class="field"><label>Especial ⭐</label><input id="cardPriceSpecial" type="number" min="1" value="${cs.special_price||25}"></div></div><div class="row2"><div class="field"><label>Lendária ⭐</label><input id="cardPriceLegendary" type="number" min="1" value="${cs.legendary_price||50}"></div><div class="field"><label>Pacote surpresa ⭐</label><input id="cardPackPrice" type="number" min="1" value="${cs.pack_price||30}"></div></div><div class="field"><label>Quantidade de cartinhas no pacote</label><input id="cardPackSize" type="number" min="1" max="10" value="${cs.pack_size||3}"></div><button class="primary" id="saveCardPrices">Salvar preços das cartinhas</button><div class="collection-tabs"><span class="small">Normal: ${(cardData.cards||[]).filter(c=>c.rarity==="normal").length}</span><span class="small">Especial: ${(cardData.cards||[]).filter(c=>c.rarity==="special").length}</span><span class="small">Lendária: ${(cardData.cards||[]).filter(c=>c.rarity==="legendary").length}</span></div></div>
     <div class="card"><div class="card-title"><h2>➕ Nova recompensa</h2></div><div class="row2"><div class="field"><label>Ícone</label><input id="rewardEmoji" value="🎁" maxlength="8"></div><div class="field"><label>Custo em estrelas</label><input id="rewardCost" type="number" min="1" value="50"></div></div><div class="field"><label>Nome da recompensa</label><input id="rewardTitle"></div><button class="primary" id="addReward">Adicionar à loja</button></div><div id="rewardRequests"></div>
     <div class="store-grid">${items.map(x=>`<div class="store-item"><div class="reward-icon">${esc(x.emoji||"🎁")}</div><b>${esc(x.title)}</b><div class="small">⭐ ${x.cost}</div><div class="store-actions"><button class="secondary" data-edit-reward="${x.id}" data-title="${esc(x.title)}" data-cost="${x.cost}" data-emoji="${esc(x.emoji||"🎁")}">Editar</button><button class="danger" data-delete-reward="${x.id}">×</button></div></div>`).join("")}</div>`;
     try{const pr=await callApi("pending_rewards"),box=document.getElementById("rewardRequests"),reqs=pr.items||[];box.innerHTML=reqs.length?`<div class="card"><div class="card-title"><h2>⏳ Pedidos de recompensa</h2><span>${reqs.length}</span></div>${reqs.map(q=>`<div class="pending"><div class="grow"><b>${esc(q.reward_store?.title||"Recompensa")}</b><div class="small">⭐ ${q.cost}</div></div><button class="secondary" data-reward-decision="approved" data-reward-id="${q.id}">Aprovar</button><button class="danger" data-reward-decision="rejected" data-reward-id="${q.id}">×</button></div>`).join("")}</div>`:"";box.querySelectorAll("[data-reward-decision]").forEach(btn=>btn.onclick=async()=>{await callApi("decide_reward",{redemption_id:btn.dataset.rewardId,status:btn.dataset.rewardDecision});renderStore()})}catch{}
+    document.getElementById("saveCardPrices").onclick=async()=>{try{await callApi("save_card_settings",{normal_price:Number(cardPriceNormal.value),special_price:Number(cardPriceSpecial.value),legendary_price:Number(cardPriceLegendary.value),pack_price:Number(cardPackPrice.value),pack_size:Number(cardPackSize.value)});toast("Preços das cartinhas atualizados! 🃏");renderStore()}catch(e){toast(e.message)}};
     document.querySelectorAll("[data-edit-reward]").forEach(btn=>btn.onclick=async()=>{const title=prompt("Nome:",btn.dataset.title),cost=Number(prompt("Estrelas:",btn.dataset.cost));if(title&&cost){await callApi("save_reward",{id:btn.dataset.editReward,title,cost,emoji:btn.dataset.emoji});renderStore()}});
     document.querySelectorAll("[data-delete-reward]").forEach(btn=>btn.onclick=async()=>{if(confirm("Remover recompensa?")){await callApi("delete_reward",{id:btn.dataset.deleteReward});renderStore()}});
     document.getElementById("addReward").onclick=async()=>{const title=rewardTitle.value.trim(),cost=Number(rewardCost.value),emoji=rewardEmoji.value||"🎁";if(!title)return toast("Informe o nome.");await callApi("save_reward",{title,cost,emoji});renderStore()};
