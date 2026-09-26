@@ -503,13 +503,13 @@ function renderApp(){
   const progressCard=document.getElementById("openProgressCard");
   if(progressCard){progressCard.onclick=()=>{activeSection="progress";renderApp()};progressCard.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();activeSection="progress";renderApp()}}}
   document.querySelectorAll("[data-sec]").forEach(b=>b.onclick=async()=>{activeSection=b.dataset.sec;if(activeSection==="parent"&&!adminData){showLoader(true);try{adminData=await callAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}}renderApp()});
-  renderHome();renderCalendar();renderAchievements();renderMenu();renderWeeklyReport();renderProgressHistory();renderStore();renderStickerAlbum();if(role==="child")renderFriends();if(role==="parent")renderParent();bindPullToRefresh();
+  renderHome();renderCalendar();renderMenu();renderWeeklyReport();renderProgressHistory();renderStore();if(role==="child"){renderStickerAlbum();renderFriends()}else{renderAchievements();renderParent()}bindPullToRefresh();
 }
 function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3134</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3135</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
