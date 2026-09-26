@@ -107,7 +107,9 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;ba
 .date-pill{min-width:62px;border:1px solid #e7d8fb;background:#fff;border-radius:17px;padding:8px 6px;text-align:center;color:#6d5281;box-shadow:0 5px 13px rgba(83,29,129,.07)}
 .date-pill b{display:block;font-size:15px;color:#4b2167}.date-pill span{font-size:10px;font-weight:800}.date-pill.active{background:linear-gradient(145deg,#8c24ed,#6b16ce);border-color:transparent;color:#fff;transform:translateY(-2px);box-shadow:0 8px 18px rgba(111,25,205,.26)}.date-pill.active b{color:#fff}
 .calendar-detail{background:linear-gradient(135deg,#fff,#fbf2ff);border:1px solid #eadbff}
-.store-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.store-item{border:1px solid #eadbff;border-radius:20px;padding:14px;background:linear-gradient(145deg,#fff,#fbf4ff);text-align:center}.store-item .reward-icon{font-size:35px}.store-item b{display:block;color:#4c1b72;margin:6px 0 3px}
+.card-shop{background:radial-gradient(circle at 80% 0,#3a1472 0,transparent 36%),linear-gradient(145deg,#0c103b,#1a0c3d 55%,#291051);border-radius:26px;padding:16px;color:#fff;box-shadow:0 18px 45px rgba(27,8,62,.25)}
+.card-shop-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.card-shop-head h2{margin:0;font-size:25px}.star-wallet{background:#321166;border:2px solid #b851ff;border-radius:999px;padding:8px 14px;font-size:20px;font-weight:1000}
+.pack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.card-pack{border-radius:23px;padding:15px 9px;text-align:center;min-height:225px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:inset 0 0 0 2px rgba(255,255,255,.28),0 12px 26px rgba(0,0,0,.25);position:relative;overflow:hidden}.card-pack:after{content:"✨";position:absolute;right:7px;top:5px;font-size:22px}.card-pack.normal{background:linear-gradient(155deg,#006cff,#1730a9 58%,#11175e)}.card-pack.special{background:linear-gradient(155deg,#ff38cf,#8c148f 58%,#4d0a66)}.card-pack.legendary{background:linear-gradient(155deg,#ffc51c,#e96b00 55%,#67220b)}.pack-icon{font-size:54px;filter:drop-shadow(0 5px 6px rgba(0,0,0,.25))}.pack-title{font-weight:1000;font-size:15px;text-transform:uppercase}.pack-price{background:rgba(8,8,45,.55);border-radius:999px;padding:8px;font-weight:1000}.collection-tabs{display:flex;gap:7px;overflow:auto;margin:14px 0 10px}.collection-tabs button{border:0;border-radius:999px;padding:9px 13px;white-space:nowrap;font-weight:900;background:#342066;color:#ddd}.collection-tabs button.active{background:#ef42d3;color:#fff}.collect-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.collect-card{aspect-ratio:.72;border-radius:20px;padding:7px;position:relative;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,.3);display:flex;flex-direction:column;justify-content:flex-end;text-align:center}.collect-card.normal{background:linear-gradient(145deg,#008cff,#4a36ff,#f044e0)}.collect-card.special{background:linear-gradient(145deg,#ff36cf,#9e2aff,#4e1b9d)}.collect-card.legendary{background:linear-gradient(145deg,#ffe145,#ff9800,#9a3300)}.collect-card img{position:absolute;inset:6px 6px 58px;width:calc(100% - 12px);height:calc(100% - 64px);object-fit:cover;border-radius:15px;background:#31155f}.collect-info{position:relative;z-index:2;background:rgba(14,6,47,.88);border-radius:12px;padding:7px 4px}.collect-info b{display:block;font-size:12px}.rarity-chip{position:absolute;z-index:3;left:10px;top:10px;border-radius:999px;padding:4px 7px;background:rgba(12,5,45,.75);font-size:9px;font-weight:1000;text-transform:uppercase}.serial-chip{position:absolute;z-index:3;right:10px;top:10px;font-size:10px;font-weight:1000}.store-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.store-item{border:1px solid #eadbff;border-radius:20px;padding:14px;background:linear-gradient(145deg,#fff,#fbf4ff);text-align:center}.store-item .reward-icon{font-size:35px}.store-item b{display:block;color:#4c1b72;margin:6px 0 3px}
 .friend-row{display:flex;align-items:center;gap:10px;padding:11px;border-radius:17px;background:#faf5ff;margin:8px 0}.friend-avatar{width:44px;height:44px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#ffd93d,#ff77d4);font-size:24px}
 .startup-splash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:
  radial-gradient(circle at 18% 14%,#ff6ed8 0,transparent 28%),
@@ -507,7 +509,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3127</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3128</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -874,51 +876,57 @@ async function renderFriends(){
   try{const r=await callApi("friends");document.getElementById("friendList").innerHTML=(r.requests||[]).map(x=>`<div class="friend-row"><div class="friend-avatar">👋</div><div style="flex:1"><b>${esc(x.display_name)}</b><div class="small">@${esc(x.username)} quer entrar na sua turma</div></div><button class="secondary" data-accept="${x.friendship_id}">Aceitar</button></div>`).join("")+(r.friends||[]).map(x=>`<div class="friend-row"><div class="friend-avatar">⭐</div><div style="flex:1"><b>${esc(x.display_name)}</b><div class="small">@${esc(x.username)} • nível ${x.level} • 🔥 ${x.streak}</div></div><span class="role-badge">${x.monthPercent}%</span></div>`).join("")||`<div class="empty"><div class="big">👫</div>Sua turma ainda está vazia.</div>`;document.querySelectorAll("[data-accept]").forEach(b=>b.onclick=async()=>{await callApi("respond_friend",{friendship_id:b.dataset.accept,accept:true});toast("Amigo adicionado! 🎉");renderFriends()})}catch(e){document.getElementById("friendList").innerHTML=`<div class="empty">${esc(e.message)}</div>`}
   const input=document.getElementById("friendSearch");if(input)input.oninput=async()=>{const q=input.value.trim();const box=document.getElementById("friendResults");if(q.length<2){box.innerHTML="";return}try{const r=await callApi("search_friends",{query:q});box.innerHTML=(r.results||[]).map(x=>`<div class="friend-row"><div class="friend-avatar">🙂</div><div style="flex:1"><b>${esc(x.display_name)}</b><div class="small">@${esc(x.username)}</div></div><button class="primary" style="width:auto;padding:9px 12px" data-add="${x.id}">Adicionar</button></div>`).join("")||`<div class="small" style="padding:8px">Nenhum usuário encontrado.</div>`;box.querySelectorAll("[data-add]").forEach(b=>b.onclick=async()=>{await callApi("add_friend",{account_id:b.dataset.add});toast("Convite enviado! 💜");box.innerHTML=""})}catch(e){box.innerHTML=`<div class="small">${esc(e.message)}</div>`}};
 }
+let cardFilter="all";
+async function createCardImage(card){
+  try{
+    const photo=data.profileAvatar||getLocalAvatar("child");if(!photo)return null;
+    const r=await fetch("/api/generate-avatar",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({photo,name:data.childDisplayName||data.family.child_name||"Criança",mode:"card"})});
+    const j=await r.json().catch(()=>({}));return r.ok&&j.avatar?await compressAvatarDataUrl(j.avatar,420):null
+  }catch{return null}
+}
+async function renderCardShop(el){
+  el.innerHTML='<div class="card"><div class="empty">✨ Abrindo sua coleção…</div></div>';
+  try{
+    const r=await callApi("card_store"),cards=r.cards||[],filtered=cardFilter==="all"?cards:cards.filter(c=>c.rarity===cardFilter);
+    const avatar=r.avatar||getLocalAvatar("child");
+    const counts={normal:cards.filter(c=>c.rarity==="normal").length,special:cards.filter(c=>c.rarity==="special").length,legendary:cards.filter(c=>c.rarity==="legendary").length};
+    el.innerHTML=`<div class="card-shop"><div class="card-shop-head"><div><h2>🃏 Loja de Cartinhas</h2><div class="small" style="color:#d9c8ff">Colecione cartinhas personalizadas com seu avatar!</div></div><div class="star-wallet">⭐ ${r.availablePoints||0}</div></div>
+      <div class="pack-grid">
+        <button class="card-pack normal" data-buy-card="normal"><div class="pack-icon">🎴</div><div><div class="pack-title">Cartinha Normal</div><div class="small" style="color:#d7e8ff">Comum • personalizada</div></div><div class="pack-price">⭐ 10</div></button>
+        <button class="card-pack special" data-buy-card="special"><div class="pack-icon">💖</div><div><div class="pack-title">Cartinha Especial</div><div class="small" style="color:#ffe0fa">Rara • efeitos especiais</div></div><div class="pack-price">⭐ 25</div></button>
+        <button class="card-pack legendary" data-buy-card="legendary"><div class="pack-icon">👑</div><div><div class="pack-title">Cartinha Lendária</div><div class="small" style="color:#fff0bf">Muito rara • visual dourado</div></div><div class="pack-price">⭐ 50</div></button>
+      </div>
+      <div class="collection-tabs"><button data-card-filter="all" class="${cardFilter==="all"?"active":""}">Todas (${cards.length})</button><button data-card-filter="normal" class="${cardFilter==="normal"?"active":""}">Normal (${counts.normal})</button><button data-card-filter="special" class="${cardFilter==="special"?"active":""}">Especial (${counts.special})</button><button data-card-filter="legendary" class="${cardFilter==="legendary"?"active":""}">Lendária (${counts.legendary})</button></div>
+      <h2 style="margin:8px 0 12px">Minhas Cartinhas</h2>
+      <div class="collect-grid">${filtered.map(c=>`<div class="collect-card ${c.rarity}"><span class="rarity-chip">${c.rarity==="legendary"?"Lendária":c.rarity==="special"?"Especial":"Normal"}</span><span class="serial-chip">#${String(c.serial_no).padStart(2,"0")}</span>${c.image_key?'<img src="'+c.image_key+'" alt="">':avatar?'<img src="'+avatar+'" alt="">':'<div style="font-size:60px;margin:auto">⭐</div>'}<div class="collect-info"><b>${esc(c.theme||"⭐")} ${esc(c.title)}</b><span style="font-size:12px">${c.rarity==="legendary"?"⭐⭐⭐⭐":c.rarity==="special"?"⭐⭐⭐":"⭐"}</span></div></div>`).join("")||'<div class="empty" style="grid-column:1/-1;color:#d9c8ff">Sua coleção ainda está vazia. Compre sua primeira cartinha! ✨</div>'}</div>
+    </div>`;
+    el.querySelectorAll("[data-card-filter]").forEach(b=>b.onclick=()=>{cardFilter=b.dataset.cardFilter;renderCardShop(el)});
+    el.querySelectorAll("[data-buy-card]").forEach(b=>b.onclick=async()=>{
+      const rarity=b.dataset.buyCard,price={normal:10,special:25,legendary:50}[rarity];
+      if(!confirm("Comprar uma cartinha "+(rarity==="legendary"?"lendária":rarity==="special"?"especial":"normal")+" por ⭐ "+price+"?"))return;
+      showLoader(true);try{
+        const x=await callApi("buy_card",{rarity});toast("Cartinha "+x.card.title+" desbloqueada! 🎉");
+        const img=await createCardImage(x.card);
+        if(img){try{await callApi("save_card_image",{card_id:x.card.id,image:img})}catch{}}
+        await renderCardShop(el)
+      }catch(e){toast(e.message)}finally{showLoader(false)}
+    });
+  }catch(e){el.innerHTML=`<div class="card"><div class="empty">${esc(e.message)}</div></div>`}
+}
 async function renderStore(){
   const el=document.getElementById("sec-store");if(!el)return;
-  const isParent=data?.role==="parent";
+  if(data?.role==="child"){return renderCardShop(el)}
+  const isParent=true;
   el.innerHTML=`<div class="card"><div class="card-title"><h2>🛍️ Loja de Estrelas</h2><span>Carregando...</span></div></div>`;
   try{
-    const r=await callApi("reward_store");
-    const items=r.items||[];
-    el.innerHTML=`
-      <div class="hero" style="margin-bottom:14px"><div class="hero-top"><div><h2>🛍️ Loja de Estrelas</h2><p>${isParent?"Cadastre recompensas para a criança trocar pelas estrelas.":"Troque suas estrelas por recompensas!"}</p></div><div style="font-size:32px">⭐ ${r.availablePoints||0}</div></div></div>
-      ${isParent?`<div class="card"><div class="card-title"><h2>➕ Nova recompensa</h2></div>
-        <div class="row2"><div class="field"><label>Ícone</label><input id="rewardEmoji" value="🎁" maxlength="8"></div><div class="field"><label>Custo em estrelas</label><input id="rewardCost" type="number" min="1" value="50"></div></div>
-        <div class="field"><label>Nome da recompensa</label><input id="rewardTitle" placeholder="Ex.: Escolher o filme da noite"></div>
-        <button class="primary" id="addReward">Adicionar à loja</button></div>`:""}
-      ${isParent?'<div id="rewardRequests"></div>':""}
-      <div class="store-grid">${items.map(x=>`<div class="store-item"><div class="reward-icon">${esc(x.emoji||"🎁")}</div><b>${esc(x.title)}</b><div class="small">⭐ ${x.cost}</div>${isParent?`<div class="small" style="margin-top:8px">Disponível na loja</div><div class="store-actions"><button class="secondary" data-edit-reward="${x.id}" data-title="${esc(x.title)}" data-cost="${x.cost}" data-emoji="${esc(x.emoji||"🎁")}">Editar</button><button class="danger" data-delete-reward="${x.id}">×</button></div>`:`<button class="primary" style="margin-top:10px;padding:10px" data-redeem="${x.id}">Resgatar</button>`}</div>`).join("")||`<div class="card" style="grid-column:1/-1"><div class="empty"><div class="big">🎁</div>${isParent?"Cadastre a primeira recompensa acima.":"Nenhuma recompensa cadastrada ainda."}</div></div>`}</div>`;
-    if(isParent){
-      try{
-        const pr=await callApi("pending_rewards");
-        const box=document.getElementById("rewardRequests");
-        if(box){
-          const reqs=pr.items||[];
-          box.innerHTML=reqs.length?`<div class="card"><div class="card-title"><h2>⏳ Pedidos de recompensa</h2><span>${reqs.length}</span></div>${reqs.map(q=>`<div class="pending"><div style="font-size:28px">${esc(q.reward_store?.emoji||"🎁")}</div><div class="grow"><b>${esc(q.reward_store?.title||"Recompensa")}</b><div class="small">⭐ ${q.cost} • aguardando decisão</div></div><button class="secondary" data-reward-decision="approved" data-reward-id="${q.id}">Aprovar</button><button class="danger" data-reward-decision="rejected" data-reward-id="${q.id}">×</button></div>`).join("")}</div>`:"";
-          box.querySelectorAll("[data-reward-decision]").forEach(btn=>btn.onclick=async()=>{showLoader(true);try{await callApi("decide_reward",{redemption_id:btn.dataset.rewardId,status:btn.dataset.rewardDecision});toast(btn.dataset.rewardDecision==="approved"?"Recompensa aprovada 🎁":"Pedido recusado.");renderStore()}catch(e){toast(e.message)}finally{showLoader(false)}});
-        }
-      }catch{}
-      document.querySelectorAll("[data-edit-reward]").forEach(btn=>btn.onclick=async()=>{const title=prompt("Nome da recompensa:",btn.dataset.title);if(title===null)return;const cost=Number(prompt("Custo em estrelas:",btn.dataset.cost));if(!title.trim()||!cost)return;showLoader(true);try{await callApi("save_reward",{id:btn.dataset.editReward,title:title.trim(),cost,emoji:btn.dataset.emoji});toast("Recompensa atualizada ✅");renderStore()}catch(e){toast(e.message)}finally{showLoader(false)}});
-      document.querySelectorAll("[data-delete-reward]").forEach(btn=>btn.onclick=async()=>{if(!confirm("Remover esta recompensa da loja?"))return;showLoader(true);try{await callApi("delete_reward",{id:btn.dataset.deleteReward});toast("Recompensa removida.");renderStore()}catch(e){toast(e.message)}finally{showLoader(false)}});
-      const add=document.getElementById("addReward");
-      if(add)add.onclick=async()=>{
-        const title=document.getElementById("rewardTitle").value.trim();
-        const cost=Number(document.getElementById("rewardCost").value);
-        const emoji=document.getElementById("rewardEmoji").value||"🎁";
-        if(!title){toast("Informe o nome da recompensa.");return}
-        showLoader(true);
-        try{await callApi("save_reward",{title,cost,emoji});toast("Recompensa adicionada 🎁");renderStore()}
-        catch(e){toast(e.message)}
-        finally{showLoader(false)}
-      };
-    }else{
-      el.querySelectorAll("[data-redeem]").forEach(b=>b.onclick=async()=>{
-        if(!confirm("Solicitar esta recompensa?"))return;
-        try{await callApi("redeem_reward",{reward_id:b.dataset.redeem});toast("Pedido enviado! 🎁");renderStore()}
-        catch(e){toast(e.message)}
-      });
-    }
+    const r=await callApi("reward_store"),items=r.items||[];
+    el.innerHTML=`<div class="hero" style="margin-bottom:14px"><div class="hero-top"><div><h2>🛍️ Loja de Estrelas</h2><p>Cadastre recompensas para a criança trocar pelas estrelas.</p></div><div style="font-size:32px">⭐ ${r.availablePoints||0}</div></div></div>
+    <div class="card"><div class="card-title"><h2>➕ Nova recompensa</h2></div><div class="row2"><div class="field"><label>Ícone</label><input id="rewardEmoji" value="🎁" maxlength="8"></div><div class="field"><label>Custo em estrelas</label><input id="rewardCost" type="number" min="1" value="50"></div></div><div class="field"><label>Nome da recompensa</label><input id="rewardTitle"></div><button class="primary" id="addReward">Adicionar à loja</button></div><div id="rewardRequests"></div>
+    <div class="store-grid">${items.map(x=>`<div class="store-item"><div class="reward-icon">${esc(x.emoji||"🎁")}</div><b>${esc(x.title)}</b><div class="small">⭐ ${x.cost}</div><div class="store-actions"><button class="secondary" data-edit-reward="${x.id}" data-title="${esc(x.title)}" data-cost="${x.cost}" data-emoji="${esc(x.emoji||"🎁")}">Editar</button><button class="danger" data-delete-reward="${x.id}">×</button></div></div>`).join("")}</div>`;
+    try{const pr=await callApi("pending_rewards"),box=document.getElementById("rewardRequests"),reqs=pr.items||[];box.innerHTML=reqs.length?`<div class="card"><div class="card-title"><h2>⏳ Pedidos de recompensa</h2><span>${reqs.length}</span></div>${reqs.map(q=>`<div class="pending"><div class="grow"><b>${esc(q.reward_store?.title||"Recompensa")}</b><div class="small">⭐ ${q.cost}</div></div><button class="secondary" data-reward-decision="approved" data-reward-id="${q.id}">Aprovar</button><button class="danger" data-reward-decision="rejected" data-reward-id="${q.id}">×</button></div>`).join("")}</div>`:"";box.querySelectorAll("[data-reward-decision]").forEach(btn=>btn.onclick=async()=>{await callApi("decide_reward",{redemption_id:btn.dataset.rewardId,status:btn.dataset.rewardDecision});renderStore()})}catch{}
+    document.querySelectorAll("[data-edit-reward]").forEach(btn=>btn.onclick=async()=>{const title=prompt("Nome:",btn.dataset.title),cost=Number(prompt("Estrelas:",btn.dataset.cost));if(title&&cost){await callApi("save_reward",{id:btn.dataset.editReward,title,cost,emoji:btn.dataset.emoji});renderStore()}});
+    document.querySelectorAll("[data-delete-reward]").forEach(btn=>btn.onclick=async()=>{if(confirm("Remover recompensa?")){await callApi("delete_reward",{id:btn.dataset.deleteReward});renderStore()}});
+    document.getElementById("addReward").onclick=async()=>{const title=rewardTitle.value.trim(),cost=Number(rewardCost.value),emoji=rewardEmoji.value||"🎁";if(!title)return toast("Informe o nome.");await callApi("save_reward",{title,cost,emoji});renderStore()};
   }catch(e){el.innerHTML=`<div class="card"><div class="empty">${esc(e.message)}</div></div>`}
 }
 function renderParent(){
