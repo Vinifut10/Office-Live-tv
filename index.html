@@ -496,7 +496,7 @@ function renderApp(){
   <nav class="nav ${role==="child"?"child":""}">
     <button data-sec="home" class="${activeSection==="home"?"active":""}"><b>🏠</b>Hoje</button>
     <button data-sec="calendar" class="${activeSection==="calendar"?"active":""}"><b>📅</b>Calendário</button>
-    ${childNav?`<button data-sec="friends" class="${activeSection==="friends"?"active":""}"><b>👫</b>Minha Turma</button><button data-sec="store" class="${activeSection==="store"?"active":""}"><b>🃏</b>Cartinhas</button>`:`<button data-sec="achievements" class="${activeSection==="achievements"?"active":""}"><b>🏆</b>Conquistas</button><button data-sec="store" class="${activeSection==="store"?"active":""}"><b>🛍️</b>Loja</button>`}
+    ${childNav?`<button data-sec="album" class="${activeSection==="album"?"active":""}"><b>📒</b>Álbum</button><button data-sec="friends" class="${activeSection==="friends"?"active":""}"><b>👫</b>Turma</button>`:`<button data-sec="achievements" class="${activeSection==="achievements"?"active":""}"><b>🏆</b>Conquistas</button><button data-sec="store" class="${activeSection==="store"?"active":""}"><b>🛍️</b>Loja</button>`}
     <button data-sec="menu" class="${activeSection==="menu"?"active":""}"><b>☰</b>Menu</button>
   </nav>`;
   document.getElementById("profileMenuBtn").onclick=()=>{activeSection="menu";renderApp()};
@@ -509,7 +509,7 @@ function renderMenu(){
   const el=document.getElementById("sec-menu");
   const role=data.role, f=data.family;
   el.innerHTML=`<div class="card">
-    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3133</span></div>
+    <div class="card-title"><h2>⚙️ Menu</h2><span>Versão 1.12.3134</span></div>
     <div style="text-align:center;padding:6px 0 14px">
       <div class="avatar profile-photo" id="menuAvatar" style="margin:0 auto 10px;width:82px;height:82px">${profileAvatarHtml(role,role==="parent"?"🧑":'<span style="font-size:38px">⭐</span>')}</div>
       <h2 style="margin-bottom:5px">${role==="parent"?esc(f.parent_name||f.display_name):esc(f.child_name||"Jogador(a)")}</h2>
@@ -524,7 +524,7 @@ function renderMenu(){
     ${role==="parent"?'<button class="secondary" id="enableParentPush" style="width:100%;margin-bottom:10px">🔔 '+(localStorage.getItem("md_push_enabled")==="1"?"Notificações de aprovação ativas":"Ativar notificações de aprovação")+'</button>':""}
     ${role==="parent"&&data.platformAdmin?'<button class="primary" id="openPlatformAdmin" style="width:100%;margin-bottom:10px">🏢 Painel de famílias</button>':""}
     <button class="secondary" id="menuHome" style="width:100%;margin-bottom:10px">🏠 Voltar para o início</button>
-    <button class="primary" id="menuStore" style="width:100%;margin-bottom:10px">${role==="child"?"🃏 Loja de Cartinhas":"🛍️ Loja de Estrelas"}</button>
+    <button class="primary" id="menuStore" style="width:100%;margin-bottom:10px">${role==="child"?"📒 Álbum":"🛍️ Loja de Estrelas"}</button>
     <button class="secondary" id="menuReport" style="width:100%;margin-bottom:10px">📊 Relatório semanal</button>
     <button class="secondary" id="menuNotifications" style="width:100%;margin-bottom:10px">🔔 Ativar notificações</button>
     ${role==="child"?'<button class="secondary" id="menuAchievements" style="width:100%;margin-bottom:10px">🏆 Minhas conquistas</button>':""}
@@ -540,11 +540,11 @@ function renderMenu(){
   if(photoInput)photoInput.onchange=async()=>{const file=photoInput.files&&photoInput.files[0];if(!file)return;try{await openAvatarCropper(file,role)}catch(e){toast(e.message||"Não foi possível usar a foto.")}finally{photoInput.value=""}};
   if(removePhoto)removePhoto.onclick=async()=>{if(!(data?.profileAvatar||getLocalAvatar(role))){toast("Nenhuma foto personalizada.");return}if(!confirm("Remover a foto de perfil?"))return;showLoader(true);try{saveLocalAvatar(role,"");data=await callApi("update_avatar",{avatar:""});toast("Foto removida em todos os aparelhos.");renderApp()}catch(e){toast(e.message)}finally{showLoader(false)}};
   document.getElementById("menuHome").onclick=()=>{activeSection="home";renderApp()};
-  const ms=document.getElementById("menuStore");if(ms)ms.onclick=()=>{activeSection="store";renderApp()};
+  const ms=document.getElementById("menuStore");if(ms)ms.onclick=()=>{activeSection="album";renderApp()};
   const mr=document.getElementById("menuReport");if(mr)mr.onclick=()=>{activeSection="report";renderApp()};
   const mn=document.getElementById("menuNotifications");if(mn)mn.onclick=async()=>{if(!("Notification" in window)){toast("Notificações não são suportadas neste navegador.");return}try{const p=await Notification.requestPermission();toast(p==="granted"?"Notificações ativadas 🔔":"Permissão de notificações não concedida.")}catch{toast("Não foi possível ativar notificações.")}};
   const ma=document.getElementById("menuAchievements");if(ma)ma.onclick=()=>{activeSection="achievements";renderApp()};
-  const pab=document.getElementById("parentAlbumBtn");if(pab)pab.onclick=()=>{activeSection="store";renderApp();setTimeout(()=>document.getElementById("saveStickerSettings")?.scrollIntoView({behavior:"smooth",block:"center"}),100)};
+  const pab=document.getElementById("parentAlbumBtn");if(pab)pab.onclick=()=>{activeSection="album";renderApp();setTimeout(()=>document.getElementById("saveStickerSettings")?.scrollIntoView({behavior:"smooth",block:"center"}),100)};
   const pa=document.getElementById("openPlatformAdmin");if(pa)pa.onclick=async()=>{showLoader(true);try{platformData=await callPlatform("list");renderPlatformAdmin()}catch(e){toast(e.message)}finally{showLoader(false)}};
   const pushBtn=document.getElementById("enableParentPush");if(pushBtn)pushBtn.onclick=enableParentPush;
   const ps=document.getElementById("openParentSettings");if(ps)ps.onclick=async()=>{
@@ -846,7 +846,7 @@ function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight){
   for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,yy);line=word;yy+=lineHeight}else line=test}
   if(line)ctx.fillText(line,x,yy);return yy;
 }
-function renderAchievements(){
+async function renderAchievements(){
   const list=achievementData(),unlocked=list.filter(a=>a[3]).length,character=data.profileCharacter==="ryan"?"ryan":"duda";
   const labels=["PRIMEIRA CONQUISTA","ESTUDIOSA","TECNOLOGIA","ATIVIDADE FÍSICA","LEITURA","MÚSICA","CRIATIVA","AMIGA INCRÍVEL","CUIDOU DE VOCÊ","META CONCLUÍDA","SUPER MISSÕES","MÊS EM ALTA"];
   const icons=["⭐","📚","📱","👟","📖","🎧","🎨","💗","💜","🏆","👑","🌈"];
@@ -854,9 +854,10 @@ function renderAchievements(){
   document.getElementById("sec-achievements").innerHTML=`
     <div class="card"><div class="card-title"><h2>🏆 Conquistas</h2><span>${unlocked}/${list.length} desbloqueadas</span></div><p class="small">Cada conquista vira uma cartinha personalizada com o avatar da criança.</p></div>
     <div class="achievement-collection"><div class="collectible-grid">${list.map((a,i)=>`<div class="achievement-trading ${a[3]?"":"locked"}"><div class="ach-top"><span class="ach-icon">${icons[i]||a[0]}</span><span class="ach-title">${labels[i]||a[1]}</span><span class="ach-no">#${String(i+1).padStart(2,"0")}</span></div><div class="ach-scene">${a[3]?avatarPoseHtml(character,a[5]):'<div class="locked-pose">🔒</div>'}</div><div class="ach-bottom"><div class="ach-stars">${"⭐".repeat(Math.min(4,1+Math.floor(i/3)))}</div><div class="ach-message">${a[3]?msgs[i]:"Continue jogando para desbloquear"}</div></div>${a[3]?'<button class="ach-share" data-share-card="'+i+'" title="Compartilhar">↗</button>':""}</div>`).join("")}</div></div>
-    <div class="card"><button class="primary" id="openCardShopFromAchievements">🃏 Abrir Loja de Cartinhas</button><div class="small" style="text-align:center;margin-top:8px">Compre cartinhas Normal, Especial e Lendária usando suas estrelas.</div></div>`;
+    <div class="card"><button class="primary" id="openCardShopFromAchievements">📒 Ver meu Álbum</button><div class="small" style="text-align:center;margin-top:8px">Cartinhas e figurinhas agora são a mesma coleção. As conquistas podem entregar peças exclusivas do álbum.</div></div>`;
   document.querySelectorAll("[data-share-card]").forEach(b=>b.onclick=()=>shareAchievementCard(Number(b.dataset.shareCard)));
-  document.getElementById("openCardShopFromAchievements").onclick=()=>{activeSection="store";renderApp()};
+  if(data.role==="child"){for(let i=0;i<Math.min(8,list.length);i++){if(list[i][3]){try{await callApi("claim_achievement_sticker",{achievement_index:i})}catch{}}}}
+  document.getElementById("openCardShopFromAchievements").onclick=()=>{activeSection="album";renderApp()};
   if(!avatarSpriteDataUrl)ensureAvatarSprite().then(src=>{if(src&&activeSection==="achievements")renderAchievements()});
 }
 async function renderFriends(){
@@ -879,7 +880,7 @@ async function renderCardShop(el){
     const r=await callApi("card_store"),catalog=r.catalog||[],settings=r.settings||{normal_price:10,special_price:25,legendary_price:50,pack_price:30,pack_size:3},cards=r.cards||[],filtered=cardFilter==="all"?cards:cards.filter(c=>c.rarity===cardFilter);
     const avatar=r.avatar||getLocalAvatar("child");
     const counts={normal:cards.filter(c=>c.rarity==="normal").length,special:cards.filter(c=>c.rarity==="special").length,legendary:cards.filter(c=>c.rarity==="legendary").length};
-    el.innerHTML=`<div class="card-shop"><div class="card-shop-head"><div><h2>🃏 Loja de Cartinhas</h2><div class="small" style="color:#d9c8ff">Colecione cartinhas personalizadas com seu avatar!</div></div><div class="star-wallet">⭐ ${r.availablePoints||0}</div></div>
+    el.innerHTML=`<div class="card-shop"><div class="card-shop-head"><div><h2>📒 Álbum</h2><div class="small" style="color:#d9c8ff">Colecione cartinhas personalizadas com seu avatar!</div></div><div class="star-wallet">⭐ ${r.availablePoints||0}</div></div>
       <div class="pack-grid">
         <button class="card-pack normal" data-buy-card="normal"><div class="pack-icon">🎴</div><div><div class="pack-title">Cartinha Normal</div><div class="small" style="color:#d7e8ff">Comum • personalizada</div></div><div class="pack-price">⭐ ${settings.normal_price}</div></button>
         <button class="card-pack special" data-buy-card="special"><div class="pack-icon">💖</div><div><div class="pack-title">Cartinha Especial</div><div class="small" style="color:#ffe0fa">Rara • efeitos especiais</div></div><div class="pack-price">⭐ ${settings.special_price}</div></button>
@@ -905,15 +906,23 @@ async function renderCardShop(el){
     const packBtn=el.querySelector("#buyCardPack");if(packBtn)packBtn.onclick=async()=>{if(!confirm("Abrir um pacote surpresa com "+settings.pack_size+" cartinhas por ⭐ "+settings.pack_price+"?"))return;showLoader(true);try{const x=await callApi("buy_card_pack");toast("Pacote aberto! Você ganhou "+x.cards.length+" cartinhas 🎁✨");for(const c of x.cards){const img=await createCardImage(c);if(img){try{await callApi("save_card_image",{card_id:c.id,image:img})}catch{}}}await renderCardShop(el)}catch(e){toast(e.message)}finally{showLoader(false)}};
   }catch(e){el.innerHTML=`<div class="card"><div class="empty">${esc(e.message)}</div></div>`}
 }
+let albumTab="album";
 async function renderStickerAlbum(){
   const el=document.getElementById("sec-album");if(!el)return;if(data?.role!=="child"){el.innerHTML="";return}
   el.innerHTML='<div class="card"><div class="empty">📒 Abrindo seu álbum…</div></div>';
-  try{const r=await callApi("sticker_album"),all=r.catalog||[],owned=all.filter(x=>x.quantity>0),duplicates=all.filter(x=>x.quantity>1),pct=Math.round(owned.length/Math.max(1,all.length)*100);
-    el.innerHTML=`<div class="sticker-album"><div class="card-title"><div><h2>📒 ${esc(r.album.title)}</h2><div class="small" style="color:#f0dcff">${esc(r.album.season||"Coleção 1")}</div></div><b>${owned.length}/${all.length}</b></div><div class="album-progress"><i style="width:${pct}%"></i></div><div class="small" style="color:#fff;margin-top:6px">${pct}% completo • 🔄 ${duplicates.length} tipos repetidos</div><button class="primary" id="buyStickerPack" style="margin-top:14px;background:linear-gradient(135deg,#ffbf21,#ff7c36)">🎁 Abrir pacotinho • ${r.settings.pack_size} figurinhas • ⭐ ${r.settings.pack_price}</button><div id="packReveal"></div><div class="sticker-grid">${all.map(x=>`<div class="sticker-slot ${x.quantity?"owned "+x.rarity:""}"><span class="sticker-no">#${String(x.sticker_no).padStart(2,"0")}</span><div class="sticker-icon">${x.quantity?x.icon:"❔"}</div><b style="font-size:10px">${x.quantity?esc(x.title):"Faltando"}</b>${x.quantity>1?'<span class="sticker-qty">x'+x.quantity+'</span>':""}</div>`).join("")}</div></div>
-      <div class="card"><div class="card-title"><h2>🔄 Repetidas e Trocas</h2><span>${duplicates.length}</span></div>${duplicates.length?duplicates.map(x=>'<div class="friend-row"><div class="friend-avatar">'+x.icon+'</div><div style="flex:1"><b>'+esc(x.title)+'</b><div class="small">Você tem x'+x.quantity+' • '+(x.quantity-1)+' disponível(is) para troca</div></div></div>').join(""):'<div class="empty">Quando vier uma figurinha repetida, ela aparecerá aqui para trocar com sua turma. 👭</div>'}<div class="small">As propostas de troca usam apenas cópias repetidas e precisam ser aceitas pela outra criança.</div></div>`;
-    document.getElementById("buyStickerPack").onclick=async()=>{if(!confirm("Comprar e abrir este pacotinho?"))return;showLoader(true);try{const x=await callApi("buy_sticker_pack"),box=document.getElementById("packReveal");box.innerHTML='<h3 style="margin:14px 0 4px">✨ Você tirou:</h3><div class="pack-reveal">'+x.stickers.map(s=>'<div class="reveal-sticker"><div style="font-size:34px">'+s.icon+'</div><b>'+esc(s.title)+'</b><div class="small">'+(s.rarity==="legendary"?"👑 Lendária":s.rarity==="special"?"💖 Especial":"⭐ Normal")+'</div></div>').join("")+'</div>';toast("Pacotinho aberto! 🎉");setTimeout(()=>renderStickerAlbum(),4500)}catch(e){toast(e.message)}finally{showLoader(false)}};
+  try{const r=await callApi("sticker_album"),all=r.catalog||[],owned=all.filter(x=>x.quantity>0),duplicates=all.filter(x=>x.quantity>1),pct=Math.round(owned.length/Math.max(1,all.length)*100),packItems=all.filter(x=>x.acquisition_mode==="pack"),achItems=all.filter(x=>x.acquisition_mode==="achievement");
+    const tabs='<div class="collection-tabs"><button data-album-tab="album" class="'+(albumTab==="album"?"active":"")+'">📖 Meu Álbum</button><button data-album-tab="packs" class="'+(albumTab==="packs"?"active":"")+'">🎁 Pacotinhos</button><button data-album-tab="trades" class="'+(albumTab==="trades"?"active":"")+'">🔄 Trocas</button></div>';
+    const grid='<div class="sticker-grid">'+all.map(x=>'<div class="sticker-slot '+(x.quantity?'owned '+x.rarity:'')+'"><span class="sticker-no">#'+String(x.sticker_no).padStart(2,"0")+'</span><div class="sticker-icon">'+(x.quantity?x.icon:(x.acquisition_mode==="achievement"?"🏆":"❔"))+'</div><b style="font-size:10px">'+(x.quantity?esc(x.title):(x.acquisition_mode==="achievement"?"Conquista":"Faltando"))+'</b>'+(x.quantity>1?'<span class="sticker-qty">x'+x.quantity+'</span>':'')+'</div>').join("")+'</div>';
+    let body="";
+    if(albumTab==="album")body='<div class="card-title" style="margin-top:12px"><h2>📖 Minha Coleção</h2><span>'+owned.length+'/'+all.length+'</span></div><div class="small">🎁 '+packItems.length+' peças podem vir nos pacotinhos • 🏆 '+achItems.length+' são exclusivas de conquistas</div>'+grid;
+    if(albumTab==="packs")body='<div class="card" style="background:rgba(255,255,255,.13);color:#fff"><div style="text-align:center;font-size:70px">🎁</div><h2 style="text-align:center">Pacotinho Coleção 1</h2><div class="small" style="text-align:center;color:#f5eaff">'+r.settings.pack_size+' peças aleatórias • repetidas podem aparecer</div><button class="primary" id="buyStickerPack" style="margin-top:14px;background:linear-gradient(135deg,#ffbf21,#ff7c36);width:100%">ABRIR PACOTINHO • ⭐ '+r.settings.pack_price+'</button><div id="packReveal"></div></div>';
+    if(albumTab==="trades")body='<div class="card" style="color:#4b2167"><div class="card-title"><h2>🔄 Minhas Repetidas</h2><span>'+duplicates.reduce((n,x)=>n+x.quantity-1,0)+'</span></div>'+(duplicates.length?duplicates.map(x=>'<div class="friend-row"><div class="friend-avatar">'+x.icon+'</div><div style="flex:1"><b>#'+String(x.sticker_no).padStart(2,"0")+' '+esc(x.title)+'</b><div class="small">x'+x.quantity+' • '+(x.quantity-1)+' disponível(is) para troca</div></div></div>').join(""):'<div class="empty">Você ainda não tem repetidas para trocar.</div>')+'<div class="small">A primeira cópia fica protegida no seu álbum. Somente as repetidas podem ser trocadas com a Minha Turma.</div></div>';
+    el.innerHTML='<div class="sticker-album"><div class="card-title"><div><h2>✨ ÁLBUM MISSÕES DIVERTIDAS</h2><div class="small" style="color:#f0dcff">'+esc(r.album.season||"Coleção 1")+'</div></div><b>'+owned.length+'/'+all.length+'</b></div><div class="album-progress"><i style="width:'+pct+'%"></i></div><div class="small" style="color:#fff;margin-top:6px">'+pct+'% completo • 🔄 '+duplicates.reduce((n,x)=>n+x.quantity-1,0)+' repetidas</div>'+tabs+body+'</div>';
+    el.querySelectorAll("[data-album-tab]").forEach(b=>b.onclick=()=>{albumTab=b.dataset.albumTab;renderStickerAlbum()});
+    const buy=document.getElementById("buyStickerPack");if(buy)buy.onclick=async()=>{if(!confirm("Comprar e abrir este pacotinho?"))return;showLoader(true);try{const x=await callApi("buy_sticker_pack"),box=document.getElementById("packReveal");box.innerHTML='<h3 style="margin:14px 0 4px">✨ Você tirou:</h3><div class="pack-reveal">'+x.stickers.map(s=>'<div class="reveal-sticker"><div style="font-size:34px">'+s.icon+'</div><b>'+esc(s.title)+'</b><div class="small">'+(s.rarity==="legendary"?"👑 Lendária":s.rarity==="special"?"💖 Especial":"⭐ Normal")+'</div></div>').join("")+'</div>';toast("Pacotinho aberto! 🎉");setTimeout(()=>{albumTab="album";renderStickerAlbum()},4500)}catch(e){toast(e.message)}finally{showLoader(false)}};
   }catch(e){el.innerHTML='<div class="card"><div class="empty">'+esc(e.message)+'</div></div>'}
 }
+
 async function renderStore(){
   const el=document.getElementById("sec-store");if(!el)return;
   if(data?.role==="child"){return renderCardShop(el)}
