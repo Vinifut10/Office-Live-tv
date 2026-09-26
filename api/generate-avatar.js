@@ -12,7 +12,7 @@ export default async function handler(req,res){
     const token=process.env.CLOUDFLARE_AI_TOKEN;
     const account=process.env.CLOUDFLARE_ACCOUNT_ID;
     if(!token||!account)throw new Error("Cloudflare Workers AI não configurado.");
-    const {photo,name,mode}=req.body||{};
+    const {photo,name,mode,rarity,title,theme,catalog_no}=req.body||{};
     if(typeof photo!=="string"||!photo.startsWith("data:image/")||photo.length>600000)return res.status(400).json({error:"Escolha uma foto válida e enquadre o rosto."});
     const parsed=parseDataUrl(photo);if(!parsed)return res.status(400).json({error:"Formato de foto inválido."});
     const child=String(name||"criança").slice(0,40);
@@ -22,7 +22,7 @@ export default async function handler(req,res){
     const expressions=mode==="expressions",stickers=mode==="stickers",outfits=mode==="outfits";
     const style="3D cartoon premium semi-realista, acabamento polido de animação cinematográfica, olhos grandes expressivos porém naturais, cabelo muito detalhado com reflexos roxos sutis, iluminação neon roxa e rosa suave, visual moderno infantil/juvenil, roupa urbana preta e roxa sem marcas, tênis branco e roxo, proporções de personagem de corpo inteiro, alta consistência facial";
     const prompt=card
-      ? `Crie UMA CARTINHA COLECIONÁVEL vertical premium usando a MESMA criança da imagem de referência como personagem central, preservando rosto, cabelo e identidade visual. Estilo obrigatório: ${style}. A cartinha deve ter moldura glossy neon, fundo temático divertido, pose expressiva, espaço visual limpo no topo e rodapé para o aplicativo sobrepor título e raridade. NÃO escreva palavras, números, marcas ou logotipos dentro da imagem. Aparência de card game infantil de alta qualidade.`
+      ? `Crie SOMENTE A ILUSTRAÇÃO CENTRAL de uma cartinha colecionável do aplicativo Missões Divertidas, usando a MESMA criança da referência e preservando rosto, cabelo e identidade visual. Tema da cartinha: ${String(title||theme||"Conquista").slice(0,60)}. Número da coleção: #${String(catalog_no||"").padStart(2,"0")}. Raridade: ${rarity==="legendary"?"LENDÁRIA, iluminação dourada premium":rarity==="special"?"ESPECIAL, iluminação rosa/magenta brilhante":"NORMAL, iluminação azul/roxa neon"}. Estilo obrigatório: ${style}. A pose, acessórios e cenário devem representar claramente o tema, com composição vertical, personagem em destaque e fundo rico e divertido. NÃO crie moldura, NÃO escreva palavras, números, estrelas, marcas ou logotipos: o aplicativo aplicará por cima o template visual oficial aprovado.`
       : gallery
       ? `Crie uma FOLHA DE PERSONAGEM quadrada com a MESMA criança da imagem de referência, mantendo identidade facial, cabelo, olhos e aparência reconhecível em todos os quadros. Estilo obrigatório: ${style}. Organize uma grade limpa 3x3, SEM TEXTO: 1 frente corpo inteiro, 2 perfil/lado, 3 costas/3-4, 4 apontando, 5 joinha, 6 sinal de paz, 7 braços cruzados confiante, 8 comemorando com braços levantados, 9 estudando com livro. Fundo claro/lilás uniforme, cada quadro bem separado, personagem inteiro quando aplicável. Nome do perfil apenas como contexto: ${child}. Não infira atributos sensíveis. Não inclua palavras, logotipos ou marcas.`
       : expressions
