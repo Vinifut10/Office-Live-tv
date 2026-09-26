@@ -18,9 +18,12 @@ export default async function handler(req,res){
     const child=String(name||"criança").slice(0,40);
     const form=new FormData();
     const gallery=mode==="gallery";
+    const card=mode==="card";
     const expressions=mode==="expressions",stickers=mode==="stickers",outfits=mode==="outfits";
     const style="3D cartoon premium semi-realista, acabamento polido de animação cinematográfica, olhos grandes expressivos porém naturais, cabelo muito detalhado com reflexos roxos sutis, iluminação neon roxa e rosa suave, visual moderno infantil/juvenil, roupa urbana preta e roxa sem marcas, tênis branco e roxo, proporções de personagem de corpo inteiro, alta consistência facial";
-    const prompt=gallery
+    const prompt=card
+      ? `Crie UMA CARTINHA COLECIONÁVEL vertical premium usando a MESMA criança da imagem de referência como personagem central, preservando rosto, cabelo e identidade visual. Estilo obrigatório: ${style}. A cartinha deve ter moldura glossy neon, fundo temático divertido, pose expressiva, espaço visual limpo no topo e rodapé para o aplicativo sobrepor título e raridade. NÃO escreva palavras, números, marcas ou logotipos dentro da imagem. Aparência de card game infantil de alta qualidade.`
+      : gallery
       ? `Crie uma FOLHA DE PERSONAGEM quadrada com a MESMA criança da imagem de referência, mantendo identidade facial, cabelo, olhos e aparência reconhecível em todos os quadros. Estilo obrigatório: ${style}. Organize uma grade limpa 3x3, SEM TEXTO: 1 frente corpo inteiro, 2 perfil/lado, 3 costas/3-4, 4 apontando, 5 joinha, 6 sinal de paz, 7 braços cruzados confiante, 8 comemorando com braços levantados, 9 estudando com livro. Fundo claro/lilás uniforme, cada quadro bem separado, personagem inteiro quando aplicável. Nome do perfil apenas como contexto: ${child}. Não infira atributos sensíveis. Não inclua palavras, logotipos ou marcas.`
       : expressions
       ? `Crie uma folha quadrada 3x3 de EXPRESSÕES com a MESMA criança da imagem de referência, mantendo rosto, cabelo, roupa e identidade consistentes em todos os quadros. Estilo obrigatório: ${style}. Mostrar sorriso, piscada, surpresa, pensativo(a), confiante, bravo(a), rindo, triste e tranquilo(a). Fundo claro/lilás uniforme, sem texto, sem marcas.`
